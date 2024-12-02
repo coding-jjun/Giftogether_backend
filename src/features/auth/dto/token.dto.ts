@@ -1,4 +1,6 @@
-export class TokenDto{
-  accessToken: string;
-  refreshToken: string;
+export class TokenDto {
+  constructor(
+    public accessToken: string,
+    public refreshToken: string
+  ){}
 }

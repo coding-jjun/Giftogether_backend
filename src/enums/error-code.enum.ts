@@ -54,7 +54,7 @@ export enum ErrorCode {
   UserAlreadyExists = '0905',
   FailedLogout = '0906',
   RedisServerError = '0907',
-  InvalidUserType = '0908',
+  InvalidUserRole = '0908',
   
   // Default image
   DefaultImgIdNotExist = '1000',

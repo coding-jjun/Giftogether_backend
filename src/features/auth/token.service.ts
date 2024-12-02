@@ -1,24 +1,36 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { RedisClientType } from "@redis/client/dist/lib/client";
-import { UserType } from "src/enums/user-type.enum";
+import { UserRole } from "src/enums/user-role.enum";
 import { GiftogetherExceptions } from "src/filters/giftogether-exception";
+import { TokenDto } from "./dto/token.dto";
 
 @Injectable()
 export class TokenService {
-  private readonly jwtService: JwtService
+  constructor(
+    private readonly jwtService: JwtService,
 
-  @Inject('REDIS_CLIENT')
-  private readonly redisClient: RedisClientType
+    @Inject('REDIS_CLIENT')
+    private readonly redisClient: RedisClientType,
 
-  private readonly g2gException: GiftogetherExceptions
+    private readonly g2gException: GiftogetherExceptions
+  ){}
+  async issueUserRoleBasedToken(userId:number, isAdmin:boolean): Promise<TokenDto> {
 
-  async createAccessToken(userType: UserType, userId: number, isAdmin: boolean): Promise<string> {
+    const role = isAdmin ? UserRole.ADMIN : UserRole.USER;
+
+    const accessToken = await this.createAccessToken(role, userId);
+    const refreshToken = await this.createRefreshToken(userId);
+
+    return new TokenDto(accessToken, refreshToken);
+
+  }
+  async createAccessToken(role: UserRole, userId: number): Promise<string> { 
     return this.jwtService.sign(
-      { userId,
-        time: new Date(),
-        type: userType,
-        isAdmin: isAdmin
+      { 
+        sub: userId,
+        iat: Math.floor(Date.now() / 1000),
+        role: role
       },
       {
         secret: process.env.JWT_SECRET,
@@ -29,9 +41,11 @@ export class TokenService {
 
   async createRefreshToken(userId: number): Promise<string> {
     await this.redisClient.del(`user:${userId}`);
-    const time = new Date();
+    const iat = Math.floor(Date.now() / 1000);  // 초 단위로 발급 시간 기록
     const token = this.jwtService.sign(
-      { userId: userId, time: time },
+      { sub: userId,
+        iat: iat 
+      },
       {
         secret: process.env.JWT_REFRESH_SECRET,
         expiresIn: '7d',
@@ -97,7 +111,7 @@ export class TokenService {
       throw this.g2gException.TokenMissing;
     }
     const tokenInfo = await this.verifyRefreshToken(refreshToken);
-    const userId = tokenInfo.userId;
+    const userId = tokenInfo.sub;
     
     const isInBlackList = await this.isBlackListToken(userId, refreshToken);
     if(isInBlackList){

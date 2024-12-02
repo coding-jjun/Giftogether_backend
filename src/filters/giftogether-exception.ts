@@ -232,9 +232,9 @@ export class GiftogetherExceptions {
     ErrorCode.RedisServerError,
     HttpStatus.CONFLICT,
   );
-  InvalidUserType = new GiftogetherException(
-    ErrorMsg.InvalidUserType,
-    ErrorCode.InvalidUserType,
+  InvalidUserRole = new GiftogetherException(
+    ErrorMsg.InvalidUserRole,
+    ErrorCode.InvalidUserRole,
     HttpStatus.BAD_REQUEST,
   );
 

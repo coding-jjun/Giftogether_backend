@@ -250,7 +250,7 @@ export class AuthService {
   
   async logout(refreshToken: string) {
     const tokenInfo = await this.tokenService.verifyRefreshToken(refreshToken);
-    const userId = tokenInfo.userId;
+    const userId = tokenInfo.sub;
 
     await this.tokenService.chkValidRefreshToken(refreshToken);
     await this.tokenService.setRefreshTokenToBlackList (userId, refreshToken);

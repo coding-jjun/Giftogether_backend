@@ -23,10 +23,10 @@ import { ValidDto } from './dto/valid.dto';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { TokenDto } from './dto/token.dto';
 import { RefreshTokenDto } from './dto/refresh.token.dto';
-import { UserType } from 'src/enums/user-type.enum';
+import { UserRole } from 'src/enums/user-role.enum';
 import { GuestLoginDto } from './dto/guest-login.dto';
-import { TokenService } from './token.service';
 import { LoginResponseDto } from './dto/login-response.dto';
+import { TokenService } from './token.service';
 
 @Controller('auth')
 export class AuthController {
@@ -124,19 +124,17 @@ export class AuthController {
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Res() res: Response){
     const user = await this.authService.login(loginDto);
-    const token = new TokenDto()
-    token.accessToken = await this.tokenService.createAccessToken(UserType.USER,user.userId);
-    token.refreshToken = await this.tokenService.createRefreshToken(user.userId);
+    const tokenDto = await this.tokenService.issueUserRoleBasedToken(user.userId, user.isAdmin);
 
-    Logger.debug("accessToken: " + token.accessToken); // redirect로 변경되면서 디버그 환경에서 token을 확인하기 어려워졌습니다.
-    Logger.debug("refreshToken: " + token.refreshToken); // redirect로 변경되면서 디버그 환경에서 token을 확인하기 어려워졌습니다.
+    Logger.debug("accessToken: " + tokenDto.accessToken); // redirect로 변경되면서 디버그 환경에서 token을 확인하기 어려워졌습니다.
+    Logger.debug("refreshToken: " + tokenDto.refreshToken); // redirect로 변경되면서 디버그 환경에서 token을 확인하기 어려워졌습니다.
 
-    res.cookie("access_token", token.accessToken, this.cookieOptions);
-    res.cookie("refresh_token", token.refreshToken, this.cookieOptions);
+    res.cookie("access_token", tokenDto.accessToken, this.cookieOptions);
+    res.cookie("refresh_token", tokenDto.refreshToken, this.cookieOptions);
     res.cookie("user", user, this.cookieOptions);
 
     return {
-      data: new LoginResponseDto(token.accessToken, token.refreshToken, user),
+      data: new LoginResponseDto(tokenDto.accessToken, tokenDto.refreshToken, user),
       message: "success"
     }
     // return res.redirect(process.env.LOGIN_URL);
@@ -147,13 +145,11 @@ export class AuthController {
     @Body() createUserDto: CreateUserDto,
     @Res() res: Response
   ) {
-    const user = await this.authService.createUser(createUserDto)
-    const token = new TokenDto();
-    token.accessToken = await this.tokenService.createAccessToken(UserType.USER, user.userId);
-    token.refreshToken = await this.tokenService.createRefreshToken(user.userId);
+    const user = await this.authService.createUser(createUserDto);
+    const tokenDto = await this.tokenService.issueUserRoleBasedToken(user.userId, user.isAdmin);
     
-    res.cookie("access_token", token.accessToken, this.cookieOptions);
-    res.cookie("refresh_token", token.refreshToken, this.cookieOptions);
+    res.cookie("access_token", tokenDto.accessToken, this.cookieOptions);
+    res.cookie("refresh_token", tokenDto.refreshToken, this.cookieOptions);
     res.cookie("user", user, this.cookieOptions);
     return res.json({ message: 'success' });
   }
@@ -161,10 +157,12 @@ export class AuthController {
   @Post('/token')
   async reIssueAccessToken(@Body() tokenDto: RefreshTokenDto, @Res() res: Response){
     const userId = await this.tokenService.chkValidRefreshToken(tokenDto.refreshToken);
-    const accessToken = await this.tokenService.createAccessToken(UserType.USER, userId)
+    const accessToken = await this.tokenService.createAccessToken(UserRole.USER, userId)
     res.cookie("access_token", accessToken, this.cookieOptions);
     return res.json({ message: 'success' }); 
   }
+
+  
   
   @Post('/logout')
   @UseGuards(JwtAuthGuard)
@@ -239,7 +237,7 @@ export class AuthController {
   @Post('/guest')
   async guestLogin(@Body() guestLoginDto: GuestLoginDto, @Res() res: Response) {
     const guest = await this.authService.loginGuest(guestLoginDto);
-    const token = await this.tokenService.createAccessToken(UserType.GUEST, guest.userId);
+    const token = await this.tokenService.createAccessToken(UserRole.GUEST, guest.userId);
     res.cookie("access_token", token);
     return res.json({ message: '비회원 로그인 성공' , user: guest});
   }

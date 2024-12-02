@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
    */
   async validate(tokenInfo: any, done: any) {
     // 사용자 인증/인가
-    const userId = tokenInfo.userId;
+    const userId = tokenInfo.sub;
     const user = await this.userRepository.findOne({
       where: { userId },
       relations: ['account']

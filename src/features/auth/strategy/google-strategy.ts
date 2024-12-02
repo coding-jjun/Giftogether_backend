@@ -6,7 +6,7 @@ import { AuthService } from "../auth.service";
 import { AuthType } from "src/enums/auth-type.enum";
 import { CreateUserDto } from "../dto/create-user.dto";
 import { TokenDto } from "../dto/token.dto";
-import { UserType } from "src/enums/user-type.enum";
+import { UserRole } from "src/enums/user-role.enum";
 import { GiftogetherExceptions } from "src/filters/giftogether-exception";
 import { TokenService } from "../token.service";
 
@@ -90,9 +90,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google'){
       type = "login"
 
     }
-    const tokenDto = new TokenDto();
-    tokenDto.accessToken = await this.tokenService.createAccessToken(UserType.USER, user.userId);
-    tokenDto.refreshToken = await this.tokenService.createRefreshToken(user.userId);
+    const tokenDto = await this.tokenService.issueUserRoleBasedToken(user.userId, user.isAdmin);
     done(null, {user, tokenDto, type});
     
   }

@@ -56,7 +56,7 @@ export enum ErrorMsg {
   UserAlreadyExists = '다른 계정으로 이미 가입된 사용자입니다.',
   FailedLogout = '로그아웃에 실패했습니다. 다시 시도해 주세요.',
   RedisServerError = '로그아웃을 처리하는 중에 서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
-  InvalidUserType = '정회원이 아닙니다. 회원가입 후 이용해주세요.',
+  InvalidUserRole = '정회원이 아닙니다. 회원가입 후 이용해주세요.',
   // Default Images
   DefaultImgIdNotExist = '기본 이미지가 정의되어있지 않습니다.',
   DefaultImgNotExist = '기본 이미지를 찾을 수 없습니다.',
