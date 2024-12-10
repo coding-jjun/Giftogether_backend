@@ -167,6 +167,8 @@ export class FundingService {
     }
 
     const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
     if (status === 'ongoing') {
       queryBuilder.andWhere('funding.endAt >= :now', { now: currentDate });
     } else if (status === 'ended') {
@@ -225,9 +227,22 @@ export class FundingService {
     queryBuilder.leftJoinAndSelect('funding.fundUser', 'user');
     // .leftJoinAndSelect('user.image', 'img');
 
-    const fundings = (await queryBuilder.getMany()).map(
-      (funding) => new FundingDto(funding),
-    );
+    const fundingPromies: Promise<FundingDto>[] = await queryBuilder
+      .getMany()
+      .then((fundings: Funding[]) =>
+        fundings.map(async (funding) => {
+          const fundUserImgUrl = await this.imageManager
+            .getImages(funding.fundUser)
+            .then((images) => images[0].imgUrl);
+
+          const { gifts, giftImgUrls } =
+            await this.giftService.findAllGift(funding);
+
+          return new FundingDto(funding, fundUserImgUrl, gifts, giftImgUrls);
+        }),
+      );
+
+    const fundings = await Promise.all(fundingPromies);
 
     return {
       fundings: fundings,
@@ -260,8 +275,12 @@ export class FundingService {
 
     const finalImgUrls = [...fundImgUrls, ...giftImgUrls]; // 펀딩의 이미지 + gift 이미지들
 
+    const fundUserImgUrl = await this.imageManager
+      .getImages(fund.fundUser)
+      .then((images) => images[0].imgUrl);
+
     // FundingDto에 펀딩 이미지와 gift 이미지 URL들을 포함하여 반환
-    return new FundingDto(fund, gifts, finalImgUrls);
+    return new FundingDto(fund, fundUserImgUrl, gifts, finalImgUrls);
   }
 
   async create(
@@ -313,7 +332,11 @@ export class FundingService {
       user,
     );
 
-    return new FundingDto(funding_save, gifts, fundImg);
+    const fundUserImgUrl = await this.imageManager
+      .getImages(user)
+      .then((images) => images[0].imgUrl);
+
+    return new FundingDto(funding_save, fundUserImgUrl, gifts, fundImg);
   }
 
   async update(
@@ -347,7 +370,11 @@ export class FundingService {
     const { gifts, giftImgUrls } = await this.giftService.findAllGift(funding);
     const finalImgUrls = [fundingImg, ...giftImgUrls];
 
-    return new FundingDto(funding, gifts, finalImgUrls);
+    const fundUserImgUrl = await this.imageManager
+      .getImages(user)
+      .then((images) => images[0].imgUrl);
+
+    return new FundingDto(funding, fundUserImgUrl, gifts, finalImgUrls);
   }
 
   private async updateFundingImage(

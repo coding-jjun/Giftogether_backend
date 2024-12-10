@@ -8,6 +8,7 @@ import {
   OneToMany,
   OneToOne,
   JoinColumn,
+  ManyToOne,
 } from 'typeorm';
 import { Funding } from './funding.entity';
 import { Comment } from './comment.entity';
@@ -82,7 +83,8 @@ export class User implements IImageId {
   user: Promise<Date>;
 
   @Column('int', { nullable: true })
-  @OneToOne(() => Image, (image) => image.imgId)
+  @ManyToOne(() => Image, (image) => image.imgId)
+  @JoinColumn({ name: 'defaultImgId' })
   defaultImgId?: number;
 
   @OneToMany(() => Image, (image) => image.creator)

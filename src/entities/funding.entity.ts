@@ -135,7 +135,8 @@ export class Funding implements IImageId {
    * defaultImgId가 null인 경우, Image.subId로 이미지를 가져올 수 있습니다.
    */
   @Column('int', { nullable: true })
-  @OneToOne(() => Image, (image) => image.imgId)
+  @ManyToOne(() => Image, (image) => image.imgId)
+  @JoinColumn({ name: 'defaultImgId' })
   defaultImgId?: number;
 
   @OneToOne(() => Image, (image) => image.subId)

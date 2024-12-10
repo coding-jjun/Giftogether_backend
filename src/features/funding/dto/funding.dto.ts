@@ -6,7 +6,7 @@ export class FundingDto {
   fundUuid: string;
   fundUserId: number;
   fundUserNick: string;
-  // fundUserImg: string;
+  fundUserImg: string;
   fundTitle: string;
   fundCont: string;
   fundTheme: string;
@@ -26,6 +26,7 @@ export class FundingDto {
 
   constructor(
     funding: Funding,
+    fundUserImg: string,
     gifts?: ResponseGiftDto[],
     fundImgUrls?: string[],
   ) {
@@ -33,7 +34,6 @@ export class FundingDto {
     this.fundUuid = funding.fundUuid;
     this.fundUserId = funding.fundUser?.userId;
     this.fundUserNick = funding.fundUser?.userNick;
-    // this.fundUserImg = funding.fundUser.image.imgUrl;
     this.fundTitle = funding.fundTitle;
     this.fundCont = funding.fundCont;
     this.fundTheme = funding.fundTheme;
@@ -50,5 +50,6 @@ export class FundingDto {
     this.endAt = funding.endAt;
     this.gifts = gifts || [];
     this.fundImgUrls = fundImgUrls || [];
+    this.fundUserImg = fundUserImg;
   }
 }

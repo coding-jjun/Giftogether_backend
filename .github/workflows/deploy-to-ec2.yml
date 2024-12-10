@@ -31,8 +31,10 @@ jobs:
         name: Deploy application
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-
+          
           cd ~/wishlist_funding_backend/
+          git fetch -ap
+          get merge origin main
           ./auto-deploy.sh
           EOF
 

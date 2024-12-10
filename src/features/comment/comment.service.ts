@@ -1,9 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { Comment } from 'src/entities/comment.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Equal, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Funding } from 'src/entities/funding.entity';
 import { GetCommentDto } from './dto/get-comment.dto';
 import { User } from 'src/entities/user.entity';
@@ -79,6 +79,7 @@ export class CommentService {
         'comment.isDel = :isDel',
         { isDel: false },
       )
+      .leftJoinAndSelect('comment.author', 'author')
       .where('funding.fundUuid = :fundUuid', { fundUuid })
       .orderBy('comment.regAt', 'DESC')
       .getOne();
