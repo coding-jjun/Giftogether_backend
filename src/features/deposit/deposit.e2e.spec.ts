@@ -209,8 +209,9 @@ describe('Deposit API E2E Test', () => {
 
   afterAll(async () => {
     await provDonRepo.clear();
-    await userRepo.clear();
-    await fundingRepo.clear();
+    await fundingRepo.remove(mockFunding);
+    await userRepo.remove(mockFundingOwner);
+    await userRepo.remove(mockDonor);
     await app.close();
   });
 });
