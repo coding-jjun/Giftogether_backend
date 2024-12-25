@@ -22,6 +22,7 @@ import { FundTheme } from 'src/enums/fund-theme.enum';
 import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 import { CommonResponse } from 'src/interfaces/common-response.interface';
 import { DepositStatus } from 'src/enums/deposit-status.enum';
+import { Notification } from 'src/entities/notification.entity';
 
 const entities = [
   Deposit,
@@ -34,6 +35,7 @@ const entities = [
   Gift,
   Donation,
   Funding,
+  Notification,
 ];
 
 describe('Deposit API E2E Test', () => {
@@ -157,11 +159,11 @@ describe('Deposit API E2E Test', () => {
       expect(foundDeposits.length).toBe(1);
       expect(foundDeposits[0].status).toBe(DepositStatus.Matched.toString());
 
-      // Donation 인스턴스가 생성되어야 합니다.
+      // TODO Donation 인스턴스가 생성되어야 합니다.
 
-      // Donor에게 Notification이 생성되어야 합니다.
+      // TODO Donor에게 Notification이 생성되어야 합니다.
 
-      // FundOwner에게 Notification이 생성되어야 합니다.
+      // TODO FundOwner에게 Notification이 생성되어야 합니다.
     });
 
     it('should handle unmatched deposit', async () => {
