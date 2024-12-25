@@ -22,6 +22,7 @@ import { DepositStatus } from 'src/enums/deposit-status.enum';
 import { DecreaseFundSumCommand } from 'src/features/funding/commands/decrease-fundsum.command';
 import { DepositDeletedEvent } from './deposit-deleted.event';
 import { ProvisionalDonation } from '../entities/provisional-donation.entity';
+import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 
 @Injectable()
 export class DepositEventHandler {
@@ -80,18 +81,19 @@ export class DepositEventHandler {
   /**
    * - 조건: 보내는 분은 일치하지만 이체 금액이 다른 경우 → 부분 매칭
    *
-   * 1. 예비 후원의 상태를 ‘반려’로 변경합니다.
+   * 1. 예비 후원의 상태가 '반려'인지 확인합니다.
    * 2. 시스템은 후원자에게 반려 사유를 포함한 알림을 발송합니다.
    * 3. 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
    * 4. 관리자는 해당 건에 대해서 환불, 혹은 삭제 조치를 진행해야 합니다.
    */
   @OnEvent('deposit.partiallyMatched')
-  handleDepositPartiallyMatched(event: DepositPartiallyMatchedEvent) {
+  async handleDepositPartiallyMatched(event: DepositPartiallyMatchedEvent) {
     const { deposit, provDon } = event;
 
     // 1
-    provDon.reject(this.g2gException);
-    this.provDonRepo.save(provDon);
+    if (provDon.status !== ProvisionalDonationStatus.Rejected) {
+      throw this.g2gException.InvalidStatusChange;
+    }
 
     // 2
     const notiDtoForSender = new CreateNotificationDto({
@@ -121,7 +123,7 @@ export class DepositEventHandler {
   }
 
   /**
-   * 1. 입금 내역을 ‘고아 상태’로 표시합니다.
+   * 1. 입금 내역이 ‘고아 상태’인지 확인합니다.
    * 2. 시스템은 관리자에게 해당 입금내역이 고아상태임을 알리는 알림을 발송합니다.
    * 3. 관리자는 해당 건에 대해 확인 및 조치를 취해야 합니다.
    *     - 보내는 분의 신원이 식별될 경우 환불을 진행합니다.
@@ -132,8 +134,9 @@ export class DepositEventHandler {
     const { deposit } = event;
 
     // 1
-    deposit.orphan(this.g2gException);
-    this.depositRepo.save(deposit);
+    if (deposit.status !== DepositStatus.Orphan) {
+      throw this.g2gException.InvalidStatus;
+    }
 
     // 2
     const users: User[] = await this.findAllAdmins.execute();

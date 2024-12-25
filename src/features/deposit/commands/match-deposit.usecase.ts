@@ -76,6 +76,9 @@ export class MatchDepositUseCase {
        *  - 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
        *  - 관리자는 해당 건에 대해서 환불 조치를 진행해야 합니다.
        */
+      provDon.reject(this.g2gException);
+      await this.provDonRepo.save(provDon);
+
       this.eventEmitter.emit(
         'deposit.partiallyMatched',
         new DepositPartiallyMatchedEvent(deposit, provDon),
