@@ -12,7 +12,7 @@ export class DepositController {
     private readonly findAllDeposits: FindAllDepositsUseCase,
   ) {}
 
-  @Post('upload')
+  @Post()
   async uploadDeposit(
     @Body() depositData: DepositDto,
   ): Promise<CommonResponse> {
