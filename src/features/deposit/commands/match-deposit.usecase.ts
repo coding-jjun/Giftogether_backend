@@ -26,6 +26,7 @@ export class MatchDepositUseCase {
   async execute(deposit: Deposit): Promise<void> {
     const provDon = await this.provDonRepo.findOne({
       where: { senderSig: deposit.senderSig },
+      relations: { funding: { fundUser: true }, senderUser: true },
     });
 
     if (!provDon) {
