@@ -38,7 +38,7 @@ export class MatchDepositUseCase {
        *  - 관리자는 해당 건에 대해 확인 및 조치를 취해야 합니다.
        */
       deposit.orphan(this.g2gException);
-      this.depositRepo.save(deposit);
+      await this.depositRepo.save(deposit);
 
       this.eventEmitter.emit(
         'deposit.unmatched',
@@ -53,13 +53,16 @@ export class MatchDepositUseCase {
        *
        * 보내는 분 (실명 + 고유번호)과 이체 금액이 예비 후원과 일치하는 경우
        * 조치:
-       *  - 예비 후원의 상태를 ‘승인’으로 변경합니다.
+       *  - 예비 후원과 이체내역의 상태를 ‘승인’으로 변경합니다.
        *  - 해당 후원은 정식 후원 내역에 추가됩니다.
        *  - 펀딩의 달성 금액이 업데이트 됩니다.
        *  - 후원자에게 후원이 정상적으로 처리되었음을 알리는 알림을 발송합니다.
        */
       provDon.approve(this.g2gException);
       await this.provDonRepo.save(provDon);
+
+      deposit.matched(this.g2gException);
+      await this.depositRepo.save(deposit);
 
       this.eventEmitter.emit(
         'deposit.matched',
