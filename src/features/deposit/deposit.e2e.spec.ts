@@ -227,10 +227,9 @@ describe('Deposit API E2E Test', () => {
   });
 
   afterAll(async () => {
-    await provDonRepo.clear();
-    await fundingRepo.remove(mockFunding);
-    await userRepo.remove(mockFundingOwner);
-    await userRepo.remove(mockDonor);
+    // 테스트 데이터베이스를 DROP하는 명령어. 모든 테이블과 데이터가 사라집니다!! 💀
+    // 아무 repository나 DataSource connection에 접근할 수 있는게 무섭네요
+    await provDonRepo.manager.connection.dropDatabase();
     await app.close();
   });
 });
