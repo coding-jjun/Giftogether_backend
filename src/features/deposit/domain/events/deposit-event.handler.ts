@@ -92,7 +92,7 @@ export class DepositEventHandler {
 
     // 1
     if (provDon.status !== ProvisionalDonationStatus.Rejected) {
-      throw this.g2gException.InvalidStatusChange;
+      throw this.g2gException.InvalidStatus;
     }
 
     // 2
