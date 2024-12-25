@@ -159,7 +159,11 @@ describe('Deposit API E2E Test', () => {
         })
         .expect(400)
         .expect((res) => {
-          expect(res.body.error).toBe('DepositUnmatched');
+          expect(res.body).toStrictEqual(
+            expect.objectContaining({
+              message: g2gException.DepositUnmatched.message,
+            } as CommonResponse),
+          );
         });
     });
 
@@ -167,7 +171,7 @@ describe('Deposit API E2E Test', () => {
       // Create provisional donation with different amount
       const provDon = ProvisionalDonation.create(
         g2gException,
-        'HONG-1234',
+        'PARK-1234',
         mockDonor,
         20000,
         mockFunding,
@@ -177,7 +181,7 @@ describe('Deposit API E2E Test', () => {
       await request(app.getHttpServer())
         .post('/deposits')
         .send({
-          senderSig: 'HONG-1234',
+          senderSig: 'PARK-1234',
           amount: 10000,
           receiver: 'GIFTOGETHER',
           transferDate: new Date(),
@@ -195,7 +199,7 @@ describe('Deposit API E2E Test', () => {
         });
 
       const foundProvDon = await provDonRepo.findOne({
-        where: { senderSig: 'HONG-1234' },
+        where: { senderSig: 'PARK-1234' },
       });
       expect(foundProvDon.status).toBe(
         ProvisionalDonationStatus.Rejected.toString(),
@@ -205,8 +209,8 @@ describe('Deposit API E2E Test', () => {
 
   afterAll(async () => {
     await provDonRepo.clear();
-    await fundingRepo.clear();
     await userRepo.clear();
+    await fundingRepo.clear();
     await app.close();
   });
 });

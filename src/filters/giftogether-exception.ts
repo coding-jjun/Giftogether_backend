@@ -297,6 +297,12 @@ export class GiftogetherExceptions {
 
   // Generic
 
+  InvalidStatus = new GiftogetherException(
+    ErrorMsg.InvalidStatus,
+    ErrorCode.InvalidStatus,
+    HttpStatus.INTERNAL_SERVER_ERROR,
+  );
+
   InvalidStatusChange = new GiftogetherException(
     ErrorMsg.InvalidStatusChange,
     ErrorCode.InvalidStatusChange,
