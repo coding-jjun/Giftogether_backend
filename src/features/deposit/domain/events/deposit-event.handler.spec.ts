@@ -139,6 +139,8 @@ describe('DepositEventHandler', () => {
       gifts: [],
       donations: [],
       image: undefined,
+      provDons: [],
+      isClosed: jest.fn(),
     };
 
     matchedDonor = Object.create(fundingOwner);
