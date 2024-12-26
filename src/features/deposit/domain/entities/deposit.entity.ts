@@ -25,7 +25,6 @@ export class Deposit {
    * `Deposit ||--o| Donation` 관계에서 Deposit이 강성엔티티, Donation이 약성엔티티입니다.
    */
   @OneToOne(() => Donation, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'donationId' })
   readonly donation?: Donation;
 
   @Column('varchar')
