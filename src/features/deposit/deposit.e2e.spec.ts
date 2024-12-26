@@ -26,6 +26,7 @@ import { Notification } from 'src/entities/notification.entity';
 import { EventModule } from '../event/event.module';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { waitForEventJobs } from 'src/tests/wait-for-events';
+import { NotiType } from 'src/enums/noti-type.enum';
 
 const entities = [
   Deposit,
@@ -48,6 +49,7 @@ describe('Deposit API E2E Test', () => {
   let fundingRepo: Repository<Funding>;
   let depositRepo: Repository<Deposit>;
   let donationRepo: Repository<Donation>;
+  let notiRepo: Repository<Notification>;
   let mockFunding: Funding;
   let mockFundingOwner: User;
   let mockDonor: User;
@@ -71,6 +73,7 @@ describe('Deposit API E2E Test', () => {
     fundingRepo = moduleFixture.get(getRepositoryToken(Funding));
     depositRepo = moduleFixture.get(getRepositoryToken(Deposit));
     donationRepo = moduleFixture.get(getRepositoryToken(Donation));
+    notiRepo = moduleFixture.get(getRepositoryToken(Notification));
     g2gException = moduleFixture.get(GiftogetherExceptions);
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     await app.init();
@@ -185,6 +188,20 @@ describe('Deposit API E2E Test', () => {
       });
       expect(foundFundings.length).toBe(1);
       expect(foundFundings[0].fundSum).toBe(provDon.amount);
+
+      // Notification이 두개 생성되어야 합니다.
+      const foundNotis = await notiRepo.find();
+      expect(foundNotis).toHaveLength(2);
+      expect(foundNotis).toContainEqual(
+        expect.objectContaining({
+          notiType: NotiType.DonationSuccess,
+        } as Notification),
+      );
+      expect(foundNotis).toContainEqual(
+        expect.objectContaining({
+          notiType: NotiType.NewDonate,
+        } as Notification),
+      );
     });
 
     it('should handle unmatched deposit', async () => {
