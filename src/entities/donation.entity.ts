@@ -32,7 +32,7 @@ export class Donation {
   @OneToOne(() => Deposit, {
     nullable: false, // Donation은 있는데 Deposit이 없는 케이스는 존재하지 않습니다.,
   })
-  @JoinColumn({ name: 'depositId' })
+  @JoinColumn({ name: 'depositId' }) // FK를 참조하는 쪽만 @JoinColumn을 가져야 함
   deposit: Deposit;
 
   @Column({

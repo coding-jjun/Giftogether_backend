@@ -7,13 +7,13 @@ import { CommonResponse } from '../../interfaces/common-response.interface';
 export class DepositController {
   constructor(private readonly depositService: DepositService) {}
 
-  @Post('upload')
+  @Post()
   async uploadDeposit(
     @Body() depositData: DepositDto,
   ): Promise<CommonResponse> {
     return {
       message: '성공적으로 입금내역이 추가되었습니다.',
-      data: this.depositService.uploadDeposit(depositData),
+      data: await this.depositService.uploadDeposit(depositData),
     };
   }
 }

@@ -3,7 +3,6 @@ import { DepositController } from './deposit.controller';
 import { DepositService } from './deposit.service';
 import { UploadDepositUseCase } from './commands/upload-deposit.usecase';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
-import { InMemoryDepositRepository } from './infrastructure/repositories/in-memory-deposit.repository';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GiftogetherExceptions } from '../../filters/giftogether-exception';
 
@@ -19,7 +18,6 @@ describe('DepositController', () => {
         DepositService,
         UploadDepositUseCase,
         MatchDepositUseCase,
-        InMemoryDepositRepository,
         GiftogetherExceptions,
       ],
     }).compile();

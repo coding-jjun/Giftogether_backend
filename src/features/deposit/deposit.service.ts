@@ -15,7 +15,7 @@ export class DepositService {
     const deposit: Deposit =
       await this.uploadDepositUseCase.execute(depositData);
 
-    this.matchDepositUseCase.execute(deposit);
+    await this.matchDepositUseCase.execute(deposit);
 
     return depositData;
   }
