@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { DepositMatchedEvent } from './deposit-matched.event';
 import { DepositPartiallyMatchedEvent } from './deposit-partially-matched.event';
 import { DepositUnmatchedEvent } from './deposit-unmatched.event';
@@ -37,6 +37,7 @@ export class DepositEventHandler {
     @InjectRepository(ProvisionalDonation)
     private readonly provDonRepo: Repository<ProvisionalDonation>,
     private readonly findAllAdmins: FindAllAdminsUseCase,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -76,6 +77,8 @@ export class DepositEventHandler {
       subId: funding.fundUuid,
     });
     await this.notiService.createNoti(createNotificationDtoForReceiver);
+
+    this.eventEmitter.emit('deposit.matched.finished');
   }
 
   /**

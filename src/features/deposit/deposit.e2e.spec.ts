@@ -6,7 +6,7 @@ import { createDataSourceOptions } from 'src/tests/data-source-options';
 import { DepositModule } from './deposit.module';
 import { Deposit } from './domain/entities/deposit.entity';
 import { ProvisionalDonation } from './domain/entities/provisional-donation.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Funding } from 'src/entities/funding.entity';
@@ -23,6 +23,9 @@ import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status
 import { CommonResponse } from 'src/interfaces/common-response.interface';
 import { DepositStatus } from 'src/enums/deposit-status.enum';
 import { Notification } from 'src/entities/notification.entity';
+import { EventModule } from '../event/event.module';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { waitForEventJobs } from 'src/tests/wait-for-events';
 
 const entities = [
   Deposit,
@@ -44,10 +47,12 @@ describe('Deposit API E2E Test', () => {
   let userRepo: Repository<User>;
   let fundingRepo: Repository<Funding>;
   let depositRepo: Repository<Deposit>;
+  let donationRepo: Repository<Donation>;
   let mockFunding: Funding;
   let mockFundingOwner: User;
   let mockDonor: User;
   let g2gException: GiftogetherExceptions;
+  let eventEmitter: EventEmitter2;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -55,6 +60,7 @@ describe('Deposit API E2E Test', () => {
         TypeOrmModule.forRoot(createDataSourceOptions(entities)),
         TypeOrmModule.forFeature(entities),
         DepositModule,
+        EventModule,
       ],
       providers: [GiftogetherExceptions],
     }).compile();
@@ -64,7 +70,9 @@ describe('Deposit API E2E Test', () => {
     userRepo = moduleFixture.get(getRepositoryToken(User));
     fundingRepo = moduleFixture.get(getRepositoryToken(Funding));
     depositRepo = moduleFixture.get(getRepositoryToken(Deposit));
+    donationRepo = moduleFixture.get(getRepositoryToken(Donation));
     g2gException = moduleFixture.get(GiftogetherExceptions);
+    eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     await app.init();
 
     mockFundingOwner = new User();
@@ -159,11 +167,24 @@ describe('Deposit API E2E Test', () => {
       expect(foundDeposits.length).toBe(1);
       expect(foundDeposits[0].status).toBe(DepositStatus.Matched.toString());
 
-      // TODO Donation 인스턴스가 생성되어야 합니다.
+      // Wait until 'deposit.matched.finished'
+      await waitForEventJobs(eventEmitter, 'deposit.matched.finished');
 
-      // TODO Donor에게 Notification이 생성되어야 합니다.
+      // Donation 하나가 새로 생성되어야 합니다.
+      const foundDonations = await donationRepo.find({
+        where: {
+          user: mockDonor,
+        },
+      });
+      expect(foundDonations.length).toBe(1);
+      expect(foundDonations[0].donAmnt).toBe(provDon.amount);
 
-      // TODO FundOwner에게 Notification이 생성되어야 합니다.
+      // Funding 의 fundSum이 수정되어야 합니다.
+      const foundFundings = await fundingRepo.find({
+        where: { fundId: mockFunding.fundId },
+      });
+      expect(foundFundings.length).toBe(1);
+      expect(foundFundings[0].fundSum).toBe(provDon.amount);
     });
 
     it('should handle unmatched deposit', async () => {
@@ -230,8 +251,7 @@ describe('Deposit API E2E Test', () => {
 
   afterAll(async () => {
     // 테스트 데이터베이스를 DROP하는 명령어. 모든 테이블과 데이터가 사라집니다!! 💀
-    // 아무 repository나 DataSource connection에 접근할 수 있는게 무섭네요
-    await provDonRepo.manager.connection.dropDatabase();
+    await app.get(DataSource).dropDatabase();
     await app.close();
   });
 });
