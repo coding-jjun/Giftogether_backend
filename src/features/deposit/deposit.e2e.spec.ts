@@ -125,7 +125,9 @@ describe('Deposit API E2E Test', () => {
   });
 
   beforeEach(async () => {
-    await provDonRepo.clear();
+    await provDonRepo.delete({});
+    await donationRepo.delete({});
+    await depositRepo.delete({});
   });
 
   describe('POST /deposits', () => {
@@ -224,6 +226,10 @@ describe('Deposit API E2E Test', () => {
             } as CommonResponse),
           );
         });
+
+      const foundDeposits = await depositRepo.find();
+      expect(foundDeposits).toHaveLength(1);
+      expect(foundDeposits[0].status).toBe(DepositStatus.Orphan);
     });
 
     it('should handle partially matched deposit', async () => {
