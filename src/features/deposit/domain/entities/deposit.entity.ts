@@ -22,13 +22,16 @@ export class Deposit {
   readonly depositId: number;
 
   /**
-   * `Deposit 0..1 --> 1 Donation` 관계에서 Donation이 강성엔티티, Deposit이 약성엔티티입니다.
+   * `Deposit 0..1 --> 1 Donation` 관계에서 Donation이 Deposit을 소유합니다.
    */
-  @OneToOne(() => Donation, { nullable: false, onDelete: 'CASCADE' })
+  @OneToOne(() => Donation, (donation) => donation.deposit, {
+    nullable: true,
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'donationId' }) // FK를 참조하는 쪽만 @JoinColumn을 가져야 함
   readonly donation?: Donation;
 
-  @Column('varchar')
+  @Column('varchar', { unique: true })
   readonly senderSig: string; // 보내는분, '홍길동-1234'
 
   @Column('varchar')
