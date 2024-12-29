@@ -15,6 +15,7 @@ import { ValidCheck } from 'src/util/valid-check';
 import { DefaultImageId } from 'src/enums/default-image-id';
 import * as bcrypt from 'bcrypt';
 import { DonationDto } from './dto/donation.dto';
+import { RollingPaper } from 'src/entities/rolling-paper.entity';
 
 @Injectable()
 export class DonationService {
@@ -22,8 +23,8 @@ export class DonationService {
     @InjectRepository(Donation)
     private readonly donationRepo: Repository<Donation>,
 
-    // @InjectRepository(RollingPaper)
-    // private readonly rollingPaperRepo: Repository<RollingPaper>,
+    @InjectRepository(RollingPaper)
+    private readonly rollingPaperRepo: Repository<RollingPaper>,
 
     @InjectRepository(Funding)
     private readonly fundingRepo: Repository<Funding>,
