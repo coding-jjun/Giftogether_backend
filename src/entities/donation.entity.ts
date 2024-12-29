@@ -17,7 +17,8 @@ import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Deposit } from 'src/features/deposit/domain/entities/deposit.entity';
 import { InconsistentAggregationError } from 'src/exceptions/inconsistent-aggregation';
 import { truncateTime } from 'src/util/truncate-tiime';
-import orderId from 'order-id';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const orderId = require('order-id');
 
 @Entity()
 export class Donation {
