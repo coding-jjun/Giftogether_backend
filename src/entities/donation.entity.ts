@@ -10,6 +10,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   OneToOne,
+  Index,
 } from 'typeorm';
 import { IsInt, Max, Min } from 'class-validator';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
@@ -74,7 +75,8 @@ export class Donation {
   @Column({ type: 'date', nullable: true })
   expirationDate: Date;
 
-  @Column({ type: 'varchar', length: 10, nullable: false })
+  @Column({ type: 'varchar', length: 10, nullable: false, unique: true })
+  @Index('UQ-senderSig', { unique: true })
   senderSig: string;
 
   approve(g2gException: GiftogetherExceptions) {
