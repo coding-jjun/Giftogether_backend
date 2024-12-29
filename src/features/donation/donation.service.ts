@@ -282,17 +282,4 @@ export class DonationService {
       return false;
     }
   }
-
-  /**
-   * 한 유저가 여러번 후원하는 경우 예비후원과 이체내역을 찾을 수 없는 문제 때문에
-   * '보내는 분'에 고유식별번호를 추가하기로 했습니다.
-   *
-   * [노션 문서](https://www.notion.so/c3cd436359344df6b60bfaed9bdbf784?pvs=4) 참고
-   * @param username 입금자명
-   */
-  createSenderSig(username: string) {
-    const signature: string = Math.round(Math.random() * 100).toString();
-    const delimeter = '-';
-    return username + delimeter + signature;
-  }
 }

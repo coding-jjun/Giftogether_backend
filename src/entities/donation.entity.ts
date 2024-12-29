@@ -11,10 +11,12 @@ import {
   DeleteDateColumn,
   OneToOne,
 } from 'typeorm';
-import { IsInt, Min } from 'class-validator';
+import { IsInt, Max, Min } from 'class-validator';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Deposit } from 'src/features/deposit/domain/entities/deposit.entity';
 import { InconsistentAggregationError } from 'src/exceptions/inconsistent-aggregation';
+import { truncateTime } from 'src/util/truncate-tiime';
+import OrderId from 'order-id';
 
 @Entity()
 export class Donation {
@@ -23,31 +25,33 @@ export class Donation {
 
   @ManyToOne(() => Funding)
   @JoinColumn({ name: 'fundId', referencedColumnName: 'fundId' })
-  funding: Funding;
+  readonly funding: Funding;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
-  user: User;
+  readonly user: User;
 
-  @OneToOne(() => Deposit, {
-    nullable: false, // Donation은 있는데 Deposit이 없는 케이스는 존재하지 않습니다.,
-  })
-  @JoinColumn({ name: 'depositId' }) // FK를 참조하는 쪽만 @JoinColumn을 가져야 함
+  @OneToOne(() => Deposit, (deposit) => deposit.donation, { nullable: true })
   deposit: Deposit;
 
   @Column({
     type: 'enum',
     enum: DonationStatus,
-    default: DonationStatus.Donated,
+    default: DonationStatus.Pending,
   })
-  donStat: DonationStatus;
+  private donStat: DonationStatus;
+
+  public get status(): DonationStatus {
+    return this.donStat;
+  }
 
   @Column()
   orderId: string;
 
   @IsInt()
-  @Min(0)
-  @Column({ default: 0 })
+  @Min(10_000)
+  @Max(5_000_000)
+  @Column({ default: 10_000 })
   donAmnt: number;
 
   @CreateDateColumn()
@@ -55,6 +59,28 @@ export class Donation {
 
   @DeleteDateColumn()
   delAt: Date;
+
+  @Column({ type: 'date', nullable: true })
+  expirationDate: Date;
+
+  @Column({ type: 'varchar', length: 10, nullable: false })
+  senderSig: string;
+
+  approve(g2gException: GiftogetherExceptions) {
+    if (this.donStat !== DonationStatus.Pending) {
+      // [정책] 매칭이 Pending인 상태인 경우에만 상태전이가 가능합니다.
+      throw g2gException.InvalidStatusChange;
+    }
+    this.donStat = DonationStatus.Approved;
+  }
+
+  reject(g2gException: GiftogetherExceptions): void {
+    if (this.donStat !== DonationStatus.Pending) {
+      // [정책] 매칭이 Pending 상태인 경우에만 상태전이 가능합니다.
+      throw g2gException.InvalidStatusChange;
+    }
+    this.donStat = DonationStatus.Rejected;
+  }
 
   /**
    * !NOTE: 아직 WaitingRefund 상태에 대한 예외처리가 되어있지 않습니다.
@@ -90,24 +116,28 @@ export class Donation {
     this.delAt = new Date(Date.now()); // softDelete까지 수행함.
   }
 
-  private constructor(
-    funding: Funding,
-    senderUser: User,
-    deposit: Deposit,
-    amount: number,
-  ) {
-    this.funding = funding;
-    this.user = senderUser;
-    this.deposit = deposit;
-    this.donAmnt = amount;
-    this.donStat = DonationStatus.Donated;
-    this.orderId = require('order-id')('key').generate();
+  private calculateExpirationDate(): Date {
+    const expiration = truncateTime(new Date());
+    expiration.setDate(expiration.getDate() + 3);
+    return expiration;
   }
 
-  static create(
+  /**
+   * 한 유저가 여러번 후원하는 경우 예비후원과 이체내역을 찾을 수 없는 문제 때문에
+   * '보내는 분'에 고유식별번호를 추가하기로 했습니다.
+   *
+   * [노션 문서](https://www.notion.so/c3cd436359344df6b60bfaed9bdbf784?pvs=4) 참고
+   * @param username 입금자명
+   */
+  private generateSenderSig(username: string): string {
+    const signature: string = Math.round(Math.random() * 100).toString();
+    const delimeter = '-';
+    return username + delimeter + signature;
+  }
+
+  constructor(
     funding: Funding,
     senderUser: User,
-    deposit: Deposit,
     amount: number,
     g2gException: GiftogetherExceptions,
   ) {
@@ -115,8 +145,16 @@ export class Donation {
       // [정책] 후원금액의 최대치는 펀딩금액을 넘지 못합니다.
       throw g2gException.DonationAmountExceeded;
     }
+    this.funding = funding;
+    this.user = senderUser;
+    this.donAmnt = amount;
+    this.donStat = DonationStatus.Approved;
+    // this.orderId = require('order-id')('key').generate();
+    this.orderId = OrderId('key').generate();
+    this.senderSig = this.generateSenderSig(this.user.userName);
+    this.donStat = DonationStatus.Pending;
+    this.expirationDate = this.calculateExpirationDate();
 
     // TODO - Add RollingPaper for inner object
-    return new Donation(funding, senderUser, deposit, amount);
   }
 }
