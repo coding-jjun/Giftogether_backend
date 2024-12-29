@@ -12,25 +12,15 @@ import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { AuthModule } from '../auth/auth.module';
 import { ValidCheck } from 'src/util/valid-check';
 import { ImageModule } from '../image/image.module';
-import { CreateProvisionalDonationUseCase } from './commands/create-provisional-donation.usecase';
-import { ProvisionalDonation } from '../deposit/domain/entities/provisional-donation.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Donation,
-      RollingPaper,
-      Funding,
-      User,
-      Image,
-      ProvisionalDonation,
-    ]),
+    TypeOrmModule.forFeature([Donation, RollingPaper, Funding, User, Image]),
     AuthModule,
     ImageModule,
   ],
   controllers: [DonationController],
   providers: [
-    CreateProvisionalDonationUseCase,
     DonationService,
     RollingPaperService,
     GiftogetherExceptions,

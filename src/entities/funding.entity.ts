@@ -20,7 +20,6 @@ import { Image } from './image.entity';
 import { IImageId } from 'src/interfaces/image-id.interface';
 import { ImageType } from 'src/enums/image-type.enum';
 import { truncateTime } from 'src/util/truncate-tiime';
-import { ProvisionalDonation } from 'src/features/deposit/domain/entities/provisional-donation.entity';
 
 @Entity()
 export class Funding implements IImageId {
@@ -132,9 +131,6 @@ export class Funding implements IImageId {
     cascade: true,
   })
   donations: Donation[];
-
-  @OneToMany(() => ProvisionalDonation, (provdon) => provdon.funding)
-  provDons: ProvisionalDonation[];
 
   /**
    * defaultImgId가 null인 경우, Image.subId로 이미지를 가져올 수 있습니다.

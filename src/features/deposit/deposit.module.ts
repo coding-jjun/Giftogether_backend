@@ -12,7 +12,6 @@ import { Notification } from 'src/entities/notification.entity';
 import { User } from 'src/entities/user.entity';
 import { Donation } from 'src/entities/donation.entity';
 import { Deposit } from './domain/entities/deposit.entity';
-import { ProvisionalDonation } from './domain/entities/provisional-donation.entity';
 import { IncreaseFundSumUseCase } from '../funding/commands/increase-fundsum.usecase';
 import { NotificationService } from '../notification/notification.service';
 import { DecreaseFundSumUseCase } from '../funding/commands/decrease-fundsum.usecase';
@@ -30,7 +29,6 @@ import { RollingPaper } from 'src/entities/rolling-paper.entity';
       User,
       Donation,
       Deposit,
-      ProvisionalDonation,
       RollingPaper,
     ]),
   ],

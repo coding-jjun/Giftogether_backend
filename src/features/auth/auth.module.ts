@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -22,8 +22,6 @@ import { Nickname } from 'src/util/nickname';
 import { ImageService } from '../image/image.service';
 import { ImageInstanceManager } from '../image/image-instance-manager';
 import { TokenService } from './token.service';
-import { CreateProvisionalDonationUseCase } from '../donation/commands/create-provisional-donation.usecase';
-import { ProvisionalDonation } from '../deposit/domain/entities/provisional-donation.entity';
 
 @Module({
   imports: [
@@ -38,7 +36,6 @@ import { ProvisionalDonation } from '../deposit/domain/entities/provisional-dona
       Donation,
       RollingPaper,
       Funding,
-      ProvisionalDonation,
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
@@ -57,7 +54,6 @@ import { ProvisionalDonation } from '../deposit/domain/entities/provisional-dona
     ImageService,
     ImageInstanceManager,
     TokenService,
-    CreateProvisionalDonationUseCase,
   ],
   exports: [PassportModule, AuthService, TokenService],
 })
