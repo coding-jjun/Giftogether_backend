@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Donation } from 'src/entities/donation.entity';
-import { RollingPaper } from 'src/entities/rolling-paper.entity';
 import { CreateDonationDto } from './dto/create-donation.dto';
 import { CreateGuestDto } from './dto/create-guest.dto';
 import { Funding } from 'src/entities/funding.entity';
@@ -15,10 +14,7 @@ import { DonationListDto } from './dto/other-donation-list.dto';
 import { ValidCheck } from 'src/util/valid-check';
 import { DefaultImageId } from 'src/enums/default-image-id';
 import * as bcrypt from 'bcrypt';
-import { ProvisionalDonation } from '../deposit/domain/entities/provisional-donation.entity';
-import { CreateProvisionalDonationUseCase } from './commands/create-provisional-donation.usecase';
-import { CreateProvisionalDonationCommand } from './commands/create-provisional-donation.command';
-import { ProvisionalDonationDto } from './dto/provisional-donation.dto';
+import { DonationDto } from './dto/donation.dto';
 
 @Injectable()
 export class DonationService {
@@ -26,8 +22,8 @@ export class DonationService {
     @InjectRepository(Donation)
     private readonly donationRepo: Repository<Donation>,
 
-    @InjectRepository(RollingPaper)
-    private readonly rollingPaperRepo: Repository<RollingPaper>,
+    // @InjectRepository(RollingPaper)
+    // private readonly rollingPaperRepo: Repository<RollingPaper>,
 
     @InjectRepository(Funding)
     private readonly fundingRepo: Repository<Funding>,
@@ -38,8 +34,6 @@ export class DonationService {
     private readonly g2gException: GiftogetherExceptions,
 
     private readonly validCheck: ValidCheck,
-
-    private readonly createProvisionalDonation: CreateProvisionalDonationUseCase,
   ) {}
 
   async getAllDonations(userId: number): Promise<Donation[]> {
@@ -106,17 +100,10 @@ export class DonationService {
     fundUuid: string,
     createDonationDto: CreateDonationDto,
     user: User,
-  ): Promise<ProvisionalDonationDto> {
+  ): Promise<Donation> {
     const funding = await this.validFundingDate(fundUuid);
     const provDon = await this.createDonation(funding, createDonationDto, user);
-    return new ProvisionalDonationDto(
-      provDon.provDonId,
-      provDon.senderSig,
-      provDon.senderUser.userId,
-      provDon.amount,
-      funding.fundUuid,
-      provDon.status,
-      provDon.regAt,
+    return new DonationDto(
     );
   }
 
@@ -147,23 +134,18 @@ export class DonationService {
     return await this.createDonation(funding, createDonationDto, user);
   }
 
-  /**
-   * 사용자는 새 Donation을 바로 만들 수 없습니다. 예비후원이라는 의미의 ProvisionalDonation (줄여서 ProvDon)을
-   * 만들어 시스템에 제출하고 안내받은 계좌번호를 통해 입금을 해야합니다.
-   */
   async createDonation(
     funding: Funding,
     dto: CreateDonationDto,
     user: User,
-  ): Promise<ProvisionalDonation> {
-    return this.createProvisionalDonation.execute(
-      new CreateProvisionalDonationCommand(
-        dto.senderSig,
-        user.userId,
-        dto.donAmnt,
-        funding.fundId,
-      ),
+  ): Promise<Donation> {
+    const donation = new Donation(
+      funding,
+      user,
+      dto.donAmnt,
+      this.g2gException,
     );
+    return await this.donationRepo.save(donation);
   }
 
   async findMineAll(
