@@ -13,11 +13,12 @@ import { User } from 'src/entities/user.entity';
 import { Donation } from 'src/entities/donation.entity';
 import { Deposit } from './domain/entities/deposit.entity';
 import { ProvisionalDonation } from './domain/entities/provisional-donation.entity';
-import { CreateDonationUseCase } from '../donation/commands/create-donation.usecase';
 import { IncreaseFundSumUseCase } from '../funding/commands/increase-fundsum.usecase';
 import { NotificationService } from '../notification/notification.service';
 import { DecreaseFundSumUseCase } from '../funding/commands/decrease-fundsum.usecase';
 import { FindAllAdminsUseCase } from '../admin/queries/find-all-admins.usecase';
+import { DonationService } from '../donation/donation.service';
+import { ValidCheck } from 'src/util/valid-check';
 
 @Module({
   imports: [
@@ -38,11 +39,12 @@ import { FindAllAdminsUseCase } from '../admin/queries/find-all-admins.usecase';
     MatchDepositUseCase,
     GiftogetherExceptions,
     DepositEventHandler,
-    CreateDonationUseCase,
     IncreaseFundSumUseCase,
     DecreaseFundSumUseCase,
     NotificationService,
     FindAllAdminsUseCase,
+    DonationService,
+    ValidCheck,
   ],
 })
 export class DepositModule {}

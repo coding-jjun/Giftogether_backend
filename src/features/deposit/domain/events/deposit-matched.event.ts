@@ -1,9 +1,9 @@
 import { Deposit } from 'src/features/deposit/domain/entities/deposit.entity';
-import { ProvisionalDonation } from '../entities/provisional-donation.entity';
+import { Donation } from 'src/entities/donation.entity';
 
 export class DepositMatchedEvent {
   constructor(
     public readonly deposit: Deposit,
-    public readonly provisionalDonation: ProvisionalDonation,
+    public readonly donation: Donation,
   ) {}
 }
