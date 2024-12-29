@@ -39,7 +39,7 @@ export class AuthController {
   private cookieOptions = {
     httpOnly: true,
     path: '/',
-    secure: true,
+    secure: process.env.DEBUG === 'false',
     // sameSite: 'none' as 'none', // 크로스 도메인 요청을 허용하기 위해 none으로 설정
     domain: process.env.COOKIE_DOMAIN // 애플리케이션 도메인으로 설정
   };
