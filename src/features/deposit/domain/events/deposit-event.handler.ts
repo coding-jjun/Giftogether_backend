@@ -6,8 +6,6 @@ import { DepositUnmatchedEvent } from './deposit-unmatched.event';
 import { NotificationService } from 'src/features/notification/notification.service';
 import { CreateNotificationDto } from 'src/features/notification/dto/create-notification.dto';
 import { NotiType } from 'src/enums/noti-type.enum';
-import { CreateDonationUseCase } from 'src/features/donation/commands/create-donation.usecase';
-import { CreateDonationCommand } from 'src/features/donation/commands/create-donation.command';
 import { IncreaseFundSumUseCase } from 'src/features/funding/commands/increase-fundsum.usecase';
 import { IncreaseFundSumCommand } from 'src/features/funding/commands/increase-fundsum.command';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
@@ -21,48 +19,40 @@ import { DepositRefundedEvent } from './deposit-refunded.event';
 import { DepositStatus } from 'src/enums/deposit-status.enum';
 import { DecreaseFundSumCommand } from 'src/features/funding/commands/decrease-fundsum.command';
 import { DepositDeletedEvent } from './deposit-deleted.event';
-import { ProvisionalDonation } from '../entities/provisional-donation.entity';
-import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
+import { DonationStatus } from 'src/enums/donation-status.enum';
+import { InvalidStatus } from 'src/exceptions/invalid-status';
 
 @Injectable()
 export class DepositEventHandler {
   constructor(
     private readonly g2gException: GiftogetherExceptions,
-    private readonly createDonation: CreateDonationUseCase,
     private readonly increaseFundSum: IncreaseFundSumUseCase,
     private readonly decreaseFundSum: DecreaseFundSumUseCase,
     private readonly notiService: NotificationService,
     @InjectRepository(Deposit)
     private readonly depositRepo: Repository<Deposit>,
-    @InjectRepository(ProvisionalDonation)
-    private readonly provDonRepo: Repository<ProvisionalDonation>,
     private readonly findAllAdmins: FindAllAdminsUseCase,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
-   * 1. 정식 후원 내역에 한 건 추가합니다.
-   * 2. 펀딩의 달성 금액이 업데이트 됩니다 `Funding.fundSum`
-   * 3. 후원자에게 알림을 보냅니다. `DonationSucessNotification`
-   * 4. 펀딩주인에게 알림을 보냅니다. `NewDonate`
+   * 1. 펀딩의 달성 금액이 업데이트 됩니다 `Funding.fundSum`
+   * 2. 후원자에게 알림을 보냅니다. `DonationSucessNotification`
+   * 3. 펀딩주인에게 알림을 보냅니다. `NewDonate`
    */
   @OnEvent('deposit.matched')
   async handleDepositMatched(event: DepositMatchedEvent) {
-    const { deposit, provisionalDonation } = event;
-    const { funding, senderUser } = provisionalDonation;
-    // 1
-    await this.createDonation.execute(
-      new CreateDonationCommand(funding, deposit.amount, senderUser, deposit),
-    );
+    const { deposit, donation } = event;
+    const { funding, user } = donation;
 
-    // 2
+    // 1
     await this.increaseFundSum.execute(
       new IncreaseFundSumCommand(funding, deposit.amount),
     );
 
     // 3
     const createNotificationDtoForSender = new CreateNotificationDto({
-      recvId: senderUser.userId,
+      recvId: user.userId,
       sendId: undefined,
       notiType: NotiType.DonationSuccess,
       subId: funding.fundUuid,
@@ -72,7 +62,7 @@ export class DepositEventHandler {
     // 4
     const createNotificationDtoForReceiver = new CreateNotificationDto({
       recvId: funding.fundUser.userId,
-      sendId: provisionalDonation.senderUser.userId,
+      sendId: donation.user.userId,
       notiType: NotiType.NewDonate,
       subId: funding.fundUuid,
     });
@@ -84,23 +74,23 @@ export class DepositEventHandler {
   /**
    * - 조건: 보내는 분은 일치하지만 이체 금액이 다른 경우 → 부분 매칭
    *
-   * 1. 예비 후원의 상태가 '반려'인지 확인합니다.
+   * 1. 후원의 상태가 '반려'인지 확인합니다.
    * 2. 시스템은 후원자에게 반려 사유를 포함한 알림을 발송합니다.
    * 3. 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
    * 4. 관리자는 해당 건에 대해서 환불, 혹은 삭제 조치를 진행해야 합니다.
    */
   @OnEvent('deposit.partiallyMatched')
   async handleDepositPartiallyMatched(event: DepositPartiallyMatchedEvent) {
-    const { deposit, provDon } = event;
+    const { deposit, donation } = event;
 
     // 1
-    if (provDon.status !== ProvisionalDonationStatus.Rejected) {
-      throw this.g2gException.InvalidStatus;
+    if (donation.status !== DonationStatus.Rejected) {
+      throw new InvalidStatus();
     }
 
     // 2
     const notiDtoForSender = new CreateNotificationDto({
-      recvId: provDon.senderUser.userId,
+      recvId: donation.user.userId,
       sendId: null, // because system is sender
       notiType: NotiType.DonationPartiallyMatched,
       subId: deposit.depositId.toString(),
@@ -138,7 +128,7 @@ export class DepositEventHandler {
 
     // 1
     if (deposit.status !== DepositStatus.Orphan) {
-      throw this.g2gException.InvalidStatus;
+      throw new InvalidStatus();
     }
 
     // 2
