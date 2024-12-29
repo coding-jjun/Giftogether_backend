@@ -51,8 +51,19 @@ export class Donation {
   @IsInt()
   @Min(10_000)
   @Max(5_000_000)
-  @Column({ default: 10_000 })
-  donAmnt: number;
+  @Column({ default: 10_000, name: 'donAmnt' })
+  private donAmnt: number;
+
+  get amount(): number {
+    return this.donAmnt;
+  }
+
+  set amount(value: number) {
+    if (value < 10_000 || value > 5_000_000) {
+      throw new InconsistentAggregationError();
+    }
+    this.donAmnt = value;
+  }
 
   @CreateDateColumn()
   regAt: Date;
@@ -147,7 +158,7 @@ export class Donation {
     }
     this.funding = funding;
     this.user = senderUser;
-    this.donAmnt = amount;
+    this.amount = amount;
     this.donStat = DonationStatus.Approved;
     // this.orderId = require('order-id')('key').generate();
     this.orderId = OrderId('key').generate();
