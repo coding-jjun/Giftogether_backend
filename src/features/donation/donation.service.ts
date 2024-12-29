@@ -100,11 +100,14 @@ export class DonationService {
     fundUuid: string,
     createDonationDto: CreateDonationDto,
     user: User,
-  ): Promise<Donation> {
+  ): Promise<DonationDto> {
     const funding = await this.validFundingDate(fundUuid);
-    const provDon = await this.createDonation(funding, createDonationDto, user);
-    return new DonationDto(
+    const donation = await this.createDonation(
+      funding,
+      createDonationDto,
+      user,
     );
+    return new DonationDto(donation);
   }
 
   async createGuest(guest: CreateGuestDto): Promise<User> {
