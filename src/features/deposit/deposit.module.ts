@@ -19,6 +19,7 @@ import { DecreaseFundSumUseCase } from '../funding/commands/decrease-fundsum.use
 import { FindAllAdminsUseCase } from '../admin/queries/find-all-admins.usecase';
 import { DonationService } from '../donation/donation.service';
 import { ValidCheck } from 'src/util/valid-check';
+import { RollingPaper } from 'src/entities/rolling-paper.entity';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ValidCheck } from 'src/util/valid-check';
       Donation,
       Deposit,
       ProvisionalDonation,
+      RollingPaper,
     ]),
   ],
   controllers: [DepositController],

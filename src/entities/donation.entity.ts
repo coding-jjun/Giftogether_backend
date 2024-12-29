@@ -17,7 +17,7 @@ import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Deposit } from 'src/features/deposit/domain/entities/deposit.entity';
 import { InconsistentAggregationError } from 'src/exceptions/inconsistent-aggregation';
 import { truncateTime } from 'src/util/truncate-tiime';
-import OrderId from 'order-id';
+import orderId from 'order-id';
 
 @Entity()
 export class Donation {
@@ -40,7 +40,7 @@ export class Donation {
     enum: DonationStatus,
     default: DonationStatus.Pending,
   })
-  private donStat: DonationStatus;
+  donStat: DonationStatus;
 
   public get status(): DonationStatus {
     return this.donStat;
@@ -53,7 +53,7 @@ export class Donation {
   @Min(10_000)
   @Max(5_000_000)
   @Column({ default: 10_000, name: 'donAmnt' })
-  private donAmnt: number;
+  donAmnt: number;
 
   get amount(): number {
     return this.donAmnt;
@@ -129,7 +129,7 @@ export class Donation {
     this.delAt = new Date(Date.now()); // softDelete까지 수행함.
   }
 
-  private calculateExpirationDate(): Date {
+  private static calculateExpirationDate(): Date {
     const expiration = truncateTime(new Date());
     expiration.setDate(expiration.getDate() + 3);
     return expiration;
@@ -142,31 +142,38 @@ export class Donation {
    * [노션 문서](https://www.notion.so/c3cd436359344df6b60bfaed9bdbf784?pvs=4) 참고
    * @param username 입금자명
    */
-  private generateSenderSig(username: string): string {
+  private static generateSenderSig(username: string): string {
     const signature: string = Math.round(Math.random() * 100).toString();
     const delimeter = '-';
     return username + delimeter + signature;
   }
 
-  constructor(
-    funding: Funding,
-    senderUser: User,
+  protected constructor(args: Partial<Donation>) {
+    Object.assign(this, args);
+  }
+
+  static create(
+    fundId: number,
+    fundGoal: number,
+    userId: number,
+    userName: string,
     amount: number,
     g2gException: GiftogetherExceptions,
-  ) {
-    if (amount > funding.fundGoal) {
+  ): Donation {
+    if (amount > fundGoal) {
       // [정책] 후원금액의 최대치는 펀딩금액을 넘지 못합니다.
       throw g2gException.DonationAmountExceeded;
     }
-    this.funding = funding;
-    this.user = senderUser;
-    this.amount = amount;
-    this.donStat = DonationStatus.Pending;
-    // this.orderId = require('order-id')('key').generate();
-    this.orderId = OrderId('key').generate();
-    this.senderSig = this.generateSenderSig(this.user.userName);
-    this.donStat = DonationStatus.Pending;
-    this.expirationDate = this.calculateExpirationDate();
+
+    return new Donation({
+      funding: { fundId } as Funding,
+      user: { userId } as User,
+      amount: amount,
+      donStat: DonationStatus.Pending,
+      orderId: orderId('key').generate(),
+      senderSig: this.generateSenderSig(userName),
+      expirationDate: this.calculateExpirationDate(),
+    });
 
     // TODO - Add RollingPaper for inner object
   }

@@ -147,9 +147,11 @@ export class DonationService {
     dto: CreateDonationDto,
     user: User,
   ): Promise<Donation> {
-    const donation = new Donation(
-      funding,
-      user,
+    const donation = Donation.create(
+      funding.fundId,
+      funding.fundGoal,
+      user.userId,
+      user.userName,
       dto.donAmnt,
       this.g2gException,
     );
