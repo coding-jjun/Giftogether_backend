@@ -159,7 +159,7 @@ export class Donation {
     this.funding = funding;
     this.user = senderUser;
     this.amount = amount;
-    this.donStat = DonationStatus.Approved;
+    this.donStat = DonationStatus.Pending;
     // this.orderId = require('order-id')('key').generate();
     this.orderId = OrderId('key').generate();
     this.senderSig = this.generateSenderSig(this.user.userName);
