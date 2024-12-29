@@ -16,6 +16,8 @@ import { DefaultImageId } from 'src/enums/default-image-id';
 import * as bcrypt from 'bcrypt';
 import { DonationDto } from './dto/donation.dto';
 import { RollingPaper } from 'src/entities/rolling-paper.entity';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DonationCreated } from './domain/events/donation-created.event';
 
 @Injectable()
 export class DonationService {
@@ -35,6 +37,8 @@ export class DonationService {
     private readonly g2gException: GiftogetherExceptions,
 
     private readonly validCheck: ValidCheck,
+
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async getAllDonations(userId: number): Promise<Donation[]> {
@@ -149,7 +153,12 @@ export class DonationService {
       dto.donAmnt,
       this.g2gException,
     );
-    return await this.donationRepo.save(donation);
+
+    await this.donationRepo.insert(donation);
+
+    this.eventEmitter.emit('donation.created', new DonationCreated(donation));
+
+    return donation;
   }
 
   async findMineAll(
