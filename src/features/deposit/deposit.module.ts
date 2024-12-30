@@ -19,6 +19,7 @@ import { FindAllAdminsUseCase } from '../admin/queries/find-all-admins.usecase';
 import { DonationService } from '../donation/donation.service';
 import { ValidCheck } from 'src/util/valid-check';
 import { RollingPaper } from 'src/entities/rolling-paper.entity';
+import { RelateDonationWithDepositUseCase } from '../donation/commands/relate-donation-with-deposit.usecase';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { RollingPaper } from 'src/entities/rolling-paper.entity';
     FindAllAdminsUseCase,
     DonationService,
     ValidCheck,
+    RelateDonationWithDepositUseCase,
   ],
 })
 export class DepositModule {}

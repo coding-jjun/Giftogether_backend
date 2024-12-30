@@ -21,6 +21,7 @@ import { DecreaseFundSumCommand } from 'src/features/funding/commands/decrease-f
 import { DepositDeletedEvent } from './deposit-deleted.event';
 import { DonationStatus } from 'src/enums/donation-status.enum';
 import { InvalidStatus } from 'src/exceptions/invalid-status';
+import { RelateDonationWithDepositUseCase } from 'src/features/donation/commands/relate-donation-with-deposit.usecase';
 
 @Injectable()
 export class DepositEventHandler {
@@ -33,12 +34,14 @@ export class DepositEventHandler {
     private readonly depositRepo: Repository<Deposit>,
     private readonly findAllAdmins: FindAllAdminsUseCase,
     private readonly eventEmitter: EventEmitter2,
+    private readonly relateDonationWithDeposit: RelateDonationWithDepositUseCase,
   ) {}
 
   /**
-   * 1. 펀딩의 달성 금액이 업데이트 됩니다 `Funding.fundSum`
-   * 2. 후원자에게 알림을 보냅니다. `DonationSucessNotification`
-   * 3. 펀딩주인에게 알림을 보냅니다. `NewDonate`
+   * 1. 매치된 Donation에 deposit이 연결됩니다.
+   * 2. 펀딩의 달성 금액이 업데이트 됩니다 `Funding.fundSum`
+   * 3. 후원자에게 알림을 보냅니다. `DonationSucessNotification`
+   * 4. 펀딩주인에게 알림을 보냅니다. `NewDonate`
    */
   @OnEvent('deposit.matched', { async: true })
   async handleDepositMatched(event: DepositMatchedEvent) {
@@ -46,6 +49,12 @@ export class DepositEventHandler {
     const { funding, user } = donation;
 
     // 1
+    await this.relateDonationWithDeposit.execute(
+      deposit.senderSig,
+      deposit.depositId,
+    );
+
+    // 2
     await this.increaseFundSum.execute(
       new IncreaseFundSumCommand(funding, deposit.amount),
     );

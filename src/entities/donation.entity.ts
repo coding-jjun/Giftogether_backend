@@ -130,6 +130,14 @@ export class Donation {
     this.delAt = new Date(Date.now()); // softDelete까지 수행함.
   }
 
+  relateToDeposit(depositId: number) {
+    if (this.deposit) {
+      // 이미 deposit이 연관돼 있는경우
+      throw new InconsistentAggregationError();
+    }
+    this.deposit = { depositId } as Deposit;
+  }
+
   private static calculateExpirationDate(): Date {
     const expiration = truncateTime(new Date());
     expiration.setDate(expiration.getDate() + 3);
