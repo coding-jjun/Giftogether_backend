@@ -49,6 +49,7 @@ describe('Deposit API E2E Test', () => {
   let mockFunding: Funding;
   let mockFundingOwner: User;
   let mockDonor: User;
+  let mockDonation: Donation;
   let g2gException: GiftogetherExceptions;
   let eventEmitter: EventEmitter2;
 
@@ -98,14 +99,33 @@ describe('Deposit API E2E Test', () => {
       fundRecvPhone: '',
       endAt: new Date('9999-12-31'),
     } as Funding);
+
+    mockDonation = await donationRepo.save({
+      donId: 1,
+      funding: mockFunding,
+      user: mockDonor,
+      deposit: null, // 아직은 없는 상태
+      orderId: '123-456-789',
+      donAmnt: 1000,
+      expirationDate: new Date(),
+      senderSig: '후원자-12',
+    } as Donation);
   });
 
   beforeEach(async () => {
-    await donationRepo.delete({});
     await depositRepo.delete({});
   });
 
-  it('should succesfully create mock entities (funding, user)', () => {});
+  it('should succesfully create mock entities (funding, user)', async () => {
+    const foundUsers = await userRepo.find({});
+    expect(foundUsers).toHaveLength(2);
+
+    const foundFundings = await fundingRepo.find({});
+    expect(foundFundings).toHaveLength(1);
+
+    const foundDonations = await donationRepo.find({});
+    expect(foundDonations).toHaveLength(1);
+  });
 
   describe('POST /deposits', () => {
     it('should handle matched deposit', async () => {
@@ -122,7 +142,6 @@ describe('Deposit API E2E Test', () => {
           withdrawalAccount: '8765-4321',
         })
         .expect(201);
-
 
       // 이체내역의 상태가 Matched이어야 합니다.
       const foundDeposits = await depositRepo.find({
@@ -209,7 +228,6 @@ describe('Deposit API E2E Test', () => {
             } as CommonResponse),
           );
         });
-
     });
   });
 
