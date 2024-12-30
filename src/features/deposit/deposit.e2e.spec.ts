@@ -25,6 +25,7 @@ import { EventModule } from '../event/event.module';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { waitForEventJobs } from 'src/tests/wait-for-events';
 import { NotiType } from 'src/enums/noti-type.enum';
+import { DonationStatus } from 'src/enums/donation-status.enum';
 
 const entities = [
   Deposit,
@@ -106,7 +107,7 @@ describe('Deposit API E2E Test', () => {
       user: mockDonor,
       deposit: null, // 아직은 없는 상태
       orderId: '123-456-789',
-      donAmnt: 1000,
+      donAmnt: 10000,
       expirationDate: new Date(),
       senderSig: '후원자-12',
     } as Donation);
@@ -129,7 +130,7 @@ describe('Deposit API E2E Test', () => {
 
   describe('POST /deposits', () => {
     it('should handle matched deposit', async () => {
-      const senderSig = 'HONG-1234';
+      const senderSig = '후원자-12';
       await request(app.getHttpServer())
         .post('/deposits')
         .send({
@@ -153,19 +154,21 @@ describe('Deposit API E2E Test', () => {
       // Wait until 'deposit.matched.finished'
       await waitForEventJobs(eventEmitter, 'deposit.matched.finished');
 
-      // Donation 하나가 새로 생성되어야 합니다.
+      // Donation 상태가 Approved가 되어야 합니다.
       const foundDonations = await donationRepo.find({
         where: {
-          user: mockDonor,
+          donId: mockDonation.donId,
         },
       });
-      expect(foundDonations.length).toBe(1);
+      expect(foundDonations).toHaveLength(1);
+      expect(foundDonations[0].status).toBe(DonationStatus.Approved.toString());
 
       // Funding 의 fundSum이 수정되어야 합니다.
       const foundFundings = await fundingRepo.find({
         where: { fundId: mockFunding.fundId },
       });
       expect(foundFundings.length).toBe(1);
+      expect(foundFundings[0].fundSum).toBe(mockDonation.donAmnt);
 
       // Notification이 두개 생성되어야 합니다.
       const foundNotis = await notiRepo.find();
