@@ -14,6 +14,10 @@ export class ApproveDonationUseCase {
 
   async execute(donId: number): Promise<void> {
     const foundDonation = await this.donationRepo.findOne({ where: { donId } });
+    if (!foundDonation) {
+      throw this.g2gException.DonationNotExists;
+    }
     foundDonation.approve(this.g2gException);
+    await this.donationRepo.save(foundDonation);
   }
 }
