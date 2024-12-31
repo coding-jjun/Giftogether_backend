@@ -22,6 +22,7 @@ import { DepositDeletedEvent } from './deposit-deleted.event';
 import { DonationStatus } from 'src/enums/donation-status.enum';
 import { InvalidStatus } from 'src/exceptions/invalid-status';
 import { RelateDonationWithDepositUseCase } from 'src/features/donation/commands/relate-donation-with-deposit.usecase';
+import { ApproveDonationUseCase } from 'src/features/donation/commands/approve-donation.usecase';
 
 @Injectable()
 export class DepositEventHandler {
@@ -35,49 +36,60 @@ export class DepositEventHandler {
     private readonly findAllAdmins: FindAllAdminsUseCase,
     private readonly eventEmitter: EventEmitter2,
     private readonly relateDonationWithDeposit: RelateDonationWithDepositUseCase,
+    private readonly approveDonation: ApproveDonationUseCase,
   ) {}
 
   /**
    * 1. 매치된 Donation에 deposit이 연결됩니다.
-   * 2. 펀딩의 달성 금액이 업데이트 됩니다 `Funding.fundSum`
-   * 3. 후원자에게 알림을 보냅니다. `DonationSucessNotification`
-   * 4. 펀딩주인에게 알림을 보냅니다. `NewDonate`
+   * 2. Donation의 상태를 Approved로 변경됩니다.
+   * 3. 펀딩의 달성 금액이 업데이트 됩니다 `Funding.fundSum`
+   * 4. 후원자에게 알림을 보냅니다. `DonationSucessNotification`
+   * 5. 펀딩주인에게 알림을 보냅니다. `NewDonate`
    */
   @OnEvent('deposit.matched', { async: true })
   async handleDepositMatched(event: DepositMatchedEvent) {
     const { deposit, donation } = event;
     const { funding, user } = donation;
 
-    // 1
-    await this.relateDonationWithDeposit.execute(
-      deposit.senderSig,
-      deposit.depositId,
-    );
+    // Promise.all을 하는 이유는 순서가 크게 중요하지 않기 때문입니다. Donation, Funding, Notification전부
+    // Deposit과 Eventual Consistency를 가지고 있기 때문입니다.
+    Promise.all([
+      // 1
+      this.relateDonationWithDeposit.execute(
+        deposit.senderSig,
+        deposit.depositId,
+      ),
 
-    // 2
-    await this.increaseFundSum.execute(
-      new IncreaseFundSumCommand(funding, deposit.amount),
-    );
+      // 2
+      this.approveDonation.execute(donation.donId),
 
-    // 3
-    const createNotificationDtoForSender = new CreateNotificationDto({
-      recvId: user.userId,
-      sendId: undefined,
-      notiType: NotiType.DonationSuccess,
-      subId: funding.fundUuid,
-    });
-    await this.notiService.createNoti(createNotificationDtoForSender);
+      // 3
+      await this.increaseFundSum.execute(
+        new IncreaseFundSumCommand(funding, deposit.amount),
+      ),
 
-    // 4
-    const createNotificationDtoForReceiver = new CreateNotificationDto({
-      recvId: funding.fundUser.userId,
-      sendId: donation.user.userId,
-      notiType: NotiType.NewDonate,
-      subId: funding.fundUuid,
-    });
-    await this.notiService.createNoti(createNotificationDtoForReceiver);
+      // 4
+      this.notiService.createNoti(
+        new CreateNotificationDto({
+          recvId: user.userId,
+          sendId: undefined,
+          notiType: NotiType.DonationSuccess,
+          subId: funding.fundUuid,
+        }),
+      ),
 
-    this.eventEmitter.emit('deposit.matched.finished');
+      // 5
+      this.notiService.createNoti(
+        new CreateNotificationDto({
+          recvId: funding.fundUser.userId,
+          sendId: donation.user.userId,
+          notiType: NotiType.NewDonate,
+          subId: funding.fundUuid,
+        }),
+      ),
+    ])
+      .then(() => this.eventEmitter.emit('deposit.matched.finished'))
+      .catch(() => {});
   }
 
   /**
