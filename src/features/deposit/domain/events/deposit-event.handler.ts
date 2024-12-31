@@ -19,10 +19,10 @@ import { DepositRefundedEvent } from './deposit-refunded.event';
 import { DepositStatus } from 'src/enums/deposit-status.enum';
 import { DecreaseFundSumCommand } from 'src/features/funding/commands/decrease-fundsum.command';
 import { DepositDeletedEvent } from './deposit-deleted.event';
-import { DonationStatus } from 'src/enums/donation-status.enum';
 import { InvalidStatus } from 'src/exceptions/invalid-status';
 import { RelateDonationWithDepositUseCase } from 'src/features/donation/commands/relate-donation-with-deposit.usecase';
 import { ApproveDonationUseCase } from 'src/features/donation/commands/approve-donation.usecase';
+import { RejectDonationUseCase } from 'src/features/donation/commands/reject-donation.usecase';
 
 @Injectable()
 export class DepositEventHandler {
@@ -37,6 +37,7 @@ export class DepositEventHandler {
     private readonly eventEmitter: EventEmitter2,
     private readonly relateDonationWithDeposit: RelateDonationWithDepositUseCase,
     private readonly approveDonation: ApproveDonationUseCase,
+    private readonly rejectDonation: RejectDonationUseCase,
   ) {}
 
   /**
@@ -95,43 +96,53 @@ export class DepositEventHandler {
   /**
    * - 조건: 보내는 분은 일치하지만 이체 금액이 다른 경우 → 부분 매칭
    *
-   * 1. 후원의 상태가 '반려'인지 확인합니다.
-   * 2. 시스템은 후원자에게 반려 사유를 포함한 알림을 발송합니다.
-   * 3. 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
-   * 4. 관리자는 해당 건에 대해서 환불, 혹은 삭제 조치를 진행해야 합니다.
+   * 1. Donation과 Deposit을 연결합니다.
+   * 2. Donation의 상태를 Rejected로 변경합니다.
+   * 3. 시스템은 후원자에게 반려 사유를 포함한 알림을 발송합니다.
+   * 4. 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
+   * 5. 관리자는 해당 건에 대해서 환불, 혹은 삭제 조치를 진행해야 합니다.
    */
   @OnEvent('deposit.partiallyMatched', { async: true })
   async handleDepositPartiallyMatched(event: DepositPartiallyMatchedEvent) {
     const { deposit, donation } = event;
 
-    // 1
-    if (donation.status !== DonationStatus.Rejected) {
-      throw new InvalidStatus();
-    }
+    Promise.all([
+      // 1
+      this.relateDonationWithDeposit.execute(
+        deposit.senderSig,
+        deposit.depositId,
+      ),
 
-    // 2
-    const notiDtoForSender = new CreateNotificationDto({
-      recvId: donation.user.userId,
-      sendId: null, // because system is sender
-      notiType: NotiType.DonationPartiallyMatched,
-      subId: deposit.depositId.toString(),
-    });
-    this.notiService.createNoti(notiDtoForSender);
+      // 2
+      this.rejectDonation.execute(donation.donId),
 
-    // 3
-    this.findAllAdmins.execute().then((admins: User[]) => {
-      admins.forEach((admin: User) => {
-        const notiDto = new CreateNotificationDto({
-          recvId: admin.userId,
-          sendId: null, // because the system is sender
+      // 3
+      () => {
+        const notiDtoForSender = new CreateNotificationDto({
+          recvId: donation.user.userId,
+          sendId: null, // because system is sender
           notiType: NotiType.DonationPartiallyMatched,
           subId: deposit.depositId.toString(),
         });
-        this.notiService.createNoti(notiDto);
-      });
-    });
+        this.notiService.createNoti(notiDtoForSender);
+      },
 
-    // 3은 관리자 중 한명이 업무를 처리하여 삭제하던, 환불조치를 취하던 ACT가 발생한
+      // 4
+      // !FIXME: 한 번의 쿼리로 실행할 수 있게 해주세요
+      this.findAllAdmins.execute().then((admins: User[]) => {
+        admins.forEach((admin: User) => {
+          const notiDto = new CreateNotificationDto({
+            recvId: admin.userId,
+            sendId: null, // because the system is sender
+            notiType: NotiType.DonationPartiallyMatched,
+            subId: deposit.depositId.toString(),
+          });
+          this.notiService.createNoti(notiDto);
+        });
+      }),
+    ]);
+
+    // 관리자 중 한명이 업무를 처리하여 삭제하던, 환불조치를 취하던 ACT가 발생한
     // 이후에 처리해야 합니다. DepositEventHandler는 Unmatched된 입금내역에 대한
     // 사후처리를 책임져야 합니다.
   }

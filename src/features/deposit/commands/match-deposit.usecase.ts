@@ -70,13 +70,12 @@ export class MatchDepositUseCase {
        *
        * 보내는 분은 일치하지만 이체 금액이 다른 경우
        * 조치:
-       *  - 후원의 상태를 ‘반려’로 변경합니다.
-       *  - 시스템은 후원자에게 반려 사유를 포함한 알림을 발송합니다.
-       *  - 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
-       *  - 관리자는 해당 건에 대해서 환불 조치를 진행해야 합니다.
+       *  - Deposit의 상태를 PartiallyMatched로 변경합니다.
+       *  - Donation, Notification 작업은 deposit-event-handler에서 확인바랍니다.
        */
-      donation.reject(this.g2gException);
-      await this.donationRepo.save(donation);
+
+      deposit.partiallyMatched(this.g2gException);
+      await this.depositRepo.save(deposit);
 
       this.eventEmitter.emit(
         'deposit.partiallyMatched',

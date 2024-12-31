@@ -79,6 +79,13 @@ export class Deposit {
     this._status = DepositStatus.Matched;
   }
 
+  partiallyMatched(g2gException: GiftogetherExceptions) {
+    if (this._status !== DepositStatus.Unmatched) {
+      throw g2gException.InvalidStatusChange;
+    }
+    this._status = DepositStatus.PartiallyMatched;
+  }
+
   refund(g2gException: GiftogetherExceptions) {
     if (
       this._status in
