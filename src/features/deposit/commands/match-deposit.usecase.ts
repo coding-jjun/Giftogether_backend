@@ -8,7 +8,6 @@ import { DepositPartiallyMatchedEvent } from '../domain/events/deposit-partially
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GetDonationBySenderSigUseCase } from 'src/features/donation/queries/get-donation-by-sender-sig.usecase';
-import { RelateDonationWithDepositUseCase } from 'src/features/donation/commands/relate-donation-with-deposit.usecase';
 
 @Injectable()
 export class MatchDepositUseCase {
@@ -21,8 +20,6 @@ export class MatchDepositUseCase {
     private readonly g2gException: GiftogetherExceptions,
 
     private readonly getDonationBySenderSig: GetDonationBySenderSigUseCase,
-
-    private readonly relateDonationWithDeposit: RelateDonationWithDepositUseCase,
   ) {}
 
   async execute(deposit: Deposit): Promise<void> {
@@ -55,11 +52,9 @@ export class MatchDepositUseCase {
        * ## 일치
        *
        * 보내는 분 (실명 + 고유번호)과 이체 금액이 예비 후원과 일치하는 경우
-       * 조치:
-       *  - 후원과 이체내역을 서로 연결합니다.
-       *  - 후원과 이체내역의 상태를 ‘승인’으로 변경합니다.
-       *  - 펀딩의 달성 금액이 업데이트 됩니다.
-       *  - 후원자에게 후원이 정상적으로 처리되었음을 알리는 알림을 발송합니다.
+       * 조치
+       *  - Deposit의 상태를 Matched로 변경
+       *  - Donation, Funding, Notification 작업은 deposit-event-handler에서 확인바랍니다.
        */
 
       deposit.matched(this.g2gException);
