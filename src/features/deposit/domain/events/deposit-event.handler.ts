@@ -140,7 +140,9 @@ export class DepositEventHandler {
           this.notiService.createNoti(notiDto);
         });
       }),
-    ]);
+    ])
+      .then(() => this.eventEmitter.emit('deposit.partiallyMatched.finished'))
+      .catch(() => {});
 
     // 관리자 중 한명이 업무를 처리하여 삭제하던, 환불조치를 취하던 ACT가 발생한
     // 이후에 처리해야 합니다. DepositEventHandler는 Unmatched된 입금내역에 대한

@@ -212,11 +212,12 @@ describe('Deposit API E2E Test', () => {
     });
 
     it('should handle partially matched deposit', async () => {
+      const senderSig = '후원자-12';
       await request(app.getHttpServer())
         .post('/deposits')
         .send({
-          senderSig: 'PARK-1234',
-          amount: 10000,
+          senderSig,
+          amount: 10001, // Wrong amount!!!
           receiver: 'GIFTOGETHER',
           transferDate: new Date(),
           depositBank: 'KB',
@@ -231,6 +232,16 @@ describe('Deposit API E2E Test', () => {
             } as CommonResponse),
           );
         });
+
+      await waitForEventJobs(eventEmitter, 'deposit.partiallyMatched.finished');
+
+      const foundDeposits = await depositRepo.find({});
+      expect(foundDeposits).toHaveLength(1);
+      expect(foundDeposits[0].status).toBe(DepositStatus.PartiallyMatched);
+
+      const foundDonations = await donationRepo.find({});
+      expect(foundDonations).toHaveLength(1);
+      expect(foundDonations[0].status).toBe(DonationStatus.Rejected);
     });
   });
 
