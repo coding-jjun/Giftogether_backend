@@ -52,8 +52,9 @@ export class DepositEventHandler {
     const { deposit, donation } = event;
     const { funding, user } = donation;
 
-    // Promise.all을 하는 이유는 순서가 크게 중요하지 않기 때문입니다. Donation, Funding, Notification전부
-    // Deposit과 Eventual Consistency를 가지고 있기 때문입니다.
+    // Promise.all을 사용하는 이유는 순서가 중요하지 않은 병렬 작업을 효율적으로 처리하기 위해서입니다.
+    // 또한, 모든 작업이 완료된 후 'deposit.matched.finished' 이벤트를 발생시키기 위해 사용됩니다.
+    // Donation, Funding, Notification은 Deposit과 Eventual Consistency를 유지하므로, 작업 순서 의존성이 없습니다.
     Promise.all([
       // 1
       this.relateDonationWithDeposit.execute(
@@ -65,7 +66,7 @@ export class DepositEventHandler {
       this.approveDonation.execute(donation.donId),
 
       // 3
-      await this.increaseFundSum.execute(
+      this.increaseFundSum.execute(
         new IncreaseFundSumCommand(funding, deposit.amount),
       ),
 
