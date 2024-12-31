@@ -118,15 +118,15 @@ export class DepositEventHandler {
       this.rejectDonation.execute(donation.donId),
 
       // 3
-      () => {
+      new Promise((resolve) => {
         const notiDtoForSender = new CreateNotificationDto({
           recvId: donation.user.userId,
           sendId: null, // because system is sender
           notiType: NotiType.DonationPartiallyMatched,
           subId: deposit.depositId.toString(),
         });
-        this.notiService.createNoti(notiDtoForSender);
-      },
+        resolve(this.notiService.createNoti(notiDtoForSender));
+      }),
 
       // 4
       // !FIXME: 한 번의 쿼리로 실행할 수 있게 해주세요

@@ -242,6 +242,9 @@ describe('Deposit API E2E Test', () => {
       const foundDonations = await donationRepo.find({});
       expect(foundDonations).toHaveLength(1);
       expect(foundDonations[0].status).toBe(DonationStatus.Rejected);
+
+      const foundNotifications = await notiRepo.find({});
+      expect(foundNotifications.length).toBeGreaterThanOrEqual(1);
     });
   });
 
