@@ -20,6 +20,9 @@ import { DonationService } from '../donation/donation.service';
 import { ValidCheck } from 'src/util/valid-check';
 import { RollingPaper } from 'src/entities/rolling-paper.entity';
 import { RelateDonationWithDepositUseCase } from '../donation/commands/relate-donation-with-deposit.usecase';
+import { ApproveDonationUseCase } from '../donation/commands/approve-donation.usecase';
+import { RejectDonationUseCase } from '../donation/commands/reject-donation.usecase';
+import { GetDonationBySenderSigUseCase } from '../donation/queries/get-donation-by-sender-sig.usecase';
 
 @Module({
   imports: [
@@ -47,6 +50,10 @@ import { RelateDonationWithDepositUseCase } from '../donation/commands/relate-do
     DonationService,
     ValidCheck,
     RelateDonationWithDepositUseCase,
+    ApproveDonationUseCase,
+    RejectDonationUseCase,
+    RelateDonationWithDepositUseCase,
+    GetDonationBySenderSigUseCase,
   ],
 })
 export class DepositModule {}

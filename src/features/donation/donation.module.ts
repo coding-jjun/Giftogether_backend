@@ -12,6 +12,10 @@ import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { AuthModule } from '../auth/auth.module';
 import { ValidCheck } from 'src/util/valid-check';
 import { ImageModule } from '../image/image.module';
+import { ApproveDonationUseCase } from './commands/approve-donation.usecase';
+import { RejectDonationUseCase } from './commands/reject-donation.usecase';
+import { RelateDonationWithDepositUseCase } from './commands/relate-donation-with-deposit.usecase';
+import { GetDonationBySenderSigUseCase } from './queries/get-donation-by-sender-sig.usecase';
 
 @Module({
   imports: [
@@ -25,6 +29,10 @@ import { ImageModule } from '../image/image.module';
     RollingPaperService,
     GiftogetherExceptions,
     ValidCheck,
+    ApproveDonationUseCase,
+    RejectDonationUseCase,
+    RelateDonationWithDepositUseCase,
+    GetDonationBySenderSigUseCase,
   ],
 })
 export class DonationModule {}
