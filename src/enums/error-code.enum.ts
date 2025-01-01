@@ -6,6 +6,8 @@ export enum ErrorCode {
   // Donation
   FundingClosed = '0100',
   FundingNotClosed = '0101',
+  DonationNotExists = '0102',
+  DonationAmountExceeded = '0103',
 
   // Gift
   IncorrectGiftUrl = '0200',
@@ -71,4 +73,13 @@ export enum ErrorCode {
 
   // Validators
   InvalidUrl = '1400',
+
+  // Deposits
+  DepositUnmatched = '1500',
+  DepositPartiallyMatched = '1501',
+
+  // Generic
+  InvalidStatusChange = '1600',
+  InvalidStatus = '1800',
+  InconsistentAggregationError = '1700',
 }

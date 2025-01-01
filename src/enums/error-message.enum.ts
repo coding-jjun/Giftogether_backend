@@ -5,6 +5,8 @@ export enum ErrorMsg {
   // Donation
   FundingClosed = '이미 마감된 펀딩입니다.',
   FundingNotClosed = '아직 마감되지 않은 펀딩입니다.',
+  DonationNotExists = '존재하지 않는 후원입니다.',
+  DonationAmountExceeded = '후원금액이 펀딩목표치를 초과합니다.',
 
   // Gift
   IncorrectGiftUrl = '선물 URL이 유효하지 않습니다.',
@@ -69,4 +71,13 @@ export enum ErrorMsg {
 
   // Validators
   InvalidUrl = '유효한 URL이 아닙니다.',
+
+  // Deposits
+  DepositUnmatched = '입금내역이 어느 후원과도 매칭되지 않습니다.',
+  DepositPartiallyMatched = '입금내역과 후원금액이 서로 일치하지 않습니다.',
+
+  // Generic
+  InvalidStatusChange = '유효하지 않은 상태 변화입니다.',
+  InvalidStatus = '유효하지 않은 상태가 발견되었습니다.',
+  InconsistentAggregationError = '애그리게이션이 일관적이지 않습니다.',
 }
