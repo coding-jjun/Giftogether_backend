@@ -13,4 +13,8 @@ export class CreateNotificationDto {
 
   @IsOptional()
   subId?: string;
+
+  constructor(dto: Partial<CreateNotificationDto>) {
+    Object.assign(this, dto);
+  }
 }

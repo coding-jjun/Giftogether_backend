@@ -26,4 +26,7 @@ export class CreateDonationDto {
   @IsOptional()
   @IsNumber()
   defaultImgId?: number;
+
+  @IsString()
+  senderSig: string; // 홍길동-1234
 }

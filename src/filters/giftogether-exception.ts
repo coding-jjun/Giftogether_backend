@@ -41,6 +41,16 @@ export class GiftogetherExceptions {
     ErrorCode.FundingNotClosed,
     HttpStatus.BAD_REQUEST,
   );
+  DonationNotExists = new GiftogetherException(
+    ErrorMsg.DonationNotExists,
+    ErrorCode.DonationNotExists,
+    HttpStatus.NOT_FOUND,
+  );
+  DonationAmountExceeded = new GiftogetherException(
+    ErrorMsg.DonationAmountExceeded,
+    ErrorCode.DonationAmountExceeded,
+    HttpStatus.BAD_REQUEST,
+  );
 
   // Gift
   IncorrectGiftUrl = new GiftogetherException(
@@ -165,7 +175,7 @@ export class GiftogetherExceptions {
     HttpStatus.NOT_FOUND,
   );
   // Admin
-  
+
   SnsLoginBlocked = new GiftogetherException(
     ErrorMsg.SnsLoginBlocked,
     ErrorCode.SnsLoginBlocked,
@@ -269,6 +279,33 @@ export class GiftogetherExceptions {
   InvalidUrl = new GiftogetherException(
     ErrorMsg.InvalidUrl,
     ErrorCode.InvalidUrl,
+    HttpStatus.BAD_REQUEST,
+  );
+
+  // Deposits
+  DepositUnmatched = new GiftogetherException(
+    ErrorMsg.DepositUnmatched,
+    ErrorCode.DepositUnmatched,
+    HttpStatus.BAD_REQUEST,
+  );
+
+  DepositPartiallyMatched = new GiftogetherException(
+    ErrorMsg.DepositPartiallyMatched,
+    ErrorCode.DepositPartiallyMatched,
+    HttpStatus.BAD_REQUEST,
+  );
+
+  // Generic
+
+  InvalidStatus = new GiftogetherException(
+    ErrorMsg.InvalidStatus,
+    ErrorCode.InvalidStatus,
+    HttpStatus.INTERNAL_SERVER_ERROR,
+  );
+
+  InvalidStatusChange = new GiftogetherException(
+    ErrorMsg.InvalidStatusChange,
+    ErrorCode.InvalidStatusChange,
     HttpStatus.BAD_REQUEST,
   );
 }

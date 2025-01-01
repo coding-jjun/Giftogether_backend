@@ -38,7 +38,7 @@ export class DonationController {
         data: await this.donationService.createUserDonation(
           fundUuid,
           createDonationDto,
-          user
+          user,
         ),
       };
     } catch (error) {
@@ -46,21 +46,32 @@ export class DonationController {
     }
   }
 
+  /**
+   * 이체시 사용할 고유식별번호를 요청합니다.
+   * @returns '보내는 분' 자리에 들어갈 이름과 식별번호 조합
+   */
+  @Get('/senderSig')
+  @UseGuards(JwtAuthGuard)
+  async createSenderSig(@Req() req: Request): Promise<CommonResponse> {
+    const user = req.user as { user: User } as any;
+    return {
+      message: 'senderSig 생성완료',
+      data: this.donationService.createSenderSig(user.userName),
+    };
+  }
+
   // 회원 후원 취소
   @Delete('/:donId')
   @UseGuards(JwtAuthGuard)
-  async deleteDonation(
-    @Req() req: Request,
-    @Param('donId') donId: number) {
-      const user = req.user as { user: User } as any;
+  async deleteDonation(@Req() req: Request, @Param('donId') donId: number) {
+    const user = req.user as { user: User } as any;
     return {
       message: 'Donation 삭제 성공',
       data: await this.donationService.deleteDonation(user.userId, donId),
     };
   }
 
-
-  // 비회원 후원 생성  
+  // 비회원 후원 생성
   @Post('/guest/:fundUuid')
   async createGuestDonation(
     @Param('fundUuid') fundUuid: string,
@@ -82,8 +93,8 @@ export class DonationController {
   // 비회원 후원내역 조회
   /**
    * 비회원용 토큰, 후원 내역 조히
-   * @param orderId 
-   * @returns 
+   * @param orderId
+   * @returns
    */
   @Get('/guest')
   @UseGuards(JwtAuthGuard)
@@ -104,5 +115,4 @@ export class DonationController {
       data: await this.donationService.deleteGuestDonation(orderId),
     };
   }
-
 }

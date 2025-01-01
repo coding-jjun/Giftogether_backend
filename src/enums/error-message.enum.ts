@@ -19,7 +19,7 @@ export enum ErrorMsg {
   // RollingPaper
 
   // Comment
-  CommentNotFound = "해당 댓글이 존재하지 않습니다.",
+  CommentNotFound = '해당 댓글이 존재하지 않습니다.',
 
   // Image
   IncorrectImageUrl = '이미지 URL이 유효하지 않습니다.',
@@ -33,10 +33,10 @@ export enum ErrorMsg {
   UserNotFound = '사용자 정보가 없습니다.',
   UserNotUpdated = '사용자 업데이트에 실패했습니다',
   UserAlreadyDeleted = '사용자가 이미 삭제됐습니다',
-  NotValidEmail = "이미 사용 중인 이메일 입니다.",
-  NotValidPhone = "이미 사용 중인 번호 입니다.",
-  NotValidNick = "이미 사용 중인 닉네임 입니다.",
-  PasswordIncorrect = "비밀번호가 틀렸습니다. 다시 시도해주세요.",
+  NotValidEmail = '이미 사용 중인 이메일 입니다.',
+  NotValidPhone = '이미 사용 중인 번호 입니다.',
+  NotValidNick = '이미 사용 중인 닉네임 입니다.',
+  PasswordIncorrect = '비밀번호가 틀렸습니다. 다시 시도해주세요.',
   UserFailedToCreate = '사용자 생성에 실패했습니다',
   UserAccessDenied = "접근 권한이 없는 요청입니다.",
   // Admin
