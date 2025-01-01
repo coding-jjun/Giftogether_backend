@@ -34,10 +34,10 @@
 DEBUG=
 
 # NODE
-TZ=Asia/Seoul
+TZ=
 
 # NestJS
-PORT=3000
+PORT=
 
 # AWS
 AWS_ACCESS_KEY_ID=
@@ -45,24 +45,48 @@ AWS_SECRET_ACCESS_KEY=
 AWS_S3_BUCKET_NAME=
 AWS_S3_REGION=
 AWS_S3_HOST=
+AWS_REGION=
+REGISTRY=
 
 # Postgres
 DB_HOST=
-DB_PORT=5432
+DB_PORT=
 # =============[ DEVELOP ]=============
-DB_DEV_DATABASE=postgres
-DB_DEV_USERNAME=postgres
+DB_DEV_DATABASE=
+DB_DEV_USERNAME=
 DB_DEV_PASSWORD=
 # =============[ PRODUCT ]=============
 DB_PROD_1_DATABASE=
 DB_PROD_1_USERNAME=
 DB_PROD_1_PASSWORD=
+# =============[ TEST ]=============
+DB_TEST_DATABASE=
+DB_TEST_USERNAME=
+DB_TEST_PASSWORD=
 
 # Auth
+# =============[ KAKAO ]=============
+KAKAO_CLIENT_ID=
+KAKAO_CLIENT_SECRET=
+KAKAO_CALLBACK_URI=
+
+# =============[ JWT ]=============
+JWT_SECRET=
+JWT_REFRESH_SECRET=
+
+# =============[ NAVER ]=============
+NAVER_CLIENT_ID=
+NAVER_CLIENT_SECRET=
+NAVER_CALLBACK_URI=
+
+# =============[ GOOGLE ]=============
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_CALLBACK_URI=
 
 # Redis
-REDIS_HOST=redis # 혹시 안되면 127.0.0.1로도 시도해보세요
-REDIS_PORT=6379
+REDIS_HOST=
+REDIS_PORT=
 REDIS_PASSWORD=
 
 # =============[ Redirect Url ]=============
@@ -72,8 +96,12 @@ COOKIE_DOMAIN=
 CORS_ORIGIN=
 
 # =============[ SSL ]=============
-SSL_CERTIFICATE_LOCATION=/etc/letsencrypt/live/xxxxxxxxxxxxxxxx/fullchain.pem
-SSL_KEY_LOCATION=/etc/letsencrypt/live/xxxxxxxxxxxxxxxx/privkey.pem
+SSL_CERTIFICATE_LOCATION=
+SSL_KEY_LOCATION=
+
+# =============[ Docker ]=============
+IMAGE_NAME=
+CONTAINER_NAME=
 ```
 
 ## docker/redis.conf 설정
