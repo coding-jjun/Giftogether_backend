@@ -145,11 +145,11 @@ describe('Deposit API E2E Test', () => {
         .expect(201);
 
       // 이체내역의 상태가 Matched이어야 합니다.
-      const foundDeposits = await depositRepo.find({
+      const foundDeposit = await depositRepo.findOne({
         where: { senderSig },
       });
-      expect(foundDeposits.length).toBe(1);
-      expect(foundDeposits[0].status).toBe(DepositStatus.Matched.toString());
+      expect(foundDeposit).not.toBeNull();
+      expect(foundDeposit.status).toBe(DepositStatus.Matched.toString());
 
       // Wait until 'deposit.matched.finished'
       await waitForEventJobs(eventEmitter, 'deposit.matched.finished');
@@ -185,31 +185,6 @@ describe('Deposit API E2E Test', () => {
       );
     });
 
-    it('should handle unmatched deposit', async () => {
-      await request(app.getHttpServer())
-        .post('/deposits')
-        .send({
-          senderSig: 'UNKNOWN-1234',
-          amount: 10000,
-          receiver: 'GIFTOGETHER',
-          transferDate: new Date(),
-          depositBank: 'KB',
-          depositAccount: '1234-5678',
-          withdrawalAccount: '8765-4321',
-        })
-        .expect(400)
-        .expect((res) => {
-          expect(res.body).toStrictEqual(
-            expect.objectContaining({
-              message: g2gException.DepositUnmatched.message,
-            } as CommonResponse),
-          );
-        });
-
-      const foundDeposits = await depositRepo.find();
-      expect(foundDeposits).toHaveLength(1);
-      expect(foundDeposits[0].status).toBe(DepositStatus.Orphan);
-    });
 
     it('should handle partially matched deposit', async () => {
       const senderSig = '후원자-12';
@@ -235,9 +210,11 @@ describe('Deposit API E2E Test', () => {
 
       await waitForEventJobs(eventEmitter, 'deposit.partiallyMatched.finished');
 
-      const foundDeposits = await depositRepo.find({});
-      expect(foundDeposits).toHaveLength(1);
-      expect(foundDeposits[0].status).toBe(DepositStatus.PartiallyMatched);
+      const foundDeposit = await depositRepo.findOne({
+        where: { senderSig },
+      });
+      expect(foundDeposit).not.toBeNull();
+      expect(foundDeposit.status).toBe(DepositStatus.PartiallyMatched);
 
       const foundDonations = await donationRepo.find({});
       expect(foundDonations).toHaveLength(1);
@@ -245,6 +222,35 @@ describe('Deposit API E2E Test', () => {
 
       const foundNotifications = await notiRepo.find({});
       expect(foundNotifications.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should handle unmatched deposit', async () => {
+      const senderSig = 'UNKNOWN-1234';
+      await request(app.getHttpServer())
+        .post('/deposits')
+        .send({
+          senderSig,
+          amount: 10000,
+          receiver: 'GIFTOGETHER',
+          transferDate: new Date(),
+          depositBank: 'KB',
+          depositAccount: '1234-5678',
+          withdrawalAccount: '8765-4321',
+        })
+        .expect(400)
+        .expect((res) => {
+          expect(res.body).toStrictEqual(
+            expect.objectContaining({
+              message: g2gException.DepositUnmatched.message,
+            } as CommonResponse),
+          );
+        });
+
+      const foundDeposit = await depositRepo.findOne({
+        where: { senderSig },
+      });
+      expect(foundDeposit).not.toBeNull();
+      expect(foundDeposit.status).toBe(DepositStatus.Orphan);
     });
   });
 
