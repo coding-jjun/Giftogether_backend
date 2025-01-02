@@ -1,11 +1,6 @@
 import { IEvent } from 'src/interfaces/event.interface';
 import { Command, Transition } from 'src/interfaces/transition.interface';
 
-interface FsmOutput<S> {
-  newState: S;
-  event: IEvent;
-}
-
 export class FiniteStateMachine<S> {
   constructor(
     private _state: S,
@@ -17,7 +12,7 @@ export class FiniteStateMachine<S> {
     return this._state;
   }
 
-  dispatch(command: Command): FsmOutput<S> {
+  dispatch(command: Command): IEvent {
     const transition = this.transitions.find(
       (t) => t.from === this.state && t.command === command,
     );
@@ -30,7 +25,7 @@ export class FiniteStateMachine<S> {
     }
 
     this._state = transition.to;
-    return { newState: this.state, event: transition.event } as FsmOutput<S>;
+    return transition.event;
   }
 
   isFinalState(): boolean {
