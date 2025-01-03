@@ -1,9 +1,7 @@
-export type Command = string;
-type Event = any;
+export type EventName = string;
 
 export interface Transition<State> {
   from: State;
   to: State;
-  command: Command;
-  event: Event;
+  event: EventName;
 }

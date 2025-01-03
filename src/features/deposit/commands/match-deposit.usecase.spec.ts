@@ -185,7 +185,7 @@ describe('MatchDepositUseCase', () => {
     // Assert
     expect(matchedSponsorship.status).toBe(ProvisionalDonationStatus.Approved);
     expect(eventEmitter.emit).toHaveBeenCalledWith(
-      'deposit.matched',
+      DepositMatchedEvent.name,
       expect.any(DepositMatchedEvent),
     );
   });
@@ -217,7 +217,7 @@ describe('MatchDepositUseCase', () => {
 
     expect(sponsorship).toBeNull(); // No exact match found
     expect(eventEmitter.emit).toHaveBeenCalledWith(
-      'deposit.partiallyMatched',
+      DepositPartiallyMatchedEvent.name,
       expect.any(DepositPartiallyMatchedEvent),
     );
   });
@@ -249,7 +249,7 @@ describe('MatchDepositUseCase', () => {
 
     expect(sponsorship).toBeNull(); // No match found
     expect(eventEmitter.emit).toHaveBeenCalledWith(
-      'deposit.unmatched',
+      DepositUnmatchedEvent.name,
       expect.any(DepositUnmatchedEvent),
     );
   });
