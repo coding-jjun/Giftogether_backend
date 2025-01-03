@@ -21,6 +21,7 @@ import { Address } from 'src/entities/address.entity';
 import { Image } from 'src/entities/image.entity';
 import { Gift } from 'src/entities/gift.entity';
 import { Donation } from 'src/entities/donation.entity';
+import { DepositFsmService } from '../domain/deposit-fsm.service';
 
 const entities = [
   ProvisionalDonation,
@@ -51,7 +52,11 @@ describe('MatchDepositUseCase', () => {
         TypeOrmModule.forFeature(entities),
       ],
       controllers: [],
-      providers: [GiftogetherExceptions, MatchDepositUseCase],
+      providers: [
+        GiftogetherExceptions,
+        MatchDepositUseCase,
+        DepositFsmService,
+      ],
     }).compile();
 
     matchDepositUseCase = module.get(MatchDepositUseCase);

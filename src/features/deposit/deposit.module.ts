@@ -18,6 +18,7 @@ import { IncreaseFundSumUseCase } from '../funding/commands/increase-fundsum.use
 import { NotificationService } from '../notification/notification.service';
 import { DecreaseFundSumUseCase } from '../funding/commands/decrease-fundsum.usecase';
 import { FindAllAdminsUseCase } from '../admin/queries/find-all-admins.usecase';
+import { DepositFsmService } from './domain/deposit-fsm.service';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { FindAllAdminsUseCase } from '../admin/queries/find-all-admins.usecase';
     DecreaseFundSumUseCase,
     NotificationService,
     FindAllAdminsUseCase,
+    DepositFsmService,
   ],
 })
 export class DepositModule {}
