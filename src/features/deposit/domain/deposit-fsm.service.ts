@@ -4,9 +4,10 @@ import { EventName, Transition } from 'src/interfaces/transition.interface';
 import { DepositMatchedEvent } from './events/deposit-matched.event';
 import { DepositUnmatchedEvent } from './events/deposit-unmatched.event';
 import { DepositRefundedEvent } from './events/deposit-refunded.event';
+import { IFsmService } from 'src/interfaces/fsm-service.interface';
 
 @Injectable()
-export class DepositFsmService {
+export class DepositFsmService implements IFsmService<State> {
   private readonly transitions: Transition<State>[] = [
     {
       from: State.Unmatched,
