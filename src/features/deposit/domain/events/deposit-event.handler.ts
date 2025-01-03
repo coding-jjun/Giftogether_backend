@@ -165,7 +165,7 @@ export class DepositEventHandler {
   async handleDepositRefunded(event: DepositRefundedEvent) {
     const { deposit } = event;
 
-    deposit.refund(this.g2gException);
+    // deposit.refund(this.g2gException); // !FIXME
 
     if (deposit.status === DepositStatus.Matched) {
       /**
@@ -189,7 +189,7 @@ export class DepositEventHandler {
   @OnEvent('deposit.deleted')
   async handleDepositDeleted(event: DepositDeletedEvent) {
     const { deposit } = event;
-    deposit.delete();
+    // deposit.delete(); // !FIXME
 
     this.depositRepo.save(deposit);
     this.depositRepo.softDelete(deposit.depositId);
