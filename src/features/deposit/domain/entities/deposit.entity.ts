@@ -12,6 +12,8 @@ import { IsInt, Min } from 'class-validator';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Donation } from 'src/entities/donation.entity';
 import { InconsistentAggregationError } from 'src/exceptions/inconsistent-aggregation';
+import { Command } from 'src/interfaces/transition.interface';
+import { DepositFsmService } from '../deposit-fsm.service';
 
 /**
  * 이체내역을 관리하는 엔티티 입니다.
@@ -61,55 +63,9 @@ export class Deposit {
     return this._status;
   }
 
-  orphan(g2gException: GiftogetherExceptions) {
-    if (this._status !== DepositStatus.Unmatched) {
-      throw g2gException.InvalidStatusChange;
-    }
-    this._status = DepositStatus.Orphan;
-  }
-
-  matched(g2gException: GiftogetherExceptions) {
-    if (this._status !== DepositStatus.Unmatched) {
-      throw g2gException.InvalidStatusChange;
-    }
-    this._status = DepositStatus.Matched;
-  }
-
-  refund(g2gException: GiftogetherExceptions) {
-    if (
-      this._status in
-      [
-        DepositStatus.Unmatched, //
-        DepositStatus.Refunded, //
-        DepositStatus.Deleted,
-      ]
-    ) {
-      throw g2gException.InvalidStatusChange;
-    }
-    if (this._status === DepositStatus.Matched) {
-      // Donation이 존재하는 상황!
-      if (!this.donation) {
-        throw new InconsistentAggregationError();
-      }
-      this.donation.refund(g2gException);
-    }
-    this._status = DepositStatus.Refunded;
-  }
-
-  /**
-   * Donation 엔티티와의 즉각적인 일관성이 필요합니다. Funding과는 느슨한 일관성을
-   * 유지해도 될 것 같습니다.
-   */
-  delete() {
-    if (this._status === DepositStatus.Matched) {
-      if (!this.donation) {
-        throw new InconsistentAggregationError();
-      }
-      // Deposit 없는 Donation은 존재하지 않기 때문에 Donation을 먼저 제거.
-      this.donation.delete();
-    }
-    this._status = DepositStatus.Deleted;
-    this.delAt = new Date(Date.now()); // softDelete까지 시켜버림
+  public transition(command: Command, fsmService: DepositFsmService) {
+    const newState = fsmService.transition(this.status, command);
+    this._status = newState;
   }
 
   @CreateDateColumn()
