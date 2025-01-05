@@ -21,6 +21,7 @@ import { Address } from 'src/entities/address.entity';
 import { Image } from 'src/entities/image.entity';
 import { Gift } from 'src/entities/gift.entity';
 import { Donation } from 'src/entities/donation.entity';
+import { DepositFsmService } from '../domain/deposit-fsm.service';
 
 const entities = [
   ProvisionalDonation,
@@ -51,7 +52,11 @@ describe('MatchDepositUseCase', () => {
         TypeOrmModule.forFeature(entities),
       ],
       controllers: [],
-      providers: [GiftogetherExceptions, MatchDepositUseCase],
+      providers: [
+        GiftogetherExceptions,
+        MatchDepositUseCase,
+        DepositFsmService,
+      ],
     }).compile();
 
     matchDepositUseCase = module.get(MatchDepositUseCase);
@@ -180,7 +185,7 @@ describe('MatchDepositUseCase', () => {
     // Assert
     expect(matchedSponsorship.status).toBe(ProvisionalDonationStatus.Approved);
     expect(eventEmitter.emit).toHaveBeenCalledWith(
-      'deposit.matched',
+      DepositMatchedEvent.name,
       expect.any(DepositMatchedEvent),
     );
   });
@@ -212,7 +217,7 @@ describe('MatchDepositUseCase', () => {
 
     expect(sponsorship).toBeNull(); // No exact match found
     expect(eventEmitter.emit).toHaveBeenCalledWith(
-      'deposit.partiallyMatched',
+      DepositPartiallyMatchedEvent.name,
       expect.any(DepositPartiallyMatchedEvent),
     );
   });
@@ -244,7 +249,7 @@ describe('MatchDepositUseCase', () => {
 
     expect(sponsorship).toBeNull(); // No match found
     expect(eventEmitter.emit).toHaveBeenCalledWith(
-      'deposit.unmatched',
+      DepositUnmatchedEvent.name,
       expect.any(DepositUnmatchedEvent),
     );
   });

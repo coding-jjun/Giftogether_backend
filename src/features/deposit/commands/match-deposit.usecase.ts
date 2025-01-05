@@ -8,6 +8,7 @@ import { ProvisionalDonation } from '../domain/entities/provisional-donation.ent
 import { DepositPartiallyMatchedEvent } from '../domain/events/deposit-partially-matched.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { DepositFsmService } from '../domain/deposit-fsm.service';
 
 @Injectable()
 export class MatchDepositUseCase {
@@ -21,6 +22,8 @@ export class MatchDepositUseCase {
     private readonly eventEmitter: EventEmitter2,
 
     private readonly g2gException: GiftogetherExceptions,
+
+    private readonly fsmService: DepositFsmService,
   ) {}
 
   async execute(deposit: Deposit): Promise<void> {
@@ -38,13 +41,12 @@ export class MatchDepositUseCase {
        *  - 입금 내역을 '고아 상태'로 표시합니다.
        *  - 관리자는 해당 건에 대해 확인 및 조치를 취해야 합니다.
        */
-      deposit.orphan(this.g2gException);
+      const event = new DepositUnmatchedEvent(deposit);
+
+      deposit.transition(event.name, this.fsmService);
       await this.depositRepo.save(deposit);
 
-      this.eventEmitter.emit(
-        'deposit.unmatched',
-        new DepositUnmatchedEvent(deposit),
-      );
+      this.eventEmitter.emit(event.name, event);
       throw this.g2gException.DepositUnmatched;
     }
 
@@ -62,13 +64,11 @@ export class MatchDepositUseCase {
       provDon.approve(this.g2gException);
       await this.provDonRepo.save(provDon);
 
-      deposit.matched(this.g2gException);
+      const event = new DepositMatchedEvent(deposit, provDon);
+      deposit.transition(event.name, this.fsmService);
       await this.depositRepo.save(deposit);
 
-      this.eventEmitter.emit(
-        'deposit.matched',
-        new DepositMatchedEvent(deposit, provDon),
-      );
+      this.eventEmitter.emit(event.name, event);
     } else {
       /**
        * ## 부분 매칭
@@ -83,10 +83,8 @@ export class MatchDepositUseCase {
       provDon.reject(this.g2gException);
       await this.provDonRepo.save(provDon);
 
-      this.eventEmitter.emit(
-        'deposit.partiallyMatched',
-        new DepositPartiallyMatchedEvent(deposit, provDon),
-      );
+      const event = new DepositPartiallyMatchedEvent(deposit, provDon);
+      this.eventEmitter.emit(event.name, event);
       throw this.g2gException.DepositPartiallyMatched;
     }
   }

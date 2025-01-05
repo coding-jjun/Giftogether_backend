@@ -1,9 +1,12 @@
 import { Deposit } from 'src/features/deposit/domain/entities/deposit.entity';
 import { ProvisionalDonation } from '../entities/provisional-donation.entity';
+import { BaseEvent } from 'src/interfaces/event.interface';
 
-export class DepositMatchedEvent {
+export class DepositMatchedEvent extends BaseEvent {
   constructor(
     public readonly deposit: Deposit,
     public readonly provisionalDonation: ProvisionalDonation,
-  ) {}
+  ) {
+    super();
+  }
 }
