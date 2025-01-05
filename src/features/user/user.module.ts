@@ -21,8 +21,9 @@ import { ValidCheck } from 'src/util/valid-check';
 import { AuthModule } from '../auth/auth.module';
 import { ImageService } from '../image/image.service';
 import { S3Service } from '../image/s3.service';
-import { FundingModule } from '../funding/funding.module';
 import { ImageInstanceManager } from '../image/image-instance-manager';
+import { CreateProvisionalDonationUseCase } from '../donation/commands/create-provisional-donation.usecase';
+import { ProvisionalDonation } from '../deposit/domain/entities/provisional-donation.entity';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ImageInstanceManager } from '../image/image-instance-manager';
       Gift,
       Donation,
       RollingPaper,
+      ProvisionalDonation,
     ]),
     AuthModule,
   ],
@@ -52,6 +54,7 @@ import { ImageInstanceManager } from '../image/image-instance-manager';
     ImageService,
     ImageInstanceManager,
     S3Service,
+    CreateProvisionalDonationUseCase,
   ],
   exports: [UserService],
 })
