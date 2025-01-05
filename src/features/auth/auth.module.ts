@@ -22,6 +22,8 @@ import { Nickname } from 'src/util/nickname';
 import { ImageService } from '../image/image.service';
 import { ImageInstanceManager } from '../image/image-instance-manager';
 import { TokenService } from './token.service';
+import { CreateProvisionalDonationUseCase } from '../donation/commands/create-provisional-donation.usecase';
+import { ProvisionalDonation } from '../deposit/domain/entities/provisional-donation.entity';
 
 @Module({
   imports: [
@@ -36,6 +38,7 @@ import { TokenService } from './token.service';
       Donation,
       RollingPaper,
       Funding,
+      ProvisionalDonation,
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
@@ -53,7 +56,8 @@ import { TokenService } from './token.service';
     Nickname,
     ImageService,
     ImageInstanceManager,
-    TokenService
+    TokenService,
+    CreateProvisionalDonationUseCase,
   ],
   exports: [PassportModule, AuthService, TokenService],
 })

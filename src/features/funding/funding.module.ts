@@ -21,6 +21,9 @@ import { AuthModule } from '../auth/auth.module';
 import { ImageService } from '../image/image.service';
 import { S3Service } from '../image/s3.service';
 import { ImageInstanceManager } from '../image/image-instance-manager';
+import { IncreaseFundSumUseCase } from './commands/increase-fundsum.usecase';
+import { ProvisionalDonation } from '../deposit/domain/entities/provisional-donation.entity';
+import { CreateProvisionalDonationUseCase } from '../donation/commands/create-provisional-donation.usecase';
 
 @Module({
   imports: [
@@ -34,6 +37,7 @@ import { ImageInstanceManager } from '../image/image-instance-manager';
       Notification,
       Donation,
       RollingPaper,
+      ProvisionalDonation,
     ]),
     AuthModule,
   ],
@@ -49,6 +53,8 @@ import { ImageInstanceManager } from '../image/image-instance-manager';
     ImageService,
     S3Service,
     ImageInstanceManager,
+    IncreaseFundSumUseCase,
+    CreateProvisionalDonationUseCase,
   ],
   exports: [FundingService],
 })
