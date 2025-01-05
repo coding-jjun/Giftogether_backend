@@ -14,12 +14,13 @@ import { Donation } from 'src/entities/donation.entity';
 import { InconsistentAggregationError } from 'src/exceptions/inconsistent-aggregation';
 import { EventName } from 'src/interfaces/transition.interface';
 import { IFsmService } from 'src/interfaces/fsm-service.interface';
+import { ITransitionDelegate } from './transition-delegate.interface';
 
 /**
  * 이체내역을 관리하는 엔티티 입니다.
  */
 @Entity()
-export class Deposit {
+export class Deposit implements ITransitionDelegate<DepositStatus> {
   @PrimaryGeneratedColumn()
   readonly depositId: number;
 
@@ -63,7 +64,10 @@ export class Deposit {
     return this._status;
   }
 
-  public transition(event: EventName, fsmService: IFsmService<DepositStatus>) {
+  public transition(
+    event: EventName,
+    fsmService: IFsmService<DepositStatus>,
+  ): void {
     const newState = fsmService.transition(this.status, event);
     this._status = newState;
   }
