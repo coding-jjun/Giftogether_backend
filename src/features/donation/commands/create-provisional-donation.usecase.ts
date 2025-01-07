@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ProvisionalDonation } from 'src/features/deposit/domain/entities/provisional-donation.entity';
+import { ProvisionalDonation } from 'src/entities/provisional-donation.entity';
 import { Repository } from 'typeorm';
 import { CreateProvisionalDonationCommand } from './create-provisional-donation.command';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';

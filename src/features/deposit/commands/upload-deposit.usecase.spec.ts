@@ -1,5 +1,5 @@
 import { UploadDepositUseCase } from './upload-deposit.usecase';
-import { Deposit } from '../domain/entities/deposit.entity';
+import { Deposit } from '../../../entities/deposit.entity';
 import { Repository } from 'typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';

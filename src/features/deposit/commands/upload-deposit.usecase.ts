@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Deposit } from '../domain/entities/deposit.entity';
+import { Deposit } from '../../../entities/deposit.entity';
 import { DepositDto } from '../dto/deposit.dto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';

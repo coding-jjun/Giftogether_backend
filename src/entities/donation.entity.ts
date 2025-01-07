@@ -13,7 +13,7 @@ import {
 } from 'typeorm';
 import { IsInt, Min } from 'class-validator';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
-import { Deposit } from 'src/features/deposit/domain/entities/deposit.entity';
+import { Deposit } from 'src/entities/deposit.entity';
 import { InconsistentAggregationError } from 'src/exceptions/inconsistent-aggregation';
 
 @Entity()

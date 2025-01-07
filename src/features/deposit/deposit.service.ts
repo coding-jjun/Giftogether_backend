@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UploadDepositUseCase } from './commands/upload-deposit.usecase';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { DepositDto } from './dto/deposit.dto';
-import { Deposit } from './domain/entities/deposit.entity';
+import { Deposit } from '../../entities/deposit.entity';
 
 @Injectable()
 export class DepositService {

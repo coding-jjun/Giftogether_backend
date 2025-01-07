@@ -23,7 +23,7 @@ import { ImageService } from '../image/image.service';
 import { S3Service } from '../image/s3.service';
 import { ImageInstanceManager } from '../image/image-instance-manager';
 import { CreateProvisionalDonationUseCase } from '../donation/commands/create-provisional-donation.usecase';
-import { ProvisionalDonation } from '../deposit/domain/entities/provisional-donation.entity';
+import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
 
 @Module({
   imports: [

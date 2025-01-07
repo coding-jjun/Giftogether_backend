@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateProvisionalDonationUseCase } from './create-provisional-donation.usecase';
-import { ProvisionalDonation } from 'src/features/deposit/domain/entities/provisional-donation.entity';
+import { ProvisionalDonation } from 'src/entities/provisional-donation.entity';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { CreateProvisionalDonationCommand } from './create-provisional-donation.command';
 import { User } from 'src/entities/user.entity';

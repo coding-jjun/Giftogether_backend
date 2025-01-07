@@ -7,14 +7,14 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { DepositStatus } from '../../../../enums/deposit-status.enum';
+import { DepositStatus } from '../enums/deposit-status.enum';
 import { IsInt, Min } from 'class-validator';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Donation } from 'src/entities/donation.entity';
 import { InconsistentAggregationError } from 'src/exceptions/inconsistent-aggregation';
 import { EventName } from 'src/interfaces/transition.interface';
 import { IFsmService } from 'src/interfaces/fsm-service.interface';
-import { ITransitionDelegate } from './transition-delegate.interface';
+import { ITransitionDelegate } from '../interfaces/transition-delegate.interface';
 
 /**
  * 이체내역을 관리하는 엔티티 입니다.

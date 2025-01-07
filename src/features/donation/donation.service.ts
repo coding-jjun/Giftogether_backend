@@ -15,7 +15,7 @@ import { DonationListDto } from './dto/other-donation-list.dto';
 import { ValidCheck } from 'src/util/valid-check';
 import { DefaultImageId } from 'src/enums/default-image-id';
 import * as bcrypt from 'bcrypt';
-import { ProvisionalDonation } from '../deposit/domain/entities/provisional-donation.entity';
+import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
 import { CreateProvisionalDonationUseCase } from './commands/create-provisional-donation.usecase';
 import { CreateProvisionalDonationCommand } from './commands/create-provisional-donation.command';
 import { ProvisionalDonationDto } from './dto/provisional-donation.dto';
