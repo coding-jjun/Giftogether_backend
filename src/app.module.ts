@@ -44,6 +44,10 @@ import { GiftogetherMiddleware } from './interfaces/giftogether.middleware';
 import { DepositModule } from './features/deposit/deposit.module';
 import { Deposit } from './features/deposit/domain/entities/deposit.entity';
 import { ProvisionalDonation } from './features/deposit/domain/entities/provisional-donation.entity';
+import { CsBoard } from './entities/cs-board.entity';
+import { CsComment } from './entities/cs-comment.entity';
+import { CsBoardModule } from './features/cs-board/cs-board.module';
+import { CsCommentModule } from './features/cs-comment/cs-comment.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -80,6 +84,8 @@ import { ProvisionalDonation } from './features/deposit/domain/entities/provisio
         GiftogetherError,
         Deposit,
         ProvisionalDonation,
+        CsBoard,
+        CsComment
       ],
       ssl: {
         ca: readFileSync('global-bundle.pem'),
@@ -110,6 +116,8 @@ import { ProvisionalDonation } from './features/deposit/domain/entities/provisio
     AccountModule,
     ValidCheckModule,
     DepositModule,
+    CsBoardModule,
+    CsCommentModule,
   ],
   controllers: [AppController],
   providers: [
