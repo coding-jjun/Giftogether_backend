@@ -61,8 +61,9 @@ export class MatchDepositUseCase {
        *  - 펀딩의 달성 금액이 업데이트 됩니다.
        *  - 후원자에게 후원이 정상적으로 처리되었음을 알리는 알림을 발송합니다.
        */
-      provDon.approve(this.g2gException);
-      await this.provDonRepo.save(provDon);
+      // 주석 사유: ProvisionalDonation와 Deposit은 Eventually Consistent 관계
+      // provDon.approve(this.g2gException);
+      // await this.provDonRepo.save(provDon);
 
       const event = new DepositMatchedEvent(deposit, provDon);
       deposit.transition(event.name, this.fsmService);

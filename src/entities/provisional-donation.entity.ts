@@ -3,6 +3,9 @@ import { Funding } from 'src/entities/funding.entity';
 import { User } from 'src/entities/user.entity';
 import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
+import { IFsmService } from 'src/interfaces/fsm-service.interface';
+import { ITransitionDelegate } from 'src/interfaces/transition-delegate.interface';
+import { EventName } from 'src/interfaces/transition.interface';
 import {
   Column,
   CreateDateColumn,
@@ -18,7 +21,9 @@ import {
  * 내역이 확인되면 자동으로 Donation 인스턴스가 생성이 됩니다.
  */
 @Entity()
-export class ProvisionalDonation {
+export class ProvisionalDonation
+  implements ITransitionDelegate<ProvisionalDonationStatus>
+{
   @PrimaryGeneratedColumn()
   readonly provDonId: number;
 
@@ -80,37 +85,12 @@ export class ProvisionalDonation {
     this._status = status;
   }
 
-  approve(g2gException: GiftogetherExceptions): void {
-    if (this._status !== ProvisionalDonationStatus.Pending) {
-      // [정책] 매칭이 Pending 상태인 경우에만 상태전이 가능합니다.
-      throw g2gException.InvalidStatusChange;
-    }
-    this._status = ProvisionalDonationStatus.Approved;
-  }
-
-  reject(g2gException: GiftogetherExceptions): void {
-    if (this._status !== ProvisionalDonationStatus.Pending) {
-      // [정책] 매칭이 Pending 상태인 경우에만 상태전이 가능합니다.
-      throw g2gException.InvalidStatusChange;
-    }
-    this._status = ProvisionalDonationStatus.Rejected;
-  }
-
-  pending(g2gException: GiftogetherExceptions): void {
-    if (this._status !== ProvisionalDonationStatus.Approved) {
-      // [정책] 매칭 성공 후 관리자 권한에 의해 다시 Pending 상태로 넘어가는 것만
-      // 가능합니다.
-      throw g2gException.InvalidStatusChange;
-    }
-    this._status = ProvisionalDonationStatus.Pending;
-  }
-
-  refund(g2gException: GiftogetherExceptions): void {
-    if (this._status !== ProvisionalDonationStatus.Rejected) {
-      // [정책] 매칭 취소 후 관리자가 환불처리한 경우에만 Refund 상태변화가 가능합니다.
-      throw g2gException.InvalidStatusChange;
-    }
-    this._status = ProvisionalDonationStatus.Refunded;
+  transition(
+    event: EventName,
+    fsmService: IFsmService<ProvisionalDonationStatus>,
+  ): void {
+    const newState = fsmService.transition(this._status, event);
+    this._status = newState;
   }
 
   static create(

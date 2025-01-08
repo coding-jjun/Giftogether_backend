@@ -23,6 +23,8 @@ import { DecreaseFundSumCommand } from 'src/features/funding/commands/decrease-f
 import { DepositDeletedEvent } from './deposit-deleted.event';
 import { ProvisionalDonation } from '../../../../entities/provisional-donation.entity';
 import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
+import { ProvisionalDonationApprovedEvent } from 'src/features/donation/domain/events/provisional-donation-approved.event';
+import { ProvisionalDonationPartiallyMatchedEvent } from 'src/features/donation/domain/events/provisional-donation-partially-matched.event';
 
 @Injectable()
 export class DepositEventHandler {
@@ -41,6 +43,7 @@ export class DepositEventHandler {
   ) {}
 
   /**
+   * 0. 예비후원의 상태를 ‘승인’으로 변경합니다.
    * 1. 정식 후원 내역에 한 건 추가합니다.
    * 2. 펀딩의 달성 금액이 업데이트 됩니다 `Funding.fundSum`
    * 3. 후원자에게 알림을 보냅니다. `DonationSucessNotification`
@@ -50,6 +53,12 @@ export class DepositEventHandler {
   async handleDepositMatched(event: DepositMatchedEvent) {
     const { deposit, provisionalDonation } = event;
     const { funding, senderUser } = provisionalDonation;
+    // 0
+    this.eventEmitter.emit(
+      ProvisionalDonationApprovedEvent.name,
+      new ProvisionalDonationApprovedEvent(provisionalDonation.senderSig),
+    );
+
     // 1
     await this.createDonation.execute(
       new CreateDonationCommand(funding, deposit.amount, senderUser, deposit),
@@ -84,6 +93,7 @@ export class DepositEventHandler {
   /**
    * - 조건: 보내는 분은 일치하지만 이체 금액이 다른 경우 → 부분 매칭
    *
+   * 0. 예비후원의 상태를 ‘반려’로 변경합니다.
    * 1. 예비 후원의 상태가 '반려'인지 확인합니다.
    * 2. 시스템은 후원자에게 반려 사유를 포함한 알림을 발송합니다.
    * 3. 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
@@ -92,6 +102,12 @@ export class DepositEventHandler {
   @OnEvent(DepositPartiallyMatchedEvent.name)
   async handleDepositPartiallyMatched(event: DepositPartiallyMatchedEvent) {
     const { deposit, provDon } = event;
+
+    // 0
+    this.eventEmitter.emit(
+      ProvisionalDonationPartiallyMatchedEvent.name,
+      new ProvisionalDonationPartiallyMatchedEvent(provDon.senderSig),
+    );
 
     // 1
     if (provDon.status !== ProvisionalDonationStatus.Rejected) {
