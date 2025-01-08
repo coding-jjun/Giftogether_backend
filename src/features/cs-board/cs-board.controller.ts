@@ -2,11 +2,11 @@ import { Body, Controller, DefaultValuePipe, Delete, Get, Param, ParseIntPipe, P
 import { CsBoardService } from './cs-board.service';
 import { CreateCsBoardDto } from './dto/create-cs-board.dto';
 import { CommonResponse } from 'src/interfaces/common-response.interface';
-import { JwtAuthGuard } from '../auth/guard/jwt-auth-guard';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
 import { UpdateCsBoardDto } from './dto/update-cs-board.dto';
 import { CsType } from 'src/enums/cs-type.enum';
+import { JwtExtendedAuthGuard } from '../auth/guard/jwt-extended-auth-guard';
 @Controller('csboard')
 export class CsBoardController {
   constructor(
@@ -15,7 +15,7 @@ export class CsBoardController {
   
   
   @Get(':csId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtExtendedAuthGuard)
   async findOneCsBoard(
     @Req() req: Request,
     @Param('csId', ParseIntPipe) csId: number,
@@ -39,7 +39,7 @@ export class CsBoardController {
     }
   }
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtExtendedAuthGuard)
   async createCsBoard(
     @Req() req: Request,
     @Body() createCsBoard: CreateCsBoardDto
@@ -52,7 +52,7 @@ export class CsBoardController {
     }
   }
   @Patch(':csId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtExtendedAuthGuard)
   async updateCsBoard(
     @Req() req: Request,
     @Param('csId', ParseIntPipe) csId: number,

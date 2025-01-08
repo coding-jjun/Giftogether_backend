@@ -24,6 +24,7 @@ import { ImageInstanceManager } from '../image/image-instance-manager';
 import { TokenService } from './token.service';
 import { CreateProvisionalDonationUseCase } from '../donation/commands/create-provisional-donation.usecase';
 import { ProvisionalDonation } from '../deposit/domain/entities/provisional-donation.entity';
+import { JwtExtendedStrategy } from './strategy/jwt-extended-strategy';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { ProvisionalDonation } from '../deposit/domain/entities/provisional-dona
     RollingPaperService,
     KakaoStrategy,
     JwtStrategy,
+    JwtExtendedStrategy,
     NaverStrategy,
     GoogleStrategy,
     GiftogetherExceptions,

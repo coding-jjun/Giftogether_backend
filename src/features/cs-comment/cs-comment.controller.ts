@@ -2,9 +2,9 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, ParseUUIDPipe, Patc
 import { CsCommentService } from './cs-comment.service';
 import { CsCommentDto } from './dto/cs-comment.dto';
 import { CommonResponse } from 'src/interfaces/common-response.interface';
-import { JwtAuthGuard } from '../auth/guard/jwt-auth-guard';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
+import { JwtExtendedAuthGuard } from '../auth/guard/jwt-extended-auth-guard';
 
 @Controller('cscomment')
 export class CsCommentController {
@@ -13,7 +13,7 @@ export class CsCommentController {
   ){}
 
   @Post(':csId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtExtendedAuthGuard)
   async createCsBoard(
     @Req() req: Request,
     @Param('csId', ParseIntPipe) csId: number,
@@ -28,7 +28,7 @@ export class CsCommentController {
   }
 
   @Patch(':cscomId')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtExtendedAuthGuard)
   async updateCsBoard(
     @Req() req: Request,
     @Param('cscomId', ParseIntPipe) cscomId: number,
