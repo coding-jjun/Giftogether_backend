@@ -13,7 +13,7 @@ import { AuthModule } from '../auth/auth.module';
 import { ValidCheck } from 'src/util/valid-check';
 import { ImageModule } from '../image/image.module';
 import { CreateProvisionalDonationUseCase } from './commands/create-provisional-donation.usecase';
-import { ProvisionalDonation } from '../deposit/domain/entities/provisional-donation.entity';
+import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
 
 @Module({
   imports: [

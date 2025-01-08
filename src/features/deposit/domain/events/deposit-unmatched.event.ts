@@ -1,4 +1,4 @@
-import { Deposit } from 'src/features/deposit/domain/entities/deposit.entity';
+import { Deposit } from 'src/entities/deposit.entity';
 import { BaseEvent } from 'src/interfaces/event.interface';
 
 export class DepositUnmatchedEvent extends BaseEvent {

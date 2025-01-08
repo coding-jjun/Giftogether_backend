@@ -20,7 +20,7 @@ import { Image } from './image.entity';
 import { IImageId } from 'src/interfaces/image-id.interface';
 import { ImageType } from 'src/enums/image-type.enum';
 import { truncateTime } from 'src/util/truncate-tiime';
-import { ProvisionalDonation } from 'src/features/deposit/domain/entities/provisional-donation.entity';
+import { ProvisionalDonation } from 'src/entities/provisional-donation.entity';
 
 @Entity()
 export class Funding implements IImageId {

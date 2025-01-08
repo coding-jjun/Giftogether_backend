@@ -1,6 +1,6 @@
 import { MatchDepositUseCase } from './match-deposit.usecase';
-import { Deposit } from '../domain/entities/deposit.entity';
-import { ProvisionalDonation } from '../domain/entities/provisional-donation.entity';
+import { Deposit } from '../../../entities/deposit.entity';
+import { ProvisionalDonation } from '../../../entities/provisional-donation.entity';
 import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
 import { DepositMatchedEvent } from '../domain/events/deposit-matched.event';
 import { DepositUnmatchedEvent } from '../domain/events/deposit-unmatched.event';
