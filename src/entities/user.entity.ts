@@ -19,6 +19,7 @@ import { AuthType } from 'src/enums/auth-type.enum';
 import { IImageId } from 'src/interfaces/image-id.interface';
 import { ImageType } from 'src/enums/image-type.enum';
 import { CsBoard } from './cs-board.entity';
+import { CsComment } from './cs-comment.entity';
 
 @Entity()
 export class User implements IImageId {
@@ -103,4 +104,8 @@ export class User implements IImageId {
 
   @OneToMany(() => CsBoard, (csBoard) => csBoard.csUser)
   csBoards: CsBoard[]
+  
+  @OneToMany(() => CsComment, (csComment) => csComment.csComUser)
+  csCommants: CsComment[];
+  
 }

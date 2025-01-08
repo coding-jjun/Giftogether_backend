@@ -45,7 +45,9 @@ import { DepositModule } from './features/deposit/deposit.module';
 import { Deposit } from './features/deposit/domain/entities/deposit.entity';
 import { ProvisionalDonation } from './features/deposit/domain/entities/provisional-donation.entity';
 import { CsBoard } from './entities/cs-board.entity';
+import { CsComment } from './entities/cs-comment.entity';
 import { CsBoardModule } from './features/cs-board/cs-board.module';
+import { CsCommentModule } from './features/cs-comment/cs-comment.module';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -83,6 +85,7 @@ import { CsBoardModule } from './features/cs-board/cs-board.module';
         Deposit,
         ProvisionalDonation,
         CsBoard,
+        CsComment
       ],
       ssl: {
         ca: readFileSync('global-bundle.pem'),
@@ -114,6 +117,7 @@ import { CsBoardModule } from './features/cs-board/cs-board.module';
     ValidCheckModule,
     DepositModule,
     CsBoardModule,
+    CsCommentModule,
   ],
   controllers: [AppController],
   providers: [
