@@ -6,6 +6,7 @@ import { ProvisionalDonationApprovedEvent } from '../events/provisional-donation
 import { ProvisionalDonationPartiallyMatchedEvent } from '../events/provisional-donation-partially-matched.event';
 import { ProvisionalDonationTimedOutEvent } from '../events/provisional-donation-timed-out.event';
 import { ProvisionalDonationMatchCancelledEvent } from '../events/provisional-donation-match-cancelled.event';
+import { InvalidStatus } from 'src/exceptions/invalid-status';
 
 @Injectable()
 export class ProvisionalDonationFsmService implements IFsmService<S> {
@@ -38,6 +39,12 @@ export class ProvisionalDonationFsmService implements IFsmService<S> {
   ];
 
   transition(current: S, event: EventName): S {
-    throw new Error('Method not implemented.');
+    const transition = this.transitions.find(
+      (t) => t.from === current && t.event === event,
+    );
+    if (!transition) {
+      throw new InvalidStatus(current.toString(), event);
+    }
+    return transition.to;
   }
 }
