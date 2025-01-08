@@ -18,6 +18,7 @@ import { Address } from './address.entity';
 import { AuthType } from 'src/enums/auth-type.enum';
 import { IImageId } from 'src/interfaces/image-id.interface';
 import { ImageType } from 'src/enums/image-type.enum';
+import { CsBoard } from './cs-board.entity';
 
 @Entity()
 export class User implements IImageId {
@@ -100,4 +101,6 @@ export class User implements IImageId {
   @Column({ default:false })
   isAdmin: boolean;
 
+  @OneToMany(() => CsBoard, (csBoard) => csBoard.csUser)
+  csBoards: CsBoard[]
 }
