@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ProvisionalDonationFsmService } from '../services/provisional-donation-fsm.service';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ProvisionalDonationApprovedEvent } from './provisional-donation-approved.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProvisionalDonation } from 'src/entities/provisional-donation.entity';
 import { Repository } from 'typeorm';
-import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
-import { ProvisionalDonationPartiallyMatchedEvent } from './provisional-donation-partially-matched.event';
+import { DepositMatchedEvent } from 'src/features/deposit/domain/events/deposit-matched.event';
+import { DepositPartiallyMatchedEvent } from 'src/features/deposit/domain/events/deposit-partially-matched.event';
 
 @Injectable()
 export class ProvisionalDonationEventHandler {
@@ -14,44 +14,32 @@ export class ProvisionalDonationEventHandler {
     private readonly provDonFsmService: ProvisionalDonationFsmService,
     @InjectRepository(ProvisionalDonation)
     private readonly provDonRepo: Repository<ProvisionalDonation>,
-    private readonly g2gException: GiftogetherExceptions,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  @OnEvent(ProvisionalDonationApprovedEvent.name)
-  async handleProvisionalDonationApproved(
-    event: ProvisionalDonationApprovedEvent,
-  ) {
-    const { senderSig } = event;
+  /**
+   * 예비후원의 상태를 ‘승인’으로 변경합니다.
+   */
+  @OnEvent(DepositMatchedEvent.name)
+  async handleDepositMatched(event: DepositMatchedEvent) {
+    const { provisionalDonation } = event;
 
-    const provDon = await this.provDonRepo.findOne({
-      where: { senderSig },
-    });
-
-    if (!provDon) {
-      throw this.g2gException.ProvisionalDonationNotFound;
-    }
-
-    provDon.transition(
-      ProvisionalDonationApprovedEvent.name,
+    provisionalDonation.transition(
+      DepositMatchedEvent.name,
       this.provDonFsmService,
     );
 
-    await this.provDonRepo.save(provDon);
+    await this.provDonRepo.save(provisionalDonation);
+
+    this.eventEmitter.emit('deposit.matched.finished');
   }
 
-  @OnEvent(ProvisionalDonationPartiallyMatchedEvent.name)
-  async handleProvisionalDonationPartiallyMatched(
-    event: ProvisionalDonationPartiallyMatchedEvent,
-  ) {
-    const { senderSig } = event;
-
-    const provDon = await this.provDonRepo.findOne({
-      where: { senderSig },
-    });
-
-    if (!provDon) {
-      throw this.g2gException.ProvisionalDonationNotFound;
-    }
+  /**
+   * 예비후원의 상태를 ‘부분 매칭’으로 변경합니다.
+   */
+  @OnEvent(DepositPartiallyMatchedEvent.name)
+  async handleDepositPartiallyMatched(event: DepositPartiallyMatchedEvent) {
+    const { provDon } = event;
 
     provDon.transition(event.name, this.provDonFsmService);
     await this.provDonRepo.save(provDon);

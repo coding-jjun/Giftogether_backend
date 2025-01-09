@@ -27,6 +27,9 @@ import { EventModule } from '../event/event.module';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { waitForEventJobs } from 'src/tests/wait-for-events';
 import { NotiType } from 'src/enums/noti-type.enum';
+import { CsBoard } from 'src/entities/cs-board.entity';
+import { CsComment } from 'src/entities/cs-comment.entity';
+import { ProvisionalDonationApprovedEvent } from '../donation/domain/events/provisional-donation-approved.event';
 
 const entities = [
   Deposit,
@@ -40,6 +43,8 @@ const entities = [
   Donation,
   Funding,
   Notification,
+  CsBoard,
+  CsComment,
 ];
 
 describe('Deposit API E2E Test', () => {
@@ -122,7 +127,7 @@ describe('Deposit API E2E Test', () => {
       'fundRecvPhone',
     );
     await fundingRepo.insert(mockFunding);
-  });
+  }, 100000);
 
   beforeEach(async () => {
     await provDonRepo.delete({});
@@ -156,15 +161,6 @@ describe('Deposit API E2E Test', () => {
         })
         .expect(201);
 
-      // Provisional Donation의 상태가 Approved이어야 합니다.
-      const foundProvDons = await provDonRepo.find({
-        where: { senderSig },
-      });
-      expect(foundProvDons.length).toBe(1);
-      expect(foundProvDons[0].status).toBe(
-        ProvisionalDonationStatus.Approved.toString(),
-      );
-
       // 이체내역의 상태가 Matched이어야 합니다.
       const foundDeposits = await depositRepo.find({
         where: { senderSig },
@@ -174,6 +170,15 @@ describe('Deposit API E2E Test', () => {
 
       // Wait until 'deposit.matched.finished'
       await waitForEventJobs(eventEmitter, 'deposit.matched.finished');
+
+      // Provisional Donation의 상태가 Approved이어야 합니다.
+      const foundProvDons = await provDonRepo.find({
+        where: { senderSig },
+      });
+      expect(foundProvDons.length).toBe(1);
+      expect(foundProvDons[0].status).toBe(
+        ProvisionalDonationStatus.Approved,
+      );
 
       // Donation 하나가 새로 생성되어야 합니다.
       const foundDonations = await donationRepo.find({

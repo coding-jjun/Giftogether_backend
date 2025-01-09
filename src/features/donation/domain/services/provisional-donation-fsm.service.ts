@@ -7,6 +7,8 @@ import { ProvisionalDonationPartiallyMatchedEvent } from '../events/provisional-
 import { ProvisionalDonationTimedOutEvent } from '../events/provisional-donation-timed-out.event';
 import { ProvisionalDonationMatchCancelledEvent } from '../events/provisional-donation-match-cancelled.event';
 import { InvalidStatus } from 'src/exceptions/invalid-status';
+import { DepositMatchedEvent } from 'src/features/deposit/domain/events/deposit-matched.event';
+import { DepositPartiallyMatchedEvent } from 'src/features/deposit/domain/events/deposit-partially-matched.event';
 
 @Injectable()
 export class ProvisionalDonationFsmService implements IFsmService<S> {
@@ -14,12 +16,12 @@ export class ProvisionalDonationFsmService implements IFsmService<S> {
     {
       from: S.Pending,
       to: S.Approved,
-      event: ProvisionalDonationApprovedEvent.name,
+      event: DepositMatchedEvent.name,
     },
     {
       from: S.Pending,
       to: S.Rejected,
-      event: ProvisionalDonationPartiallyMatchedEvent.name,
+      event: DepositPartiallyMatchedEvent.name,
     },
     {
       from: S.Pending,

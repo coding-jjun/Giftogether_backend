@@ -5,11 +5,13 @@ import { ProvisionalDonation } from 'src/entities/provisional-donation.entity';
 import { Repository } from 'typeorm';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { ProvisionalDonationApprovedEvent } from './provisional-donation-approved.event';
-import { ProvisionalDonationPartiallyMatchedEvent } from './provisional-donation-partially-matched.event';
 import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 import { User } from 'src/entities/user.entity';
 import { Funding } from 'src/entities/funding.entity';
+import { DepositMatchedEvent } from 'src/features/deposit/domain/events/deposit-matched.event';
+import { Deposit } from 'src/entities/deposit.entity';
+import { DepositPartiallyMatchedEvent } from 'src/features/deposit/domain/events/deposit-partially-matched.event';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 describe('ProvisionalDonationEventHandler', () => {
   let handler: ProvisionalDonationEventHandler;
@@ -25,6 +27,7 @@ describe('ProvisionalDonationEventHandler', () => {
         ProvisionalDonationEventHandler,
         ProvisionalDonationFsmService,
         GiftogetherExceptions,
+        EventEmitter2,
         {
           provide: getRepositoryToken(ProvisionalDonation),
           useClass: Repository,
@@ -77,25 +80,12 @@ describe('ProvisionalDonationEventHandler', () => {
       jest.spyOn(provDonRepo, 'save').mockResolvedValue(provDon);
 
       // Create and handle the event
-      const event = new ProvisionalDonationApprovedEvent('test-sig');
-      await handler.handleProvisionalDonationApproved(event);
+      const event = new DepositMatchedEvent({} as Deposit, provDon);
+      await handler.handleDepositMatched(event);
 
       // Verify the state transition
       expect(provDon.status).toBe(ProvisionalDonationStatus.Approved);
       expect(provDonRepo.save).toHaveBeenCalledWith(provDon);
-    });
-
-    it('should throw exception when provisional donation not found', async () => {
-      // Mock repository to return null
-      jest.spyOn(provDonRepo, 'findOne').mockResolvedValue(null);
-
-      // Create and handle the event
-      const event = new ProvisionalDonationApprovedEvent('non-existent-sig');
-
-      // Verify that it throws the correct exception
-      await expect(
-        handler.handleProvisionalDonationApproved(event),
-      ).rejects.toBe(g2gException.ProvisionalDonationNotFound);
     });
   });
 
@@ -117,27 +107,12 @@ describe('ProvisionalDonationEventHandler', () => {
       jest.spyOn(provDonRepo, 'save').mockResolvedValue(provDon);
 
       // Create and handle the event
-      const event = new ProvisionalDonationPartiallyMatchedEvent('test-sig');
-      await handler.handleProvisionalDonationPartiallyMatched(event);
+      const event = new DepositPartiallyMatchedEvent({} as Deposit, provDon);
+      await handler.handleDepositPartiallyMatched(event);
 
       // Verify the state transition
       expect(provDon.status).toBe(ProvisionalDonationStatus.Rejected);
       expect(provDonRepo.save).toHaveBeenCalledWith(provDon);
-    });
-
-    it('should throw exception when provisional donation not found', async () => {
-      // Mock repository to return null
-      jest.spyOn(provDonRepo, 'findOne').mockResolvedValue(null);
-
-      // Create and handle the event
-      const event = new ProvisionalDonationPartiallyMatchedEvent(
-        'non-existent-sig',
-      );
-
-      // Verify that it throws the correct exception
-      await expect(
-        handler.handleProvisionalDonationPartiallyMatched(event),
-      ).rejects.toBe(g2gException.ProvisionalDonationNotFound);
     });
   });
 });

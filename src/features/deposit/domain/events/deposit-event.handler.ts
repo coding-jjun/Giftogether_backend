@@ -39,7 +39,7 @@ export class DepositEventHandler {
   ) {}
 
   /**
-   * 0. 예비후원의 상태를 ‘승인’으로 변경합니다.
+   * 예비 후원의 상태를 '승인'으로 변경합니다. => 이 작업은 ProvisionalDonationEventHandler에서 처리합니다.
    * 1. 정식 후원 내역에 한 건 추가합니다.
    * 2. 펀딩의 달성 금액이 업데이트 됩니다 `Funding.fundSum`
    * 3. 후원자에게 알림을 보냅니다. `DonationSucessNotification`
@@ -49,11 +49,6 @@ export class DepositEventHandler {
   async handleDepositMatched(event: DepositMatchedEvent) {
     const { deposit, provisionalDonation } = event;
     const { funding, senderUser } = provisionalDonation;
-    // 0
-    this.eventEmitter.emit(
-      ProvisionalDonationApprovedEvent.name,
-      new ProvisionalDonationApprovedEvent(provisionalDonation.senderSig),
-    );
 
     // 1
     await this.createDonation.execute(
