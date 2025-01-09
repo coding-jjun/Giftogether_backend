@@ -21,8 +21,6 @@ import { DepositRefundedEvent } from './deposit-refunded.event';
 import { DepositStatus } from 'src/enums/deposit-status.enum';
 import { DecreaseFundSumCommand } from 'src/features/funding/commands/decrease-fundsum.command';
 import { DepositDeletedEvent } from './deposit-deleted.event';
-import { ProvisionalDonation } from '../../../../entities/provisional-donation.entity';
-import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 import { ProvisionalDonationApprovedEvent } from 'src/features/donation/domain/events/provisional-donation-approved.event';
 import { ProvisionalDonationPartiallyMatchedEvent } from 'src/features/donation/domain/events/provisional-donation-partially-matched.event';
 
@@ -36,8 +34,6 @@ export class DepositEventHandler {
     private readonly notiService: NotificationService,
     @InjectRepository(Deposit)
     private readonly depositRepo: Repository<Deposit>,
-    @InjectRepository(ProvisionalDonation)
-    private readonly provDonRepo: Repository<ProvisionalDonation>,
     private readonly findAllAdmins: FindAllAdminsUseCase,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -93,8 +89,7 @@ export class DepositEventHandler {
   /**
    * - 조건: 보내는 분은 일치하지만 이체 금액이 다른 경우 → 부분 매칭
    *
-   * 0. 예비후원의 상태를 ‘반려’로 변경합니다.
-   * 1. 예비 후원의 상태가 '반려'인지 확인합니다.
+   * 1. 예비후원의 상태를 ‘반려’로 변경합니다.
    * 2. 시스템은 후원자에게 반려 사유를 포함한 알림을 발송합니다.
    * 3. 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
    * 4. 관리자는 해당 건에 대해서 환불, 혹은 삭제 조치를 진행해야 합니다.
@@ -103,16 +98,11 @@ export class DepositEventHandler {
   async handleDepositPartiallyMatched(event: DepositPartiallyMatchedEvent) {
     const { deposit, provDon } = event;
 
-    // 0
+    // 1
     this.eventEmitter.emit(
       ProvisionalDonationPartiallyMatchedEvent.name,
       new ProvisionalDonationPartiallyMatchedEvent(provDon.senderSig),
     );
-
-    // 1
-    if (provDon.status !== ProvisionalDonationStatus.Rejected) {
-      throw this.g2gException.InvalidStatus;
-    }
 
     // 2
     const notiDtoForSender = new CreateNotificationDto({
