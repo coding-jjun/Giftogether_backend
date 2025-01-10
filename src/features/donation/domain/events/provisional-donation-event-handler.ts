@@ -21,7 +21,7 @@ export class ProvisionalDonationEventHandler {
   /**
    * 예비후원의 상태를 ‘승인’으로 변경합니다.
    */
-  @OnEvent(DepositMatchedEvent.name)
+  @OnEvent(DepositMatchedEvent.name, { async: true })
   async handleDepositMatched(event: DepositMatchedEvent) {
     const { provisionalDonation } = event;
 
@@ -32,23 +32,19 @@ export class ProvisionalDonationEventHandler {
 
     await this.provDonRepo.save(provisionalDonation);
 
-    this.eventEmitter.emit(ProvisionalDonationApprovedEvent.name, {
-      provisionalDonation,
-    });
+    this.eventEmitter.emit(ProvisionalDonationApprovedEvent.name);
   }
 
   /**
    * 예비후원의 상태를 ‘부분 매칭’으로 변경합니다.
    */
-  @OnEvent(DepositPartiallyMatchedEvent.name)
+  @OnEvent(DepositPartiallyMatchedEvent.name, { async: true })
   async handleDepositPartiallyMatched(event: DepositPartiallyMatchedEvent) {
     const { provDon } = event;
 
     provDon.transition(event.name, this.provDonFsmService);
     await this.provDonRepo.save(provDon);
 
-    this.eventEmitter.emit(ProvisionalDonationPartiallyMatchedEvent.name, {
-      provisionalDonation: provDon,
-    });
+    this.eventEmitter.emit(ProvisionalDonationPartiallyMatchedEvent.name);
   }
 }

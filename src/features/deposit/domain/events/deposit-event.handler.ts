@@ -45,7 +45,7 @@ export class DepositEventHandler {
    * 3. 후원자에게 알림을 보냅니다. `DonationSucessNotification`
    * 4. 펀딩주인에게 알림을 보냅니다. `NewDonate`
    */
-  @OnEvent(DepositMatchedEvent.name)
+  @OnEvent(DepositMatchedEvent.name, { async: true })
   async handleDepositMatched(event: DepositMatchedEvent) {
     const { deposit, provisionalDonation } = event;
     const { funding, senderUser } = provisionalDonation;
@@ -89,7 +89,7 @@ export class DepositEventHandler {
    * 3. 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
    * 4. 관리자는 해당 건에 대해서 환불, 혹은 삭제 조치를 진행해야 합니다.
    */
-  @OnEvent(DepositPartiallyMatchedEvent.name)
+  @OnEvent(DepositPartiallyMatchedEvent.name, { async: true })
   async handleDepositPartiallyMatched(event: DepositPartiallyMatchedEvent) {
     const { deposit, provDon } = event;
 
@@ -133,7 +133,7 @@ export class DepositEventHandler {
    *     - 보내는 분의 신원이 식별될 경우 환불을 진행합니다.
    *     - 보내는 분의 신원이 식별되지 않을경우? 어쩌지? 냠냠?
    */
-  @OnEvent(DepositUnmatchedEvent.name)
+  @OnEvent(DepositUnmatchedEvent.name, { async: true })
   async handleDepositUnmatched(event: DepositUnmatchedEvent) {
     const { deposit } = event;
 
@@ -162,7 +162,7 @@ export class DepositEventHandler {
   /**
    * 관리자가 해당 입금내역을 환불처리한 경우 입금내역의 생애주기가 올바르게 전환되는지를 따져보아야 합니다.
    */
-  @OnEvent(DepositRefundedEvent.name)
+  @OnEvent(DepositRefundedEvent.name, { async: true })
   async handleDepositRefunded(event: DepositRefundedEvent) {
     const { deposit } = event;
 
@@ -187,7 +187,7 @@ export class DepositEventHandler {
   /**
    * 관리자가 해당 입금내역을 삭제처리한 경우 입금내역의 생애주기가 올바르게 전환되는지를 따져보아야 합니다.
    */
-  @OnEvent(DepositDeletedEvent.name)
+  @OnEvent(DepositDeletedEvent.name, { async: true })
   async handleDepositDeleted(event: DepositDeletedEvent) {
     const { deposit } = event;
     // deposit.delete(); // !FIXME
