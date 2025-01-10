@@ -26,19 +26,15 @@ describe('MatchDepositUseCase', () => {
   let matchDepositUseCase: MatchDepositUseCase;
   let eventEmitter: EventEmitter2;
   let g2gException: GiftogetherExceptions;
-  let provDonEventHandler: ProvisionalDonationEventHandler;
-  let depositEventHandler: DepositEventHandler;
   let mockUser: User;
   let mockFunding: Funding;
-
+  let depositRepository: Repository<Deposit>;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [EventModule],
       providers: [
         MatchDepositUseCase,
         DepositFsmService,
-        ProvisionalDonationEventHandler,
-        ProvisionalDonationFsmService,
         GiftogetherExceptions,
         {
           provide: getRepositoryToken(Deposit),
@@ -55,10 +51,8 @@ describe('MatchDepositUseCase', () => {
     provDonationRepository = module.get<Repository<ProvisionalDonation>>(
       getRepositoryToken(ProvisionalDonation),
     );
+    depositRepository = module.get<Repository<Deposit>>(getRepositoryToken(Deposit));
     g2gException = module.get<GiftogetherExceptions>(GiftogetherExceptions);
-    provDonEventHandler = module.get<ProvisionalDonationEventHandler>(
-      ProvisionalDonationEventHandler,
-    );
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
 
     // Setup mock data
@@ -85,16 +79,12 @@ describe('MatchDepositUseCase', () => {
       fundTheme: FundTheme.Birthday,
     } as Funding;
 
-    jest.spyOn(provDonEventHandler['eventEmitter'], 'emit');
-    jest.spyOn(provDonEventHandler, 'handleDepositMatched');
-    jest.spyOn(provDonEventHandler, 'handleDepositPartiallyMatched');
+    jest.spyOn(eventEmitter, 'emit');
   });
 
   it('should be defined', () => {
-    expect(provDonationRepository).toBeDefined();
     expect(matchDepositUseCase).toBeDefined();
     expect(eventEmitter).toBeDefined();
-    expect(provDonEventHandler).toBeDefined();
   });
 
   it('should have same identity', () => {
@@ -124,16 +114,12 @@ describe('MatchDepositUseCase', () => {
     jest
       .spyOn(provDonationRepository, 'findOne')
       .mockResolvedValue(mockProvDonation);
-    jest
-      .spyOn(provDonationRepository, 'save')
-      .mockResolvedValue(mockProvDonation);
-
-    const emitSpy = jest.spyOn(provDonEventHandler['eventEmitter'], 'emit');
 
     // Act
     await matchDepositUseCase.execute(deposit);
 
     // Assert
+    expect(depositRepository.save).toHaveBeenCalledWith(deposit);
     expect(eventEmitter.emit).toHaveBeenCalledWith(
       DepositMatchedEvent.name,
       expect.any(DepositMatchedEvent),
@@ -173,9 +159,6 @@ describe('MatchDepositUseCase', () => {
       DepositPartiallyMatchedEvent.name,
       expect.any(DepositPartiallyMatchedEvent),
     );
-    expect(
-      provDonEventHandler.handleDepositPartiallyMatched,
-    ).toHaveBeenCalledWith(expect.any(DepositPartiallyMatchedEvent));
   });
 
   it('should handle unmatched deposit (Unmatched Case)', async () => {
@@ -189,8 +172,6 @@ describe('MatchDepositUseCase', () => {
       'Deposit Account',
       'Withdrawal Account',
     );
-
-    jest.spyOn(provDonationRepository, 'findOne').mockResolvedValue(null);
 
     // Act & Assert
     await expect(() => matchDepositUseCase.execute(deposit)).rejects.toThrow(
