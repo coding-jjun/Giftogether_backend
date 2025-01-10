@@ -12,6 +12,9 @@ import { DepositMatchedEvent } from 'src/features/deposit/domain/events/deposit-
 import { Deposit } from 'src/entities/deposit.entity';
 import { DepositPartiallyMatchedEvent } from 'src/features/deposit/domain/events/deposit-partially-matched.event';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventModule } from '../../../event/event.module';
+import { ProvisionalDonationApprovedEvent } from './provisional-donation-approved.event';
+import { ProvisionalDonationPartiallyMatchedEvent } from './provisional-donation-partially-matched.event';
 
 describe('ProvisionalDonationEventHandler', () => {
   let handler: ProvisionalDonationEventHandler;
@@ -23,6 +26,7 @@ describe('ProvisionalDonationEventHandler', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [EventModule],
       providers: [
         ProvisionalDonationEventHandler,
         ProvisionalDonationFsmService,
@@ -91,9 +95,9 @@ describe('ProvisionalDonationEventHandler', () => {
       expect(provDonRepo.save).toHaveBeenCalledWith(provDon);
 
       // Verify event was emitted
-      expect(emitSpy).toHaveBeenCalledWith('ProvisionalDonationApprovedEvent', {
-        provisionalDonation: provDon,
-      });
+      expect(emitSpy).toHaveBeenCalledWith(
+        ProvisionalDonationApprovedEvent.name,
+      );
     });
   });
 
@@ -126,9 +130,9 @@ describe('ProvisionalDonationEventHandler', () => {
       expect(provDonRepo.save).toHaveBeenCalledWith(provDon);
 
       // Verify event was emitted
-      expect(emitSpy).toHaveBeenCalledWith('ProvisionalDonationPartiallyMatchedEvent', {
-        provisionalDonation: provDon,
-      });
+      expect(emitSpy).toHaveBeenCalledWith(
+        ProvisionalDonationPartiallyMatchedEvent.name,
+      );
     });
   });
 });
