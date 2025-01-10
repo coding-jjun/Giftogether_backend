@@ -79,6 +79,9 @@ describe('ProvisionalDonationEventHandler', () => {
       // Mock repository save
       jest.spyOn(provDonRepo, 'save').mockResolvedValue(provDon);
 
+      // Mock event emitter
+      const emitSpy = jest.spyOn(handler['eventEmitter'], 'emit');
+
       // Create and handle the event
       const event = new DepositMatchedEvent({} as Deposit, provDon);
       await handler.handleDepositMatched(event);
@@ -86,6 +89,11 @@ describe('ProvisionalDonationEventHandler', () => {
       // Verify the state transition
       expect(provDon.status).toBe(ProvisionalDonationStatus.Approved);
       expect(provDonRepo.save).toHaveBeenCalledWith(provDon);
+
+      // Verify event was emitted
+      expect(emitSpy).toHaveBeenCalledWith('ProvisionalDonationApprovedEvent', {
+        provisionalDonation: provDon,
+      });
     });
   });
 
@@ -106,6 +114,9 @@ describe('ProvisionalDonationEventHandler', () => {
       // Mock repository save
       jest.spyOn(provDonRepo, 'save').mockResolvedValue(provDon);
 
+      // Mock event emitter
+      const emitSpy = jest.spyOn(handler['eventEmitter'], 'emit');
+
       // Create and handle the event
       const event = new DepositPartiallyMatchedEvent({} as Deposit, provDon);
       await handler.handleDepositPartiallyMatched(event);
@@ -113,6 +124,11 @@ describe('ProvisionalDonationEventHandler', () => {
       // Verify the state transition
       expect(provDon.status).toBe(ProvisionalDonationStatus.Rejected);
       expect(provDonRepo.save).toHaveBeenCalledWith(provDon);
+
+      // Verify event was emitted
+      expect(emitSpy).toHaveBeenCalledWith('ProvisionalDonationPartiallyMatchedEvent', {
+        provisionalDonation: provDon,
+      });
     });
   });
 });

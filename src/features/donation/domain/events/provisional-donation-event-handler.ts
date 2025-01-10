@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { ProvisionalDonationFsmService } from '../services/provisional-donation-fsm.service';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { ProvisionalDonationApprovedEvent } from './provisional-donation-approved.event';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProvisionalDonation } from 'src/entities/provisional-donation.entity';
 import { Repository } from 'typeorm';
 import { DepositMatchedEvent } from 'src/features/deposit/domain/events/deposit-matched.event';
 import { DepositPartiallyMatchedEvent } from 'src/features/deposit/domain/events/deposit-partially-matched.event';
+import { ProvisionalDonationApprovedEvent } from './provisional-donation-approved.event';
+import { ProvisionalDonationPartiallyMatchedEvent } from './provisional-donation-partially-matched.event';
 
 @Injectable()
 export class ProvisionalDonationEventHandler {
@@ -31,7 +32,9 @@ export class ProvisionalDonationEventHandler {
 
     await this.provDonRepo.save(provisionalDonation);
 
-    this.eventEmitter.emit('deposit.matched.finished');
+    this.eventEmitter.emit(ProvisionalDonationApprovedEvent.name, {
+      provisionalDonation,
+    });
   }
 
   /**
@@ -43,5 +46,9 @@ export class ProvisionalDonationEventHandler {
 
     provDon.transition(event.name, this.provDonFsmService);
     await this.provDonRepo.save(provDon);
+
+    this.eventEmitter.emit(ProvisionalDonationPartiallyMatchedEvent.name, {
+      provisionalDonation: provDon,
+    });
   }
 }
