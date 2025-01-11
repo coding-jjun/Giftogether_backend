@@ -16,104 +16,29 @@ import { ImageType } from 'src/enums/image-type.enum';
 import { DonationStatus } from 'src/enums/donation-status.enum';
 import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 import { DepositStatus } from 'src/enums/deposit-status.enum';
+import { Nickname } from '../util/nickname';
+import { DonationService } from '../features/donation/donation.service';
 
-// Interfaces
-interface IMockUser {
-  userId?: number;
-  authId?: string;
-  authType?: AuthType;
-  userNick?: string;
-  userPw?: string;
-  userName?: string;
-  userPhone?: string;
-  userEmail?: string;
-  userBirth?: Date;
-  account?: Account;
-  regAt?: Date;
-  uptAt?: Date;
-  delAt?: Date;
-  fundings?: Funding[];
-  comments?: Comment[];
-  addresses?: Address[];
-  defaultImgId?: number;
-  createdImages?: Image[];
-  image?: Image;
-  isAdmin?: boolean;
-}
+const baseNick = (): string => {
+  const nickname = new Nickname();
+  const adjectiveIndex = Math.floor(Math.random() * nickname.adjective.length);
+  const nounIndex = Math.floor(Math.random() * nickname.noun.length);
 
-interface IMockFunding {
-  fundId?: number;
-  fundUuid?: string;
-  fundUser?: User;
-  fundTitle?: string;
-  fundCont?: string;
-  fundTheme?: FundTheme;
-  fundPubl?: boolean;
-  fundGoal?: number;
-  fundSum?: number;
-  fundAddrRoad?: string;
-  fundAddrDetl?: string;
-  fundAddrZip?: string;
-  fundRecvName?: string;
-  fundRecvPhone?: string;
-  fundRecvReq?: string;
-  endAt?: Date;
-  regAt?: Date;
-  uptAt?: Date;
-  comments?: Comment[];
-  gifts?: Gift[];
-  donations?: Donation[];
-  provDons?: ProvisionalDonation[];
-  defaultImgId?: number;
-  image?: Image;
-}
+  const adjective = nickname.adjective[adjectiveIndex];
+  const noun = nickname.noun[nounIndex];
 
-interface IMockProvisionalDonation {
-  provDonId?: number;
-  senderSig?: string;
-  senderUser?: User;
-  amount?: number;
-  funding?: Funding;
-  fundId?: number;
-  status?: ProvisionalDonationStatus;
-  regAt?: Date;
-  delAt?: Date;
-}
+  const baseNick = `${adjective}${noun}`;
 
-interface IMockDeposit {
-  depositId?: number;
-  donation?: Donation;
-  senderSig?: string;
-  receiver?: string;
-  amount?: number;
-  transferDate?: Date;
-  depositBank?: string;
-  depositAccount?: string;
-  withdrawalAccount?: string;
-  status?: DepositStatus;
-  regAt?: Date;
-  delAt?: Date;
-}
-
-interface IMockDonation {
-  donId?: number;
-  funding?: Funding;
-  user?: User;
-  deposit?: Deposit;
-  donStat?: DonationStatus;
-  orderId?: string;
-  donAmnt?: number;
-  regAt?: Date;
-  delAt?: Date;
-}
+  return baseNick;
+};
 
 // Factory functions
-export const createMockUser = (overwrites?: Partial<IMockUser>): User => {
+export const createMockUser = (overwrites?: Partial<User>): User => {
   const defaultUser = {
-    userId: faker.number.int(),
+    userId: faker.number.int({ max: 1000000000 }),
     authId: faker.string.alphanumeric(10),
     authType: AuthType.Jwt,
-    userNick: faker.internet.userName(),
+    userNick: baseNick(),
     userPw: faker.internet.password(),
     userName: faker.person.fullName(),
     userPhone: faker.helpers.fromRegExp('010-[0-9]{4}-[0-9]{4}'),
@@ -133,9 +58,11 @@ export const createMockUser = (overwrites?: Partial<IMockUser>): User => {
   } as User;
 };
 
-export const createMockFunding = (overwrites?: Partial<IMockFunding>): Funding => {
+export const createMockFunding = (
+  overwrites?: Partial<Funding>,
+): Funding => {
   const defaultFunding = {
-    fundId: faker.number.int(),
+    fundId: faker.number.int({ max: 1000000000 }),
     fundUuid: faker.string.uuid(),
     fundTitle: faker.commerce.productName(),
     fundCont: faker.lorem.paragraph(),
@@ -165,11 +92,11 @@ export const createMockFunding = (overwrites?: Partial<IMockFunding>): Funding =
 };
 
 export const createMockProvisionalDonation = (
-  overwrites?: Partial<IMockProvisionalDonation>,
+  overwrites?: Partial<ProvisionalDonation>,
 ): ProvisionalDonation => {
   const defaultProvDonation = {
-    provDonId: faker.number.int(),
-    senderSig: `${faker.person.lastName()}-${faker.number.int({ min: 1000, max: 9999 })}`,
+    provDonId: faker.number.int({ max: 1000000000 }),
+    senderSig: DonationService.createSenderSig(faker.person.fullName()),
     amount: faker.number.int({ min: 1000, max: 100000 }),
     status: ProvisionalDonationStatus.Pending,
     regAt: faker.date.recent(),
@@ -181,9 +108,11 @@ export const createMockProvisionalDonation = (
   } as ProvisionalDonation;
 };
 
-export const createMockDeposit = (overwrites?: Partial<IMockDeposit>): Deposit => {
+export const createMockDeposit = (
+  overwrites?: Partial<Deposit>,
+): Deposit => {
   const defaultDeposit = {
-    depositId: faker.number.int(),
+    depositId: faker.number.int({ max: 1000000000 }),
     senderSig: `${faker.person.lastName()}-${faker.number.int({ min: 1000, max: 9999 })}`,
     receiver: 'GIFTOGETHER',
     amount: faker.number.int({ min: 1000, max: 100000 }),
@@ -201,9 +130,11 @@ export const createMockDeposit = (overwrites?: Partial<IMockDeposit>): Deposit =
   } as Deposit;
 };
 
-export const createMockDonation = (overwrites?: Partial<IMockDonation>): Donation => {
+export const createMockDonation = (
+  overwrites?: Partial<Donation>,
+): Donation => {
   const defaultDonation = {
-    donId: faker.number.int(),
+    donId: faker.number.int({ max: 1000000000 }),
     donStat: DonationStatus.Donated,
     orderId: faker.string.alphanumeric(10),
     donAmnt: faker.number.int({ min: 1000, max: 100000 }),
@@ -218,7 +149,7 @@ export const createMockDonation = (overwrites?: Partial<IMockDonation>): Donatio
 
 // Helper function to create related entities
 export const createMockFundingWithRelations = async (
-  overwrites?: Partial<IMockFunding>,
+  overwrites?: Partial<Funding>,
 ): Promise<Funding> => {
   const mockUser = createMockUser();
   const mockFunding = createMockFunding({
@@ -227,22 +158,26 @@ export const createMockFundingWithRelations = async (
   });
 
   // Create some mock donations
-  const mockDonations = Array(3).fill(null).map(() => {
-    const mockDeposit = createMockDeposit();
-    return createMockDonation({
-      funding: mockFunding,
-      user: mockUser,
-      deposit: mockDeposit,
+  const mockDonations = Array(3)
+    .fill(null)
+    .map(() => {
+      const mockDeposit = createMockDeposit();
+      return createMockDonation({
+        funding: mockFunding,
+        user: mockUser,
+        deposit: mockDeposit,
+      });
     });
-  });
 
   // Create some mock provisional donations
-  const mockProvDonations = Array(2).fill(null).map(() =>
-    createMockProvisionalDonation({
-      funding: mockFunding,
-      senderUser: mockUser,
-    }),
-  );
+  const mockProvDonations = Array(2)
+    .fill(null)
+    .map(() =>
+      createMockProvisionalDonation({
+        funding: mockFunding,
+        senderUser: mockUser,
+      }),
+    );
 
   mockFunding.donations = mockDonations;
   mockFunding.provDons = mockProvDonations;
@@ -252,29 +187,36 @@ export const createMockFundingWithRelations = async (
 
 // Helper function to create a complete user with all relations
 export const createMockUserWithRelations = async (
-  overwrites?: Partial<IMockUser>,
+  overwrites?: Partial<User>,
 ): Promise<User> => {
   const mockUser = createMockUser(overwrites);
-  
+
   // Create fundings for the user
-  const mockFundings = Array(2).fill(null).map(() =>
-    createMockFunding({
-      fundUser: mockUser,
-    }),
-  );
+  const mockFundings = Array(2)
+    .fill(null)
+    .map(() =>
+      createMockFunding({
+        fundUser: mockUser,
+      }),
+    );
 
   // Create addresses for the user
-  const mockAddresses = Array(2).fill(null).map(() => ({
-    addrId: faker.number.int(),
-    addrUser: mockUser,
-    addrNick: faker.word.noun(),
-    addrRoad: faker.location.streetAddress(),
-    addrDetl: faker.location.secondaryAddress(),
-    addrZip: faker.location.zipCode(),
-    recvName: faker.person.fullName(),
-    recvPhone: faker.helpers.fromRegExp('010-[0-9]{4}-[0-9]{4}'),
-    isDef: false,
-  } as Address));
+  const mockAddresses = Array(2)
+    .fill(null)
+    .map(
+      () =>
+        ({
+          addrId: faker.number.int({ max: 1000000000 }),
+          addrUser: mockUser,
+          addrNick: faker.word.noun(),
+          addrRoad: faker.location.streetAddress(),
+          addrDetl: faker.location.secondaryAddress(),
+          addrZip: faker.location.zipCode(),
+          recvName: faker.person.fullName(),
+          recvPhone: faker.helpers.fromRegExp('010-[0-9]{4}-[0-9]{4}'),
+          isDef: false,
+        }) as Address,
+    );
 
   mockUser.fundings = mockFundings;
   mockUser.addresses = mockAddresses;
