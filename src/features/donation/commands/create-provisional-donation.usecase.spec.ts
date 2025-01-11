@@ -7,6 +7,7 @@ import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { CreateProvisionalDonationCommand } from './create-provisional-donation.command';
 import { User } from 'src/entities/user.entity';
 import { Funding } from 'src/entities/funding.entity';
+import { createMockRepository } from '../../../tests/create-mock-repository';
 
 describe('CreateProvisionalDonationUseCase', () => {
   let useCase: CreateProvisionalDonationUseCase;
@@ -18,7 +19,7 @@ describe('CreateProvisionalDonationUseCase', () => {
         CreateProvisionalDonationUseCase,
         {
           provide: getRepositoryToken(ProvisionalDonation),
-          useClass: Repository,
+          useValue: createMockRepository(Repository<ProvisionalDonation>),
         },
         {
           provide: GiftogetherExceptions,
@@ -44,7 +45,7 @@ describe('CreateProvisionalDonationUseCase', () => {
       'test-sig',
       1,
       1000,
-      'test-uuid',
+      1,
     );
 
     const provdon = {
@@ -54,7 +55,7 @@ describe('CreateProvisionalDonationUseCase', () => {
       funding: { fundUuid: 'test-uuid' } as Funding,
     } as ProvisionalDonation;
     jest.spyOn(ProvisionalDonation, 'create').mockReturnValue(provdon);
-    jest.spyOn(repository, 'save').mockResolvedValue(provdon);
+    jest.spyOn(repository, 'insert');
 
     const result = await useCase.execute(cmd);
 
@@ -63,9 +64,9 @@ describe('CreateProvisionalDonationUseCase', () => {
       'test-sig',
       { userId: 1 } as User,
       1000,
-      { fundUuid: 'test-uuid' } as Funding,
+      { fundId: 1 } as Funding,
     );
-    expect(repository.save).toHaveBeenCalledWith(provdon);
+    expect(repository.insert).toHaveBeenCalledWith(provdon);
     expect(result).toBe(provdon);
   });
 
@@ -74,7 +75,7 @@ describe('CreateProvisionalDonationUseCase', () => {
       'test-sig',
       1,
       1000,
-      'test-uuid',
+      1,
     );
 
     jest.spyOn(ProvisionalDonation, 'create').mockImplementation(() => {
