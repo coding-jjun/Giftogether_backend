@@ -85,26 +85,19 @@ describe('Deposit API E2E Test', () => {
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     await app.init();
 
-    mockFundingOwner = createMockUser({
+    mockFundingOwner = await createMockUserWithRelations({
+      userRepo,
+      fundingRepo,
+    }, {
       userName: '펀딩주인',
     });
-    await userRepo.save(mockFundingOwner);
 
-    mockFunding = createMockFunding({
-      fundUser: mockFundingOwner,
-    });
-    await fundingRepo.save(mockFunding);
+    mockFunding = mockFundingOwner.fundings[0];
 
     mockDonor = createMockUser({
       userName: '후원자',
     });
     await userRepo.save(mockDonor);
-  });
-
-  beforeEach(async () => {
-    await provDonRepo.delete({});
-    await donationRepo.delete({});
-    await depositRepo.delete({});
   });
 
   describe('POST /deposits', () => {
@@ -204,7 +197,9 @@ describe('Deposit API E2E Test', () => {
           );
         });
 
-      const foundDeposits = await depositRepo.find();
+      const foundDeposits = await depositRepo.find({
+        where: { senderSig: 'UNKNOWN-1234' },
+      });
       expect(foundDeposits).toHaveLength(1);
       expect(foundDeposits[0].status).toBe(DepositStatus.Orphan);
     });
