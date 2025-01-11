@@ -31,7 +31,6 @@ import {
   createMockUser,
   createMockUserWithRelations,
 } from '../../tests/mock-factory';
-import { createMockFunding } from '../../tests/mock-factory';
 
 const entities = [
   Deposit,
