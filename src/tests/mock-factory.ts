@@ -12,6 +12,7 @@ import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status
 import { DepositStatus } from 'src/enums/deposit-status.enum';
 import { Nickname } from '../util/nickname';
 import { DonationService } from '../features/donation/donation.service';
+import { Repository } from 'typeorm';
 
 const baseNick = (): string => {
   const nickname = new Nickname();
@@ -31,7 +32,6 @@ export const createMockUser = (overwrites?: Partial<User>): User => {
   const userNick = baseNick();
   const userName = faker.person.fullName();
   const defaultUser = {
-    userId: faker.number.int({ min: 1, max: 1000000000 }),
     authId: faker.string.alphanumeric(10),
     authType: AuthType.Jwt,
     userNick,
@@ -59,7 +59,6 @@ export const createMockUser = (overwrites?: Partial<User>): User => {
 
 export const createMockFunding = (overwrites?: Partial<Funding>): Funding => {
   const defaultFunding = {
-    fundId: faker.number.int({ min: 1, max: 1000000000 }),
     fundUuid: faker.string.uuid(),
     fundTitle: faker.commerce.productName(),
     fundCont: faker.lorem.paragraph(),
@@ -92,7 +91,6 @@ export const createMockProvisionalDonation = (
   overwrites?: Partial<ProvisionalDonation>,
 ): ProvisionalDonation => {
   const defaultProvDonation = {
-    provDonId: faker.number.int({ min: 1, max: 1000000000 }),
     senderSig: DonationService.createSenderSig(faker.person.fullName()),
     amount: faker.number.int({ min: 1000, max: 100000 }),
     status: ProvisionalDonationStatus.Pending,
@@ -107,7 +105,6 @@ export const createMockProvisionalDonation = (
 
 export const createMockDeposit = (overwrites?: Partial<Deposit>): Deposit => {
   const defaultDeposit = {
-    depositId: faker.number.int({ min: 1, max: 1000000000 }),
     senderSig: `${faker.person.lastName()}-${faker.number.int({ min: 1000, max: 9999 })}`,
     receiver: 'GIFTOGETHER',
     amount: faker.number.int({ min: 1000, max: 100000 }),
@@ -129,7 +126,6 @@ export const createMockDonation = (
   overwrites?: Partial<Donation>,
 ): Donation => {
   const defaultDonation = {
-    donId: faker.number.int({ min: 1, max: 1000000000 }),
     donStat: DonationStatus.Donated,
     orderId: faker.string.alphanumeric(10),
     donAmnt: faker.number.int({ min: 1000, max: 100000 }),
@@ -142,92 +138,116 @@ export const createMockDonation = (
   } as Donation;
 };
 
-// Helper function to create related entities
+// Helper function to create related entities with proper save order
 export const createMockFundingWithRelations = async (
+  delegate: {
+    userRepo: Repository<User>;
+    fundingRepo: Repository<Funding>;
+    depositRepo?: Repository<Deposit>;
+    donationRepo?: Repository<Donation>;
+    provDonRepo?: Repository<ProvisionalDonation>;
+  },
   overwrites?: Partial<Funding>,
 ): Promise<Funding> => {
-  const mockUser = createMockUser();
-  const mockFunding = createMockFunding({
-    fundUser: {
-      userId: mockUser.userId,
-    } as User,
-    ...overwrites,
-  });
+  // First save the user (strong entity)
+  const mockUser = await delegate.userRepo.save(createMockUser());
 
-  // Create some mock donations
-  const mockDonations = Array(3)
-    .fill(null)
-    .map(() => {
-      const mockDeposit = createMockDeposit();
-      return createMockDonation({
-        funding: {
-          fundId: mockFunding.fundId,
-        } as Funding,
-        user: {
-          userId: mockUser.userId,
-        } as User,
-        deposit: {
-          depositId: mockDeposit.depositId,
-        } as Deposit,
-      });
-    });
+  // Then create and save the funding (weak entity)
+  const mockFunding = await delegate.fundingRepo.save(
+    createMockFunding({
+      fundUser: mockUser,
+      ...overwrites,
+    }),
+  );
 
-  // Create some mock provisional donations
-  const mockProvDonations = Array(2)
-    .fill(null)
-    .map(() =>
-      createMockProvisionalDonation({
-        funding: {
-          fundId: mockFunding.fundId,
-        } as Funding,
-        senderUser: {
-          userId: mockUser.userId,
-        } as User,
-      }),
+  // Handle optional deposits
+  if (delegate.depositRepo) {
+    const deposits = await Promise.all(
+      Array(3)
+        .fill(null)
+        .map(() => delegate.depositRepo.save(createMockDeposit())),
     );
 
-  mockFunding.donations = mockDonations;
-  mockFunding.provDons = mockProvDonations;
+    // Handle optional donations if deposits exist
+    if (delegate.donationRepo) {
+      await Promise.all(
+        deposits.map((deposit) =>
+          delegate.donationRepo.save(
+            createMockDonation({
+              funding: mockFunding,
+              user: mockUser,
+              deposit,
+            }),
+          ),
+        ),
+      );
+    }
+  }
+
+  // Handle optional provisional donations
+  if (delegate.provDonRepo) {
+    await Promise.all(
+      Array(2)
+        .fill(null)
+        .map(() =>
+          delegate.provDonRepo.save(
+            createMockProvisionalDonation({
+              funding: mockFunding,
+              senderUser: mockUser,
+            }),
+          ),
+        ),
+    );
+  }
 
   return mockFunding;
 };
 
-// Helper function to create a complete user with all relations
 export const createMockUserWithRelations = async (
+  delegate: {
+    userRepo: Repository<User>;
+    fundingRepo: Repository<Funding>;
+    addressRepo?: Repository<Address>;
+  },
   overwrites?: Partial<User>,
 ): Promise<User> => {
-  const mockUser = createMockUser(overwrites);
+  // First save the user (strong entity)
+  const mockUser = await delegate.userRepo.save(createMockUser(overwrites));
 
-  // Create fundings for the user
-  const mockFundings = Array(2)
-    .fill(null)
-    .map(() =>
-      createMockFunding({
-        fundUser: {
-          userId: mockUser.userId,
-        } as User,
-      }),
-    );
-
-  // Create addresses for the user
-  const mockAddresses = Array(2)
-    .fill(null)
-    .map(
-      () =>
-        ({
-          addrUser: mockUser,
-          addrNick: faker.word.noun(),
-          addrRoad: faker.location.streetAddress(),
-          addrDetl: faker.location.secondaryAddress(),
-          addrZip: faker.location.zipCode(),
-          recvName: faker.person.fullName(),
-          recvPhone: faker.helpers.fromRegExp('010-[0-9]{4}-[0-9]{4}'),
-          isDef: false,
-        }) as Address,
-    );
-
+  // Create and save fundings (weak entities)
+  const mockFundings = await Promise.all(
+    Array(2)
+      .fill(null)
+      .map(() =>
+        delegate.fundingRepo.save(
+          createMockFunding({
+            fundUser: mockUser,
+          }),
+        ),
+      ),
+  );
   mockUser.fundings = mockFundings;
-  mockUser.addresses = mockAddresses;
 
-  return mockUser;
+  // Handle optional addresses
+  if (delegate.addressRepo) {
+    const mockAddresses = await Promise.all(
+      Array(2)
+        .fill(null)
+        .map(() =>
+          delegate.addressRepo.save({
+            addrUser: mockUser,
+            addrNick: faker.word.noun(),
+            addrRoad: faker.location.streetAddress(),
+            addrDetl: faker.location.secondaryAddress(),
+            addrZip: faker.location.zipCode(),
+            recvName: faker.person.fullName(),
+            recvPhone: faker.helpers.fromRegExp('010-[0-9]{4}-[0-9]{4}'),
+            isDef: false,
+          } as Address),
+        ),
+    );
+    mockUser.addresses = mockAddresses;
+  }
+
+  return delegate.userRepo.save(mockUser);
 };
