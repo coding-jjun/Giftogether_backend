@@ -84,12 +84,15 @@ describe('Deposit API E2E Test', () => {
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     await app.init();
 
-    mockFundingOwner = await createMockUserWithRelations({
-      userRepo,
-      fundingRepo,
-    }, {
-      userName: '펀딩주인',
-    });
+    mockFundingOwner = await createMockUserWithRelations(
+      {
+        userRepo,
+        fundingRepo,
+      },
+      {
+        userName: '펀딩주인',
+      },
+    );
 
     mockFunding = mockFundingOwner.fundings[0];
 
