@@ -138,7 +138,32 @@ export const createMockDonation = (
   } as Donation;
 };
 
-// Helper function to create related entities with proper save order
+/**
+ * 펀딩을 생성합니다. 옵션으로 예치, 프로비전 후원, 후원을 생성할 수 있습니다.
+ *
+ * @param delegate - TypeOrm Repository 인스턴스를 대리자로 활용, 테스트 데이터 생성과 저장을 수행합니다.
+ * @param overwrites - 펀딩 엔티티의 속성을 오버라이드합니다.
+ * @param amount - 예치, 프로비전 후원, 후원 생성 개수를 지정합니다.
+ * @returns 생성된 펀딩 엔티티를 반환합니다.
+ *
+ * @example
+ * const mockFunding = await createMockFundingWithRelations(
+ * {
+ *   userRepo,
+ *   fundingRepo,
+ *   depositRepo,
+ *   donationRepo,
+ *   provDonRepo,
+ * },
+ * {
+ *   fundUser: mockFundingOwner,
+ *   fundGoal: 1000000,
+ * },
+ * {
+ *   deposit: 1,
+ * },
+ * );
+ */
 export const createMockFundingWithRelations = async (
   delegate: {
     userRepo: Repository<User>;
@@ -188,7 +213,10 @@ export const createMockFundingWithRelations = async (
         ),
       );
       // conform fundSum
-      mockFunding.fundSum = donations.reduce((sum, donation) => sum + donation.donAmnt, 0);
+      mockFunding.fundSum = donations.reduce(
+        (sum, donation) => sum + donation.donAmnt,
+        0,
+      );
       await delegate.fundingRepo.save(mockFunding);
     }
   }
@@ -212,6 +240,27 @@ export const createMockFundingWithRelations = async (
   return mockFunding;
 };
 
+/**
+ * 유저를 생성합니다. 옵션으로 펀딩, 주소를 생성할 수 있습니다.
+ *
+ * @param delegate - TypeOrm Repository 인스턴스를 대리자로 활용, 테스트 데이터 생성과 저장을 수행합니다.
+ * @param overwrites - 유저 엔티티의 속성을 오버라이드합니다.
+ * @param amount - 펀딩, 주소 생성 개수를 지정합니다.
+ * @returns 생성된 유저 엔티티를 반환합니다.
+ *
+ * @example
+ * const mockFundingOwner = await createMockUserWithRelations(
+ * {
+ *   userRepo,
+ *   fundingRepo,
+ * },
+ * {
+ *   userName: '펀딩주인',
+ * },
+ * {
+ *   funding: 1,
+ * },
+ */
 export const createMockUserWithRelations = async (
   delegate: {
     userRepo: Repository<User>;
