@@ -27,6 +27,8 @@ import { EventModule } from '../event/event.module';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { waitForEventJobs } from 'src/tests/wait-for-events';
 import { NotiType } from 'src/enums/noti-type.enum';
+import { CsBoard } from '../../entities/cs-board.entity';
+import { CsComment } from '../../entities/cs-comment.entity';
 
 const entities = [
   Deposit,
@@ -40,6 +42,8 @@ const entities = [
   Donation,
   Funding,
   Notification,
+  CsBoard,
+  CsComment,
 ];
 
 describe('Deposit API E2E Test', () => {
@@ -273,8 +277,6 @@ describe('Deposit API E2E Test', () => {
   });
 
   afterAll(async () => {
-    // 테스트 데이터베이스를 DROP하는 명령어. 모든 테이블과 데이터가 사라집니다!! 💀
-    await app.get(DataSource).dropDatabase();
     await app.close();
   });
 });
