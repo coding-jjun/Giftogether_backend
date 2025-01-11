@@ -12,7 +12,8 @@ import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status
 import { DepositStatus } from 'src/enums/deposit-status.enum';
 import { Nickname } from '../util/nickname';
 import { DonationService } from '../features/donation/donation.service';
-import { Repository } from 'typeorm';
+import { CreateMockFundingWithRelationsDelegate } from './create-mock-funding-delegate.interface';
+import { CreateMockUserDelegate } from './create-mock-user-delegate.interface';
 
 const baseNick = (): string => {
   const nickname = new Nickname();
@@ -165,13 +166,7 @@ export const createMockDonation = (
  * );
  */
 export const createMockFundingWithRelations = async (
-  delegate: {
-    userRepo: Repository<User>;
-    fundingRepo: Repository<Funding>;
-    depositRepo?: Repository<Deposit>;
-    donationRepo?: Repository<Donation>;
-    provDonRepo?: Repository<ProvisionalDonation>;
-  },
+  delegate: CreateMockFundingWithRelationsDelegate,
   overwrites?: Partial<Funding>,
   amount?: {
     deposit?: number;
@@ -262,11 +257,7 @@ export const createMockFundingWithRelations = async (
  * },
  */
 export const createMockUserWithRelations = async (
-  delegate: {
-    userRepo: Repository<User>;
-    fundingRepo: Repository<Funding>;
-    addressRepo?: Repository<Address>;
-  },
+  delegate: CreateMockUserDelegate,
   overwrites?: Partial<User>,
   amount?: {
     funding?: number;
