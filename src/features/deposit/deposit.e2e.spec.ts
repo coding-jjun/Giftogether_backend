@@ -1,24 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request = require('supertest');
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { createDataSourceOptions } from 'src/tests/data-source-options';
 import { DepositModule } from './deposit.module';
 import { Deposit } from '../../entities/deposit.entity';
 import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Funding } from 'src/entities/funding.entity';
 import { User } from 'src/entities/user.entity';
-import { AuthType } from 'src/enums/auth-type.enum';
 import { Account } from 'src/entities/account.entity';
 import { Comment } from 'src/entities/comment.entity';
 import { Address } from 'src/entities/address.entity';
 import { Image } from 'src/entities/image.entity';
 import { Gift } from 'src/entities/gift.entity';
 import { Donation } from 'src/entities/donation.entity';
-import { FundTheme } from 'src/enums/fund-theme.enum';
 import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 import { CommonResponse } from 'src/interfaces/common-response.interface';
 import { DepositStatus } from 'src/enums/deposit-status.enum';
@@ -29,6 +27,11 @@ import { waitForEventJobs } from 'src/tests/wait-for-events';
 import { NotiType } from 'src/enums/noti-type.enum';
 import { CsBoard } from '../../entities/cs-board.entity';
 import { CsComment } from '../../entities/cs-comment.entity';
+import {
+  createMockUser,
+  createMockUserWithRelations,
+} from '../../tests/mock-factory';
+import { createMockFunding } from '../../tests/mock-factory';
 
 const entities = [
   Deposit,
@@ -82,50 +85,20 @@ describe('Deposit API E2E Test', () => {
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     await app.init();
 
-    mockFundingOwner = new User();
-    Object.assign(mockFundingOwner, {
-      authId: 'mockUser',
-      authType: AuthType.Jwt,
-      userNick: 'mockUser',
-      userPw: 'password',
+    mockFundingOwner = createMockUser({
       userName: '펀딩주인',
-      userPhone: '010-1234-5678',
-      userBirth: new Date('1997-09-26'),
-      account: null,
-      regAt: new Date(Date.now()),
-      uptAt: new Date(Date.now()),
-      delAt: null,
-      userEmail: 'mockFundingOwner@example.com',
-      defaultImgId: undefined,
-      createdImages: [],
-      image: null,
-      isAdmin: false,
     });
-    await userRepo.insert(mockFundingOwner);
+    await userRepo.save(mockFundingOwner);
 
-    mockDonor = Object.create(mockFundingOwner) as User;
-    Object.assign(mockDonor, {
+    mockFunding = createMockFunding({
+      fundUser: mockFundingOwner,
+    });
+    await fundingRepo.save(mockFunding);
+
+    mockDonor = createMockUser({
       userName: '후원자',
-      userEmail: 'mockDonor@example.com',
-      userNick: '후원자',
-      userPhone: '010-9012-3456',
-    } as User);
-    await userRepo.insert(mockDonor);
-
-    mockFunding = new Funding(
-      mockFundingOwner,
-      'mockFunding',
-      'mockFunding',
-      1_000_000,
-      new Date('9999-12-31'),
-      FundTheme.Birthday,
-      'fundAddrRoad',
-      'fundAddrDetl',
-      'fundAddrZip',
-      'fundRecvName',
-      'fundRecvPhone',
-    );
-    await fundingRepo.insert(mockFunding);
+    });
+    await userRepo.save(mockDonor);
   });
 
   beforeEach(async () => {
