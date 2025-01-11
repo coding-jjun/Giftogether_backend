@@ -175,7 +175,9 @@ export const createMockFundingWithRelations = async (
   },
 ): Promise<Funding> => {
   // First save the user (strong entity)
-  const mockUser = await delegate.userRepo.save(createMockUser());
+  const mockUser = overwrites?.fundUser
+    ? overwrites.fundUser
+    : await delegate.userRepo.save(createMockUser());
 
   // Then create and save the funding (weak entity)
   const mockFunding = await delegate.fundingRepo.save(
