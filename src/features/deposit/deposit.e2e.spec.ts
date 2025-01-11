@@ -92,6 +92,9 @@ describe('Deposit API E2E Test', () => {
       {
         userName: '펀딩주인',
       },
+      {
+        funding: 1,
+      },
     );
 
     mockFunding = mockFundingOwner.fundings[0];

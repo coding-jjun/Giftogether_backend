@@ -148,6 +148,11 @@ export const createMockFundingWithRelations = async (
     provDonRepo?: Repository<ProvisionalDonation>;
   },
   overwrites?: Partial<Funding>,
+  amount?: {
+    deposit?: number;
+    provDonation?: number;
+    donation?: number;
+  },
 ): Promise<Funding> => {
   // First save the user (strong entity)
   const mockUser = await delegate.userRepo.save(createMockUser());
@@ -163,31 +168,35 @@ export const createMockFundingWithRelations = async (
   // Handle optional deposits
   if (delegate.depositRepo) {
     const deposits = await Promise.all(
-      Array(3)
+      Array(amount?.deposit ?? 1)
         .fill(null)
         .map(() => delegate.depositRepo.save(createMockDeposit())),
     );
 
     // Handle optional donations if deposits exist
     if (delegate.donationRepo) {
-      await Promise.all(
+      const donations = await Promise.all(
         deposits.map((deposit) =>
           delegate.donationRepo.save(
             createMockDonation({
               funding: mockFunding,
               user: mockUser,
               deposit,
+              donAmnt: deposit.amount,
             }),
           ),
         ),
       );
+      // conform fundSum
+      mockFunding.fundSum = donations.reduce((sum, donation) => sum + donation.donAmnt, 0);
+      await delegate.fundingRepo.save(mockFunding);
     }
   }
 
   // Handle optional provisional donations
   if (delegate.provDonRepo) {
     await Promise.all(
-      Array(2)
+      Array(amount?.provDonation ?? 1)
         .fill(null)
         .map(() =>
           delegate.provDonRepo.save(
@@ -210,13 +219,17 @@ export const createMockUserWithRelations = async (
     addressRepo?: Repository<Address>;
   },
   overwrites?: Partial<User>,
+  amount?: {
+    funding?: number;
+    address?: number;
+  },
 ): Promise<User> => {
   // First save the user (strong entity)
   const mockUser = await delegate.userRepo.save(createMockUser(overwrites));
 
   // Create and save fundings (weak entities)
   const mockFundings = await Promise.all(
-    Array(2)
+    Array(amount?.funding ?? 1)
       .fill(null)
       .map(() =>
         delegate.fundingRepo.save(
@@ -231,7 +244,7 @@ export const createMockUserWithRelations = async (
   // Handle optional addresses
   if (delegate.addressRepo) {
     const mockAddresses = await Promise.all(
-      Array(2)
+      Array(amount?.address ?? 1)
         .fill(null)
         .map(() =>
           delegate.addressRepo.save({

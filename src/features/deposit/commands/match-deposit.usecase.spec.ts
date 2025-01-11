@@ -22,6 +22,13 @@ import { Image } from 'src/entities/image.entity';
 import { Gift } from 'src/entities/gift.entity';
 import { Donation } from 'src/entities/donation.entity';
 import { DepositFsmService } from '../domain/deposit-fsm.service';
+import {
+  createMockFundingWithRelations,
+  createMockUser,
+  createMockProvisionalDonation,
+} from '../../../tests/mock-factory';
+import { CsBoard } from '../../../entities/cs-board.entity';
+import { CsComment } from '../../../entities/cs-comment.entity';
 
 const entities = [
   ProvisionalDonation,
@@ -34,6 +41,8 @@ const entities = [
   Image,
   Gift,
   Donation,
+  CsBoard,
+  CsComment,
 ];
 
 describe('MatchDepositUseCase', () => {
@@ -70,86 +79,64 @@ describe('MatchDepositUseCase', () => {
     eventEmitter = module.get(EventEmitter2);
     g2gException = module.get(GiftogetherExceptions);
 
-    const mockUser1: User = new User();
-    Object.assign(mockUser1, {
-      authId: 'mockUser',
-      authType: AuthType.Jwt,
-      userNick: 'mockUser',
-      userPw: 'password',
+    const mockUser1 = createMockUser({
       userName: '홍길동',
-      userPhone: '010-1234-5678',
-      userBirth: new Date('1997-09-26'),
-      account: null,
-      regAt: new Date(Date.now()),
-      uptAt: new Date(Date.now()),
-      delAt: null,
-      fundings: [],
-      comments: [],
-      addresses: [],
-      userEmail: 'mockuser@example.com',
-      user: null,
-      defaultImgId: undefined,
-      createdImages: [],
-      image: null,
-      isAdmin: false,
     });
-
-    const mockUser2 = Object.create(mockUser1) as User;
-    mockUser2.userName = '김철수';
-
-    const mockUser3 = Object.create(mockUser1) as User;
-    mockUser3.userName = '이영희';
-
-    const mockFundingOwner = Object.create(mockUser1) as User;
-    mockUser3.userName = '펀딩주인임.';
-    await userRepository.create(mockFundingOwner);
+    const mockUser2 = createMockUser({
+      userName: '김철수',
+    });
+    const mockUser3 = createMockUser({
+      userName: '이영희',
+    });
+    const mockFundingOwner = createMockUser({
+      userName: '펀딩주인',
+    });
+    await userRepository.insert([
+      mockUser1,
+      mockUser2,
+      mockUser3,
+      mockFundingOwner,
+    ]);
 
     // Seed sample funding
-    const mockFunding = new Funding(
-      mockFundingOwner,
-      'mockFunding',
-      'mockFunding',
-      1000000,
-      new Date('9999-12-31'),
-      FundTheme.Birthday,
-      'fundAddrRoad',
-      'fundAddrDetl',
-      'fundAddrZip',
-      'fundRecvName',
-      '010-8752-4037',
+    const mockFunding = await createMockFundingWithRelations(
+      {
+        userRepo: userRepository,
+        fundingRepo: fundingRepository,
+        provDonRepo: provDonationRepository,
+      },
+      {
+        fundUser: mockFundingOwner,
+        fundGoal: 1000000,
+      },
+      {
+        deposit: 1,
+      },
     );
-    await fundingRepository.insert(mockFunding);
 
     jest.spyOn(eventEmitter, 'emit'); // Spy on the `emit` method for assertions.
 
     // Seed sample donations
-    await provDonationRepository.insert(
-      ProvisionalDonation.create(
-        g2gException,
-        '홍길동-1234',
-        mockUser1,
-        50000,
-        mockFunding,
-      ),
-    );
-    await provDonationRepository.insert(
-      ProvisionalDonation.create(
-        g2gException,
-        '김철수-5678',
-        mockUser2,
-        100000,
-        mockFunding,
-      ),
-    );
-    await provDonationRepository.insert(
-      ProvisionalDonation.create(
-        g2gException,
-        '이영희-9012',
-        mockUser3,
-        150000,
-        mockFunding,
-      ),
-    );
+    await provDonationRepository.insert([
+      createMockProvisionalDonation({
+        senderSig: '홍길동-1234',
+        senderUser: mockUser1,
+        amount: 50000,
+        funding: mockFunding,
+      }),
+      createMockProvisionalDonation({
+        senderSig: '김철수-5678',
+        senderUser: mockUser2,
+        amount: 100000,
+        funding: mockFunding,
+      }),
+      createMockProvisionalDonation({
+        senderSig: '이영희-9012',
+        senderUser: mockUser3,
+        amount: 150000,
+        funding: mockFunding,
+      }),
+    ]);
   });
 
   it('should be defined', () => {
