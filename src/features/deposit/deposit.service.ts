@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UploadDepositUseCase } from './commands/upload-deposit.usecase';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { DepositDto } from './dto/deposit.dto';
@@ -17,15 +17,15 @@ export class DepositService {
   ) {}
 
   async findAll(
-    page: number,
-    limit: number,
+    page: number = 1,
+    limit: number = 10,
   ): Promise<{
     deposits: DepositDto[];
     total: number;
     page: number;
     lastPage: number;
   }> {
-    const [deposits, total] = await this.depositRepo
+    const depositsQb = this.depositRepo
       .createQueryBuilder('deposit')
       .leftJoinAndSelect('deposit.donation', 'donation')
       .leftJoinAndSelect('donation.funding', 'funding')
@@ -33,8 +33,9 @@ export class DepositService {
       .leftJoinAndSelect('donation.user', 'user')
       .orderBy('deposit.regAt', 'DESC')
       .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
+      .take(limit);
+
+    const [deposits, total] = await depositsQb.getManyAndCount();
 
     return {
       deposits: deposits.map(
@@ -49,6 +50,7 @@ export class DepositService {
             deposit.withdrawalAccount,
             deposit.status,
             deposit.depositId,
+            deposit.regAt,
           ),
       ),
       total,
@@ -81,6 +83,7 @@ export class DepositService {
       deposit.withdrawalAccount,
       deposit.status,
       deposit.depositId,
+      deposit.regAt,
       deposit.donation
         ? new DonationDto(
             deposit.donation.donId,

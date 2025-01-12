@@ -22,13 +22,13 @@ export class DepositController {
 
   @Get()
   async findAll(
-    @Query('page', new ParseIntPipe({ optional: true })) page = 0,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
+    @Query('page', new ParseIntPipe({ optional: true })) page: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit: number,
   ): Promise<CommonResponse> {
-    if (page < 0) {
+    if (page <= 0) {
       throw this.g2gException.InvalidPage;
     }
-    if (limit < 0) {
+    if (limit <= 0) {
       throw this.g2gException.InvalidLimit;
     }
     return {
