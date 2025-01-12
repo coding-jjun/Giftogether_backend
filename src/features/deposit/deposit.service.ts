@@ -38,21 +38,7 @@ export class DepositService {
     const [deposits, total] = await depositsQb.getManyAndCount();
 
     return {
-      deposits: deposits.map(
-        (deposit) =>
-          new DepositDto(
-            deposit.senderSig,
-            deposit.receiver,
-            deposit.amount,
-            deposit.transferDate,
-            deposit.depositBank,
-            deposit.depositAccount,
-            deposit.withdrawalAccount,
-            deposit.status,
-            deposit.depositId,
-            deposit.regAt,
-          ),
-      ),
+      deposits: deposits.map((deposit) => new DepositDto(deposit)),
       total,
       page,
       lastPage: Math.ceil(total / limit),
@@ -73,29 +59,7 @@ export class DepositService {
       throw new NotFoundException('입금내역을 찾을 수 없습니다.');
     }
 
-    return new DepositDto(
-      deposit.senderSig,
-      deposit.receiver,
-      deposit.amount,
-      deposit.transferDate,
-      deposit.depositBank,
-      deposit.depositAccount,
-      deposit.withdrawalAccount,
-      deposit.status,
-      deposit.depositId,
-      deposit.regAt,
-      deposit.donation
-        ? new DonationDto(
-            deposit.donation.donId,
-            deposit.donation.funding.fundUuid,
-            deposit.donation.user.userId,
-            deposit.donation.orderId,
-            deposit.donation.donStat,
-            deposit.donation.donAmnt,
-            deposit.donation.regAt,
-          )
-        : undefined,
-    );
+    return new DepositDto(deposit);
   }
 
   async uploadDeposit(depositData: DepositDto): Promise<DepositDto> {
