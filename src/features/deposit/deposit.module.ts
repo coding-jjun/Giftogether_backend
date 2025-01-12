@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DepositController } from './deposit.controller';
 import { DepositService } from './deposit.service';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { UploadDepositUseCase } from './commands/upload-deposit.usecase';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { GiftogetherExceptions } from '../../filters/giftogether-exception';
@@ -19,10 +18,11 @@ import { NotificationService } from '../notification/notification.service';
 import { DecreaseFundSumUseCase } from '../funding/commands/decrease-fundsum.usecase';
 import { FindAllAdminsUseCase } from '../admin/queries/find-all-admins.usecase';
 import { DepositFsmService } from './domain/deposit-fsm.service';
+import { EventModule } from '../event/event.module';
 
 @Module({
   imports: [
-    EventEmitterModule.forRoot(),
+    EventModule,
     TypeOrmModule.forFeature([
       Funding,
       Notification,

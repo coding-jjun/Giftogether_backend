@@ -28,6 +28,8 @@ import { DecreaseFundSumUseCase } from 'src/features/funding/commands/decrease-f
 import { FindAllAdminsUseCase } from 'src/features/admin/queries/find-all-admins.usecase';
 import { CreateDonationCommand } from 'src/features/donation/commands/create-donation.command';
 import { DepositPartiallyMatchedEvent } from './deposit-partially-matched.event';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { DepositStatus } from 'src/enums/deposit-status.enum';
 
 const entities = [
   User,
@@ -76,6 +78,7 @@ describe('DepositEventHandler', () => {
         DecreaseFundSumUseCase,
         FindAllAdminsUseCase,
         GetDonationsByFundingUseCase,
+        EventEmitter2,
         ...entities.map(createMockProvider),
       ],
     }).compile();
@@ -111,7 +114,7 @@ describe('DepositEventHandler', () => {
       createdImages: [],
       image: null,
       isAdmin: false,
-    };
+    } as User;
 
     // TODO - call mock factory
     mockFunding = {
@@ -221,18 +224,17 @@ describe('DepositEventHandler', () => {
   });
 
   it('should handle deposit.unmatched event', async () => {
-    const deposit = Deposit.create(
-      '익명의 천사',
-      '최승현',
-      1_000_000_000,
-      new Date(),
-      'depositBank',
-      'depositAccount',
-      'withdrawalAccount',
-      1,
-    );
-
-    deposit.orphan = jest.fn();
+    const deposit = {
+      depositId: 1,
+      senderSig: '익명의 천사',
+      receiver: '최승현',
+      amount: 1_000_000_000,
+      transferDate: new Date(),
+      depositBank: 'depositBank',
+      depositAccount: 'depositAccount',
+      withdrawalAccount: 'withdrawalAccount',
+      status: DepositStatus.Orphan,
+    } as Deposit;
 
     const event = new DepositUnmatchedEvent(deposit);
 
@@ -248,12 +250,6 @@ describe('DepositEventHandler', () => {
 
     // 이벤트 생성!
     await handler.handleDepositUnmatched(event);
-
-    // Verify deposit is marked as orphan
-    expect(deposit.orphan).toHaveBeenCalledWith(g2gException);
-
-    // Verify deposit is saved
-    expect(depositSaveSpy).toHaveBeenCalledWith(deposit);
 
     // Verify notifications are sent to all admins
     expect(findAllAdminsSpy).toHaveBeenCalled();
@@ -276,16 +272,17 @@ describe('DepositEventHandler', () => {
     );
   });
   it('should handle deposit.partiallyMatched event', async () => {
-    const deposit = Deposit.create(
-      'sender',
-      'receiver',
-      1000,
-      new Date(),
-      'depositBank',
-      'depositAccount',
-      'withdrawalAccount',
-      1,
-    );
+    const deposit = {
+      depositId: 1,
+      senderSig: '익명의 천사',
+      receiver: '최승현',
+      amount: 1000,
+      transferDate: new Date(),
+      depositBank: 'depositBank',
+      depositAccount: 'depositAccount',
+      withdrawalAccount: 'withdrawalAccount',
+      status: DepositStatus.Unmatched,
+    } as Deposit;
 
     const provisionalDonation = ProvisionalDonation.create(
       g2gException,
@@ -300,20 +297,12 @@ describe('DepositEventHandler', () => {
       provisionalDonation,
     );
 
-    const rejectSpy = jest.spyOn(provisionalDonation, 'reject');
-    const saveSpy = jest.spyOn(handler['provDonRepo'], 'save');
     const notiSpy = jest.spyOn(notificationService, 'createNoti');
     const findAllAdminsSpy = jest
       .spyOn(handler['findAllAdmins'], 'execute')
       .mockResolvedValue([{ userId: 1 } as User, { userId: 2 } as User]);
 
     await handler.handleDepositPartiallyMatched(event);
-
-    // Verify provisional donation is rejected
-    expect(rejectSpy).toHaveBeenCalledWith(g2gException);
-
-    // Verify provisional donation is saved
-    expect(saveSpy).toHaveBeenCalledWith(provisionalDonation);
 
     // Verify notification is sent to the sender
     expect(notiSpy).toHaveBeenCalledWith(

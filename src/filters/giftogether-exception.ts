@@ -52,6 +52,12 @@ export class GiftogetherExceptions {
     HttpStatus.BAD_REQUEST,
   );
 
+  ProvisionalDonationNotFound = new GiftogetherException(
+    ErrorMsg.ProvisionalDonationNotFound,
+    ErrorCode.ProvisionalDonationNotFound,
+    HttpStatus.NOT_FOUND,
+  );
+
   // Gift
   IncorrectGiftUrl = new GiftogetherException(
     ErrorMsg.IncorrectGiftUrl,
