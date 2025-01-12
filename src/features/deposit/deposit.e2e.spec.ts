@@ -39,6 +39,7 @@ import {
   createMockUser,
   createMockUserWithRelations,
 } from '../../tests/mock-factory';
+import { FundTheme } from '../../enums/fund-theme.enum';
 
 const entities = [
   Deposit,
