@@ -296,7 +296,6 @@ export class GiftogetherExceptions {
   );
 
   // Generic
-
   InvalidStatus = new GiftogetherException(
     ErrorMsg.InvalidStatus,
     ErrorCode.InvalidStatus,
@@ -306,6 +305,18 @@ export class GiftogetherExceptions {
   InvalidStatusChange = new GiftogetherException(
     ErrorMsg.InvalidStatusChange,
     ErrorCode.InvalidStatusChange,
+    HttpStatus.BAD_REQUEST,
+  );
+
+  InvalidPage = new GiftogetherException(
+    ErrorMsg.InvalidPage,
+    ErrorCode.InvalidPage,
+    HttpStatus.BAD_REQUEST,
+  );
+
+  InvalidLimit = new GiftogetherException(
+    ErrorMsg.InvalidLimit,
+    ErrorCode.InvalidLimit,
     HttpStatus.BAD_REQUEST,
   );
 }

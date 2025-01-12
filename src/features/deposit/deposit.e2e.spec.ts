@@ -30,6 +30,8 @@ import { CsComment } from '../../entities/cs-comment.entity';
 import {
   createMockUser,
   createMockUserWithRelations,
+  createMockDeposit,
+  createMockFundingWithRelations,
 } from '../../tests/mock-factory';
 
 const entities = [
@@ -246,6 +248,129 @@ describe('Deposit API E2E Test', () => {
       expect(foundProvDon.status).toBe(
         ProvisionalDonationStatus.Rejected.toString(),
       );
+    });
+  });
+
+  describe('GET /deposits', () => {
+    beforeEach(async () => {
+      await depositRepo.delete({});
+    });
+
+    it('should return paginated deposits', async () => {
+      // Create test deposits using mock factory
+      const deposits = await Promise.all(
+        Array(3)
+          .fill(null)
+          .map(() => depositRepo.save(createMockDeposit())),
+      );
+
+      const response = await request(app.getHttpServer())
+        .get('/deposits')
+        .query({ page: 1, limit: 2 })
+        .expect(200);
+
+      expect(response.body.data.deposits).toHaveLength(2);
+      expect(response.body.data.total).toBe(3);
+      expect(response.body.data.page).toBe(1);
+      expect(response.body.data.lastPage).toEqual(2);
+
+      // Verify deposits are ordered by regAt DESC
+      const returnedDeposits = response.body.data.deposits;
+      expect(
+        new Date(returnedDeposits[0].regAt).getTime(),
+      ).toBeGreaterThanOrEqual(new Date(returnedDeposits[1].regAt).getTime());
+    });
+
+    it('should return empty array when no deposits exist', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/deposits')
+        .expect(200);
+
+      expect(response.body.data.deposits).toHaveLength(0);
+      expect(response.body.data.total).toBe(0);
+      expect(response.body.data.page).toBe(1);
+      expect(response.body.data.lastPage).toBe(0);
+    });
+
+    it('should handle invalid page parameters', async () => {
+      // Create some test deposits
+      await Promise.all(
+        Array(3)
+          .fill(null)
+          .map(() => depositRepo.save(createMockDeposit())),
+      );
+
+      // Test negative page
+      const responseNegative = await request(app.getHttpServer())
+        .get('/deposits')
+        .query({ page: -1 })
+        .expect(400);
+      expect(responseNegative.body.message).toBe('잘못된 페이지 번호입니다.');
+
+      // Test page beyond last page
+      const responseBeyond = await request(app.getHttpServer())
+        .get('/deposits')
+        .query({ page: 999 })
+        .expect(200);
+      expect(responseBeyond.body.data.deposits).toHaveLength(0);
+    });
+  });
+
+  describe('GET /deposits/:id', () => {
+    beforeEach(async () => {
+      await depositRepo.delete({});
+    });
+
+    it('should return a deposit by id', async () => {
+      // Create test deposit using mock factory
+      const deposit = await depositRepo.save(createMockDeposit());
+
+      const response = await request(app.getHttpServer())
+        .get(`/deposits/${deposit.depositId}`)
+        .expect(200);
+
+      expect(response.body.data.depositId).toBe(deposit.depositId);
+      expect(response.body.data.senderSig).toBe(deposit.senderSig);
+      expect(response.body.data.amount).toBe(deposit.amount);
+      expect(response.body.data.receiver).toBe('GIFTOGETHER');
+      expect(response.body.data.status).toBe(
+        DepositStatus.Unmatched.toString(),
+      );
+    });
+
+    it('should return 404 when deposit not found', async () => {
+      await request(app.getHttpServer())
+        .get('/deposits/999999')
+        .expect(404)
+        .expect((res) => {
+          expect(res.body.message).toBe('입금내역을 찾을 수 없습니다.');
+        });
+    });
+
+    it('should return deposit with related donation if exists', async () => {
+      // Create a deposit that is matched with a donation
+      const mockFunding = await createMockFundingWithRelations(
+        {
+          userRepo,
+          fundingRepo,
+          depositRepo,
+          donationRepo,
+        },
+        undefined,
+        { deposit: 1, donation: 1 },
+      );
+
+      const deposit = await depositRepo.findOne({
+        where: { depositId: mockFunding.donations[0].deposit.depositId },
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`/deposits/${deposit.depositId}`)
+        .expect(200);
+
+      expect(response.body.data.depositId).toBe(deposit.depositId);
+      expect(response.body.data.donation).toBeDefined();
+      expect(response.body.data.donation.donAmnt).toBe(deposit.amount);
     });
   });
 
