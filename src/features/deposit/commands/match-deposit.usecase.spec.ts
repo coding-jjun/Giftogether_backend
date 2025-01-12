@@ -11,73 +11,50 @@ import { User } from 'src/entities/user.entity';
 import { AuthType } from 'src/enums/auth-type.enum';
 import { Funding } from 'src/entities/funding.entity';
 import { FundTheme } from 'src/enums/fund-theme.enum';
-import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 import { Repository } from 'typeorm';
-import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
-import { createDataSourceOptions } from 'src/tests/data-source-options';
-import { Account } from 'src/entities/account.entity';
-import { Comment } from 'src/entities/comment.entity';
-import { Address } from 'src/entities/address.entity';
-import { Image } from 'src/entities/image.entity';
-import { Gift } from 'src/entities/gift.entity';
-import { Donation } from 'src/entities/donation.entity';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { DepositFsmService } from '../domain/deposit-fsm.service';
-import {
-  createMockFundingWithRelations,
-  createMockUser,
-  createMockProvisionalDonation,
-} from '../../../tests/mock-factory';
-import { CsBoard } from '../../../entities/cs-board.entity';
-import { CsComment } from '../../../entities/cs-comment.entity';
-
-const entities = [
-  ProvisionalDonation,
-  Deposit,
-  Funding,
-  User,
-  Account,
-  Comment,
-  Address,
-  Image,
-  Gift,
-  Donation,
-  CsBoard,
-  CsComment,
-];
+import { ProvisionalDonationEventHandler } from '../../../features/donation/domain/events/provisional-donation-event-handler';
+import { ProvisionalDonationFsmService } from '../../../features/donation/domain/services/provisional-donation-fsm.service';
+import { createMockRepository } from '../../../tests/create-mock-repository';
+import { EventModule } from '../../event/event.module';
+import { DepositEventHandler } from '../domain/events/deposit-event.handler';
+import { DepositModule } from '../deposit.module';
+import { createMockUser } from '../../../tests/mock-factory';
 
 describe('MatchDepositUseCase', () => {
   let provDonationRepository: Repository<ProvisionalDonation>;
-  let fundingRepository: Repository<Funding>;
-  let userRepository: Repository<User>;
   let matchDepositUseCase: MatchDepositUseCase;
   let eventEmitter: EventEmitter2;
   let g2gException: GiftogetherExceptions;
-
+  let mockUser: User;
+  let mockFunding: Funding;
+  let depositRepository: Repository<Deposit>;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        EventEmitterModule.forRoot(),
-        TypeOrmModule.forRoot(createDataSourceOptions(entities)),
-        TypeOrmModule.forFeature(entities),
-      ],
-      controllers: [],
+      imports: [EventModule],
       providers: [
-        GiftogetherExceptions,
         MatchDepositUseCase,
         DepositFsmService,
+        GiftogetherExceptions,
+        {
+          provide: getRepositoryToken(Deposit),
+          useValue: createMockRepository(Repository<Deposit>),
+        },
+        {
+          provide: getRepositoryToken(ProvisionalDonation),
+          useValue: createMockRepository(Repository<ProvisionalDonation>),
+        },
       ],
     }).compile();
 
-    matchDepositUseCase = module.get(MatchDepositUseCase);
+    matchDepositUseCase = module.get<MatchDepositUseCase>(MatchDepositUseCase);
     provDonationRepository = module.get<Repository<ProvisionalDonation>>(
       getRepositoryToken(ProvisionalDonation),
     );
-    fundingRepository = module.get<Repository<Funding>>(
-      getRepositoryToken(Funding),
-    );
-    userRepository = module.get<Repository<User>>(getRepositoryToken(User));
-    eventEmitter = module.get(EventEmitter2);
-    g2gException = module.get(GiftogetherExceptions);
+    depositRepository = module.get<Repository<Deposit>>(getRepositoryToken(Deposit));
+    g2gException = module.get<GiftogetherExceptions>(GiftogetherExceptions);
+    eventEmitter = module.get<EventEmitter2>(EventEmitter2);
 
     const mockUser1 = createMockUser({
       userName: '홍길동',
@@ -140,9 +117,12 @@ describe('MatchDepositUseCase', () => {
   });
 
   it('should be defined', () => {
-    expect(provDonationRepository).toBeDefined();
     expect(matchDepositUseCase).toBeDefined();
     expect(eventEmitter).toBeDefined();
+  });
+
+  it('should have same identity', () => {
+    expect(matchDepositUseCase['eventEmitter']).toBe(eventEmitter);
   });
 
   it('should match deposit with an exact sponsorship (Matched Case)', async () => {
@@ -157,20 +137,23 @@ describe('MatchDepositUseCase', () => {
       'Withdrawal Account',
     );
 
+    const mockProvDonation = ProvisionalDonation.create(
+      g2gException,
+      '홍길동-1234',
+      mockUser,
+      50000,
+      mockFunding,
+    );
+
+    jest
+      .spyOn(provDonationRepository, 'findOne')
+      .mockResolvedValue(mockProvDonation);
+
     // Act
     await matchDepositUseCase.execute(deposit);
 
-    const matchedSponsorship = await provDonationRepository.findOne({
-      where: {
-        senderSig: deposit.senderSig,
-        amount: deposit.amount,
-      },
-    });
-
-    expect(matchedSponsorship?.status).toBe(ProvisionalDonationStatus.Approved);
-
     // Assert
-    expect(matchedSponsorship.status).toBe(ProvisionalDonationStatus.Approved);
+    expect(depositRepository.save).toHaveBeenCalledWith(deposit);
     expect(eventEmitter.emit).toHaveBeenCalledWith(
       DepositMatchedEvent.name,
       expect.any(DepositMatchedEvent),
@@ -182,27 +165,30 @@ describe('MatchDepositUseCase', () => {
     const deposit = Deposit.create(
       '홍길동-1234',
       'Receiver Name',
-      99999999, // Mismatched amount
+      99999999,
       new Date(),
       'Bank Name',
       'Deposit Account',
       'Withdrawal Account',
     );
 
-    // Act
+    const mockProvDonation = ProvisionalDonation.create(
+      g2gException,
+      '홍길동-1234',
+      mockUser,
+      50000, // Different amount
+      mockFunding,
+    );
+
+    jest
+      .spyOn(provDonationRepository, 'findOne')
+      .mockResolvedValue(mockProvDonation);
+
+    // Act & Assert
     await expect(() => matchDepositUseCase.execute(deposit)).rejects.toThrow(
       g2gException.DepositPartiallyMatched,
     );
 
-    // Assert
-    const sponsorship = await provDonationRepository.findOne({
-      where: {
-        senderSig: deposit.senderSig,
-        amount: deposit.amount,
-      },
-    });
-
-    expect(sponsorship).toBeNull(); // No exact match found
     expect(eventEmitter.emit).toHaveBeenCalledWith(
       DepositPartiallyMatchedEvent.name,
       expect.any(DepositPartiallyMatchedEvent),
@@ -212,7 +198,7 @@ describe('MatchDepositUseCase', () => {
   it('should handle unmatched deposit (Unmatched Case)', async () => {
     // Arrange
     const deposit = Deposit.create(
-      '박영수-9999', // Non-existent sender
+      '박영수-9999',
       'Receiver Name',
       50000,
       new Date(),
@@ -221,110 +207,14 @@ describe('MatchDepositUseCase', () => {
       'Withdrawal Account',
     );
 
-    // Act
+    // Act & Assert
     await expect(() => matchDepositUseCase.execute(deposit)).rejects.toThrow(
       g2gException.DepositUnmatched,
     );
 
-    // Assert
-    const sponsorship = await provDonationRepository.findOne({
-      where: {
-        senderSig: deposit.senderSig,
-        amount: deposit.amount,
-      },
-    });
-
-    expect(sponsorship).toBeNull(); // No match found
     expect(eventEmitter.emit).toHaveBeenCalledWith(
       DepositUnmatchedEvent.name,
       expect.any(DepositUnmatchedEvent),
     );
-  });
-
-  it('should create a provdonation successfully when matched', async () => {
-    // Arrange
-    const deposit = Deposit.create(
-      '홍길동-1234',
-      'Receiver Name',
-      50000,
-      new Date(),
-      'Bank Name',
-      'Deposit Account',
-      'Withdrawal Account',
-    );
-
-    // Act
-    await matchDepositUseCase.execute(deposit);
-
-    const matchedSponsorship = await provDonationRepository.findOne({
-      where: {
-        senderSig: deposit.senderSig,
-        amount: deposit.amount,
-      },
-    });
-
-    // Assert
-    expect(matchedSponsorship?.status).toBe(ProvisionalDonationStatus.Approved);
-    const donation = await provDonationRepository.findOne({
-      where: {
-        senderSig: deposit.senderSig,
-        amount: deposit.amount,
-      },
-    });
-    expect(donation).toBeDefined();
-  });
-
-  it('should not create a provdonation when partially matched', async () => {
-    // Arrange
-    const deposit = Deposit.create(
-      '홍길동-1234',
-      'Receiver Name',
-      99999999, // Mismatched amount
-      new Date(),
-      'Bank Name',
-      'Deposit Account',
-      'Withdrawal Account',
-    );
-
-    // Act
-    await expect(() => matchDepositUseCase.execute(deposit)).rejects.toThrow(
-      g2gException.DepositPartiallyMatched,
-    );
-
-    // Assert
-    const donation = await provDonationRepository.findOne({
-      where: {
-        senderSig: deposit.senderSig,
-        amount: deposit.amount,
-      },
-    });
-    expect(donation).toBeNull();
-  });
-
-  it('should not create a provdonation when unmatched', async () => {
-    // Arrange
-    const deposit = Deposit.create(
-      '박영수-9999', // Non-existent sender
-      'Receiver Name',
-      50000,
-      new Date(),
-      'Bank Name',
-      'Deposit Account',
-      'Withdrawal Account',
-    );
-
-    // Act
-    await expect(() => matchDepositUseCase.execute(deposit)).rejects.toThrow(
-      g2gException.DepositUnmatched,
-    );
-
-    // Assert
-    const donation = await provDonationRepository.findOne({
-      where: {
-        senderSig: deposit.senderSig,
-        amount: deposit.amount,
-      },
-    });
-    expect(donation).toBeNull();
   });
 });

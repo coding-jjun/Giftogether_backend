@@ -14,6 +14,9 @@ import { ValidCheck } from 'src/util/valid-check';
 import { ImageModule } from '../image/image.module';
 import { CreateProvisionalDonationUseCase } from './commands/create-provisional-donation.usecase';
 import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
+import { EventModule } from '../event/event.module';
+import { ProvisionalDonationEventHandler } from './domain/events/provisional-donation-event-handler';
+import { ProvisionalDonationFsmService } from './domain/services/provisional-donation-fsm.service';
 
 @Module({
   imports: [
@@ -27,6 +30,7 @@ import { ProvisionalDonation } from '../../entities/provisional-donation.entity'
     ]),
     AuthModule,
     ImageModule,
+    EventModule,
   ],
   controllers: [DonationController],
   providers: [
@@ -35,6 +39,8 @@ import { ProvisionalDonation } from '../../entities/provisional-donation.entity'
     RollingPaperService,
     GiftogetherExceptions,
     ValidCheck,
+    ProvisionalDonationEventHandler,
+    ProvisionalDonationFsmService,
   ],
 })
 export class DonationModule {}
