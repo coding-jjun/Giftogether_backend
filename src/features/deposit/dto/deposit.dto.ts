@@ -12,6 +12,7 @@ export class DepositDto {
     public readonly withdrawalAccount: string,
     public readonly status: DepositStatus,
     public readonly depositId: number,
+    public readonly regAt: Date,
     public readonly donation?: DonationDto,
   ) {}
 }
