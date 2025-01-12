@@ -8,6 +8,7 @@ export enum ErrorCode {
   FundingNotClosed = '0101',
   DonationNotExists = '0102',
   DonationAmountExceeded = '0103',
+  ProvisionalDonationNotFound = '0104',
 
   // Gift
   IncorrectGiftUrl = '0200',

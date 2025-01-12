@@ -21,8 +21,8 @@ import { DepositRefundedEvent } from './deposit-refunded.event';
 import { DepositStatus } from 'src/enums/deposit-status.enum';
 import { DecreaseFundSumCommand } from 'src/features/funding/commands/decrease-fundsum.command';
 import { DepositDeletedEvent } from './deposit-deleted.event';
-import { ProvisionalDonation } from '../../../../entities/provisional-donation.entity';
-import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
+import { ProvisionalDonationApprovedEvent } from 'src/features/donation/domain/events/provisional-donation-approved.event';
+import { ProvisionalDonationPartiallyMatchedEvent } from 'src/features/donation/domain/events/provisional-donation-partially-matched.event';
 
 @Injectable()
 export class DepositEventHandler {
@@ -34,22 +34,22 @@ export class DepositEventHandler {
     private readonly notiService: NotificationService,
     @InjectRepository(Deposit)
     private readonly depositRepo: Repository<Deposit>,
-    @InjectRepository(ProvisionalDonation)
-    private readonly provDonRepo: Repository<ProvisionalDonation>,
     private readonly findAllAdmins: FindAllAdminsUseCase,
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
+   * 예비 후원의 상태를 '승인'으로 변경합니다. => 이 작업은 ProvisionalDonationEventHandler에서 처리합니다.
    * 1. 정식 후원 내역에 한 건 추가합니다.
    * 2. 펀딩의 달성 금액이 업데이트 됩니다 `Funding.fundSum`
    * 3. 후원자에게 알림을 보냅니다. `DonationSucessNotification`
    * 4. 펀딩주인에게 알림을 보냅니다. `NewDonate`
    */
-  @OnEvent(DepositMatchedEvent.name)
+  @OnEvent(DepositMatchedEvent.name, { async: true })
   async handleDepositMatched(event: DepositMatchedEvent) {
     const { deposit, provisionalDonation } = event;
     const { funding, senderUser } = provisionalDonation;
+
     // 1
     await this.createDonation.execute(
       new CreateDonationCommand(funding, deposit.amount, senderUser, deposit),
@@ -84,19 +84,20 @@ export class DepositEventHandler {
   /**
    * - 조건: 보내는 분은 일치하지만 이체 금액이 다른 경우 → 부분 매칭
    *
-   * 1. 예비 후원의 상태가 '반려'인지 확인합니다.
+   * 1. 예비후원의 상태를 ‘반려’로 변경합니다.
    * 2. 시스템은 후원자에게 반려 사유를 포함한 알림을 발송합니다.
    * 3. 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
    * 4. 관리자는 해당 건에 대해서 환불, 혹은 삭제 조치를 진행해야 합니다.
    */
-  @OnEvent(DepositPartiallyMatchedEvent.name)
+  @OnEvent(DepositPartiallyMatchedEvent.name, { async: true })
   async handleDepositPartiallyMatched(event: DepositPartiallyMatchedEvent) {
     const { deposit, provDon } = event;
 
     // 1
-    if (provDon.status !== ProvisionalDonationStatus.Rejected) {
-      throw this.g2gException.InvalidStatus;
-    }
+    this.eventEmitter.emit(
+      ProvisionalDonationPartiallyMatchedEvent.name,
+      new ProvisionalDonationPartiallyMatchedEvent(provDon.senderSig),
+    );
 
     // 2
     const notiDtoForSender = new CreateNotificationDto({
@@ -132,7 +133,7 @@ export class DepositEventHandler {
    *     - 보내는 분의 신원이 식별될 경우 환불을 진행합니다.
    *     - 보내는 분의 신원이 식별되지 않을경우? 어쩌지? 냠냠?
    */
-  @OnEvent(DepositUnmatchedEvent.name)
+  @OnEvent(DepositUnmatchedEvent.name, { async: true })
   async handleDepositUnmatched(event: DepositUnmatchedEvent) {
     const { deposit } = event;
 
@@ -161,7 +162,7 @@ export class DepositEventHandler {
   /**
    * 관리자가 해당 입금내역을 환불처리한 경우 입금내역의 생애주기가 올바르게 전환되는지를 따져보아야 합니다.
    */
-  @OnEvent(DepositRefundedEvent.name)
+  @OnEvent(DepositRefundedEvent.name, { async: true })
   async handleDepositRefunded(event: DepositRefundedEvent) {
     const { deposit } = event;
 
@@ -186,7 +187,7 @@ export class DepositEventHandler {
   /**
    * 관리자가 해당 입금내역을 삭제처리한 경우 입금내역의 생애주기가 올바르게 전환되는지를 따져보아야 합니다.
    */
-  @OnEvent(DepositDeletedEvent.name)
+  @OnEvent(DepositDeletedEvent.name, { async: true })
   async handleDepositDeleted(event: DepositDeletedEvent) {
     const { deposit } = event;
     // deposit.delete(); // !FIXME

@@ -7,6 +7,7 @@ export enum ErrorMsg {
   FundingNotClosed = '아직 마감되지 않은 펀딩입니다.',
   DonationNotExists = '존재하지 않는 후원입니다.',
   DonationAmountExceeded = '후원금액이 펀딩목표치를 초과합니다.',
+  ProvisionalDonationNotFound = '예비후원이 존재하지 않습니다.',
 
   // Gift
   IncorrectGiftUrl = '선물 URL이 유효하지 않습니다.',
