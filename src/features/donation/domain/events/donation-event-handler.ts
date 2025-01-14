@@ -33,11 +33,6 @@ export class DonationEventHandler {
   async handleDonationRefundRequested(event: DonationRefundRequestedEvent) {
     const { donId, donorId } = event;
 
-    const donation = await this.donationRepo.findOne({ where: { donId } });
-    if (!donation) {
-      throw this.g2gException.DonationNotExists;
-    }
-
     // !FIXME - 관리자들에게 알림을 일괄적으로 보내는 방법 강구
     this.findAllAdmins.execute().then((admins) => {
       admins.forEach((admin) => {
@@ -45,7 +40,7 @@ export class DonationEventHandler {
           recvId: admin.userId,
           sendId: donorId,
           notiType: NotiType.DonationRefundRequested,
-          subId: donation.donId.toString(),
+          subId: donId.toString(),
         });
 
         this.notificationService.createNoti(createNotificationDtoForAdmins);
@@ -61,16 +56,11 @@ export class DonationEventHandler {
   async handleDonationRefundCancelled(event: DonationRefundCancelledEvent) {
     const { donId, donorId, assignedAdminId } = event;
 
-    const donation = await this.donationRepo.findOne({ where: { donId } });
-    if (!donation) {
-      throw this.g2gException.DonationNotExists;
-    }
-
     const createNotificationDtoForDonor = new CreateNotificationDto({
       recvId: donorId,
       sendId: undefined,
       notiType: NotiType.DonationRefundCancelled,
-      subId: donation.donId.toString(),
+      subId: donId.toString(),
     });
 
     this.notificationService.createNoti(createNotificationDtoForDonor);
@@ -80,7 +70,7 @@ export class DonationEventHandler {
         recvId: assignedAdminId,
         sendId: undefined,
         notiType: NotiType.DonationRefundCancelled,
-        subId: donation.donId.toString(),
+        subId: donId.toString(),
       });
 
       this.notificationService.createNoti(createNotificationDtoForAdmin);
