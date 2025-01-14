@@ -12,6 +12,7 @@ import { AdminService } from '../../../admin/admin.service';
 import { FindAllAdminsUseCase } from '../../../admin/queries/find-all-admins.usecase';
 import { CreateNotificationDto } from '../../../notification/dto/create-notification.dto';
 import { NotiType } from '../../../../enums/noti-type.enum';
+import { DonationRefundCancelledEvent } from './donation-refund-cancelled.event';
 
 @Injectable()
 export class DonationEventHandler {
@@ -50,5 +51,39 @@ export class DonationEventHandler {
         this.notificationService.createNoti(createNotificationDtoForAdmins);
       });
     });
+  }
+
+  /**
+   * 후원 환불 요청이 취소되었습니다. 후원자에게 환불 요청 취소 알림을 보냅니다.
+   * 만약 관여한 관리자가 있다면 관리자에게도 환불 요청 취소 알림을 보냅니다.
+   */
+  @OnEvent(DonationRefundCancelledEvent.name, { async: true })
+  async handleDonationRefundCancelled(event: DonationRefundCancelledEvent) {
+    const { donId, donorId, assignedAdminId } = event;
+
+    const donation = await this.donationRepo.findOne({ where: { donId } });
+    if (!donation) {
+      throw this.g2gException.DonationNotExists;
+    }
+
+    const createNotificationDtoForDonor = new CreateNotificationDto({
+      recvId: donorId,
+      sendId: undefined,
+      notiType: NotiType.DonationRefundCancelled,
+      subId: donation.donId.toString(),
+    });
+
+    this.notificationService.createNoti(createNotificationDtoForDonor);
+
+    if (assignedAdminId) {
+      const createNotificationDtoForAdmin = new CreateNotificationDto({
+        recvId: assignedAdminId,
+        sendId: undefined,
+        notiType: NotiType.DonationRefundCancelled,
+        subId: donation.donId.toString(),
+      });
+
+      this.notificationService.createNoti(createNotificationDtoForAdmin);
+    }
   }
 }
