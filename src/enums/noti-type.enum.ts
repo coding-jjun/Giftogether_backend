@@ -10,6 +10,7 @@ export enum NotiType {
   NewComment = 'NewComment', // 새로운 댓글
   DonationSuccess = 'DonationSuccess', // 후원이 성공적으로 이루어졌음
   DonationPartiallyMatched = 'DonationPartiallyMatched', // 후원이 금액이 안맞음
+  DonationRefundRequested = 'DonationRefundRequested', // 후원 환불 요청
   DepositUnmatched = 'DepositUnmatched', // 이체내역이 어디에도 매치하지 않는 경우
 }
 
