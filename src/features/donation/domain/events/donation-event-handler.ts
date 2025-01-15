@@ -15,6 +15,7 @@ import { NotiType } from '../../../../enums/noti-type.enum';
 import { DonationRefundCancelledEvent } from './donation-refund-cancelled.event';
 import { AdminAssignedForDonationRefundEvent } from './admin-assigned-for-refune.event';
 import { DonationRefundCompletedEvent } from './donation-refund-completed.event';
+import { DonationDeletedEvent } from './donation-deleted.event';
 
 @Injectable()
 export class DonationEventHandler {
@@ -109,6 +110,23 @@ export class DonationEventHandler {
       recvId: donorId,
       sendId: undefined,
       notiType: NotiType.DonationRefundCompleted,
+      subId: donId.toString(),
+    });
+
+    this.notificationService.createNoti(createNotificationDtoForDonor);
+  }
+
+  /**
+   * 후원이 삭제되었습니다. 후원자에게 후원 삭제 알림을 보냅니다.
+   */
+  @OnEvent(DonationDeletedEvent.name, { async: true })
+  async handleDonationDeleted(event: DonationDeletedEvent) {
+    const { donId, donorId } = event;
+
+    const createNotificationDtoForDonor = new CreateNotificationDto({
+      recvId: donorId,
+      sendId: undefined,
+      notiType: NotiType.DonationDeleted,
       subId: donId.toString(),
     });
 
