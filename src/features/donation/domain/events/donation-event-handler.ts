@@ -154,11 +154,11 @@ export class DonationEventHandler {
   }
 
   /**
-   * 후원 삭제가 실패했습니다. 후원자에게 후원 삭제 실패 알림을 보냅니다.
+   * 후원 삭제가 실패했습니다. 후원자와 관리자에게 후원 삭제 실패 알림을 보냅니다.
    */
   @OnEvent(DonationDeleteFailedEvent.name, { async: true })
   async handleDonationDeleteFailed(event: DonationDeleteFailedEvent) {
-    const { donId, donorId } = event;
+    const { donId, donorId, adminId } = event;
 
     const createNotificationDtoForDonor = new CreateNotificationDto({
       recvId: donorId,
@@ -168,5 +168,14 @@ export class DonationEventHandler {
     });
 
     this.notificationService.createNoti(createNotificationDtoForDonor);
+
+    const createNotificationDtoForAdmin = new CreateNotificationDto({
+      recvId: adminId,
+      sendId: undefined,
+      notiType: NotiType.DonationDeleteFailed,
+      subId: donId.toString(),
+    });
+
+    this.notificationService.createNoti(createNotificationDtoForAdmin);
   }
 }
