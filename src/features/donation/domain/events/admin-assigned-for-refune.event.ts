@@ -1,7 +1,10 @@
 import { BaseEvent } from '../../../../interfaces/event.interface';
 
-export class AdminAssignedForRefundEvent extends BaseEvent {
-  constructor(public readonly donId: number) {
+export class AdminAssignedForDonationRefundEvent extends BaseEvent {
+  constructor(
+    public readonly donId: number,
+    public readonly assignedAdminId: number,
+  ) {
     super();
   }
 }

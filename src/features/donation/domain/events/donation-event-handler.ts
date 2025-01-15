@@ -13,6 +13,7 @@ import { FindAllAdminsUseCase } from '../../../admin/queries/find-all-admins.use
 import { CreateNotificationDto } from '../../../notification/dto/create-notification.dto';
 import { NotiType } from '../../../../enums/noti-type.enum';
 import { DonationRefundCancelledEvent } from './donation-refund-cancelled.event';
+import { AdminAssignedForDonationRefundEvent } from './admin-assigned-for-refune.event';
 
 @Injectable()
 export class DonationEventHandler {
@@ -75,5 +76,24 @@ export class DonationEventHandler {
 
       this.notificationService.createNoti(createNotificationDtoForAdmin);
     }
+  }
+
+  /**
+   * 후원 환불 관리자가 할당되었습니다. 관리자에게 환불 요청 알림을 보냅니다.
+   */
+  @OnEvent(AdminAssignedForDonationRefundEvent.name, { async: true })
+  async handleAdminAssignedForDonationRefund(
+    event: AdminAssignedForDonationRefundEvent,
+  ) {
+    const { donId, assignedAdminId } = event;
+
+    const createNotificationDtoForAdmin = new CreateNotificationDto({
+      recvId: assignedAdminId,
+      sendId: undefined,
+      notiType: NotiType.DonationRefundRequested,
+      subId: donId.toString(),
+    });
+
+    this.notificationService.createNoti(createNotificationDtoForAdmin);
   }
 }

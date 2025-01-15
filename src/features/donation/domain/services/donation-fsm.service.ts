@@ -5,7 +5,7 @@ import { EventName, Transition } from 'src/interfaces/transition.interface';
 import { InvalidStatus } from 'src/exceptions/invalid-status';
 import { DonationRefundRequestedEvent } from '../events/donation-refund-requested.event';
 import { DonationRefundCancelledEvent } from '../events/donation-refund-cancelled.event';
-import { AdminAssignedForRefundEvent } from '../events/admin-assigned-for-refune.event';
+import { AdminAssignedForDonationRefundEvent } from '../events/admin-assigned-for-refune.event';
 import { DonationRefundCompletedEvent } from '../events/donation-refund-completed.event';
 import { DonationDeletedEvent } from '../events/donation-deleted.event';
 import { DonationDeleteFailedEvent } from '../events/donation-delete-failed.event';
@@ -26,7 +26,7 @@ export class DonationFsmService implements IFsmService<S> {
     {
       from: S.WaitingRefund,
       to: S.WaitingRefundPhase2,
-      event: AdminAssignedForRefundEvent.name,
+      event: AdminAssignedForDonationRefundEvent.name,
     },
     {
       from: S.WaitingRefundPhase2,
