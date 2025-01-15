@@ -5,6 +5,8 @@ import { DepositMatchedEvent } from './events/deposit-matched.event';
 import { DepositUnmatchedEvent } from './events/deposit-unmatched.event';
 import { DepositRefundedEvent } from './events/deposit-refunded.event';
 import { IFsmService } from 'src/interfaces/fsm-service.interface';
+import { DepositDeletedEvent } from './events/deposit-deleted.event';
+import { DepositDeleteFailedEvent } from './events/deposit-delete-failed.event';
 
 @Injectable()
 export class DepositFsmService implements IFsmService<State> {
@@ -23,6 +25,21 @@ export class DepositFsmService implements IFsmService<State> {
       from: State.Matched,
       to: State.Refunded,
       event: DepositRefundedEvent.name,
+    },
+    {
+      from: State.Matched,
+      to: State.Deleted,
+      event: DepositDeletedEvent.name,
+    },
+    {
+      from: State.Matched,
+      to: State.Matched,
+      event: DepositDeleteFailedEvent.name,
+    },
+    {
+      from: State.Unmatched,
+      to: State.Deleted,
+      event: DepositDeletedEvent.name,
     },
   ];
 
