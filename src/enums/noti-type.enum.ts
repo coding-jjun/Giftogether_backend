@@ -15,7 +15,8 @@ export enum NotiType {
   DonationRefundCancelled = 'DonationRefundCancelled', // 후원 환불 요청 취소
   DonationRefundCompleted = 'DonationRefundCompleted', // 후원 환불 완료
   DonationDeleted = 'DonationDeleted', // 후원 삭제
-  DonationDeleteFailed = 'DonationDeleteFailed', // 후원 삭제 실패
+  DonationDeleteFailed = 'DonationDeleteFailed',
+  AdminAssignedForDonationRefund = 'AdminAssignedForDonationRefund', // 후원 환불 관리자가 할당되었습니다. 관리자에게 환불 요청 알림을 보냅니다.
 }
 
 export enum ReqType {

@@ -97,7 +97,7 @@ export class DonationEventHandler {
     const createNotificationDtoForAdmin = new CreateNotificationDto({
       recvId: assignedAdminId,
       sendId: undefined,
-      notiType: NotiType.DonationRefundRequested,
+      notiType: NotiType.AdminAssignedForDonationRefund,
       subId: donId.toString(),
     });
 
