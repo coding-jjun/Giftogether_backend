@@ -15,6 +15,7 @@ export enum NotiType {
   DonationRefundCancelled = 'DonationRefundCancelled', // 후원 환불 요청 취소
   DonationRefundCompleted = 'DonationRefundCompleted', // 후원 환불 완료
   DonationDeleted = 'DonationDeleted', // 후원 삭제
+  DonationDeleteFailed = 'DonationDeleteFailed', // 후원 삭제 실패
 }
 
 export enum ReqType {

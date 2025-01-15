@@ -16,6 +16,9 @@ import { DonationRefundCancelledEvent } from './donation-refund-cancelled.event'
 import { AdminAssignedForDonationRefundEvent } from './admin-assigned-for-refune.event';
 import { DonationRefundCompletedEvent } from './donation-refund-completed.event';
 import { DonationDeletedEvent } from './donation-deleted.event';
+import { DonationDeleteFailedEvent } from './donation-delete-failed.event';
+import { DeleteDepositUseCase } from '../../../deposit/commands/delete-deposit.usecase';
+import { DecreaseFundSumUseCase } from '../../../funding/commands/decrease-fundsum.usecase';
 
 @Injectable()
 export class DonationEventHandler {
@@ -27,6 +30,8 @@ export class DonationEventHandler {
     private readonly g2gException: GiftogetherExceptions,
     private readonly notificationService: NotificationService,
     private readonly findAllAdmins: FindAllAdminsUseCase,
+    private readonly deleteDepositUseCase: DeleteDepositUseCase,
+    private readonly decreaseFundSumUseCase: DecreaseFundSumUseCase,
   ) {}
 
   /**
@@ -131,5 +136,37 @@ export class DonationEventHandler {
     });
 
     this.notificationService.createNoti(createNotificationDtoForDonor);
+  }
+
+  /**
+   * 후원 삭제가 실패했습니다. 후원자에게 후원 삭제 실패 알림을 보냅니다.
+   *
+   * [정책]
+   * 삭제된 후원은 이체내역도 함께 삭제시킨다
+   *
+   * [정책]
+   * 삭제된 후원 펀딩금액을 감액 시킨다
+   */
+  @OnEvent(DonationDeleteFailedEvent.name, { async: true })
+  async handleDonationDeleteFailed(event: DonationDeleteFailedEvent) {
+    const { donId, donorId, fundId } = event;
+
+    const createNotificationDtoForDonor = new CreateNotificationDto({
+      recvId: donorId,
+      sendId: undefined,
+      notiType: NotiType.DonationDeleteFailed,
+      subId: donId.toString(),
+    });
+
+    this.notificationService.createNoti(createNotificationDtoForDonor);
+
+    // 이체내역 삭제
+    const deletedDeposit = await this.deleteDepositUseCase.execute(donId);
+
+    // 펀딩금액 감액
+    await this.decreaseFundSumUseCase.execute({
+      fundId,
+      amount: deletedDeposit.amount,
+    });
   }
 }
