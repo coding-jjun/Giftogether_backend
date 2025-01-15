@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DonationEventHandler } from './donation-event-handler';
-import { DonationFsmService } from '../services/donation-fsm.service';
 import { Donation } from '../../../../entities/donation.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GiftogetherExceptions } from '../../../../filters/giftogether-exception';
