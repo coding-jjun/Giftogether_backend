@@ -7,6 +7,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DonationDeletedEvent } from '../domain/events/donation-deleted.event';
 import { DonationFsmService } from '../domain/services/donation-fsm.service';
 import { DonationDeleteFailedEvent } from '../domain/events/donation-delete-failed.event';
+import { InvalidStatus } from '../../../exceptions/invalid-status';
 
 /**
  * 후원 삭제 요청을 처리하는 유스케이스입니다.
@@ -42,13 +43,16 @@ export class DeleteDonationUseCase {
       /**
        * 후원 삭제에 실패함! 보상절차를 시작합니다.
        */
-      const failedEvent = new DonationDeleteFailedEvent(
-        donation.donId,
-        donation.userId,
-        adminId,
-      );
-      this.eventEmitter.emit(failedEvent.name, failedEvent);
-      return false;
+      if (error instanceof InvalidStatus) {
+        const failedEvent = new DonationDeleteFailedEvent(
+          donation.donId,
+          donation.userId,
+          adminId,
+        );
+        this.eventEmitter.emit(failedEvent.name, failedEvent);
+        return false;
+      }
+      throw error;
     }
 
     await this.donationRepo.manager.transaction(

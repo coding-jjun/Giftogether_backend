@@ -24,6 +24,7 @@ import { Notification } from '../../../../entities/notification.entity';
 import { Funding } from '../../../../entities/funding.entity';
 import { Deposit } from '../../../../entities/deposit.entity';
 import { DepositFsmService } from '../../../deposit/domain/deposit-fsm.service';
+import { DepositDto } from '../../../deposit/dto/deposit.dto';
 describe('DonationEventHandler', () => {
   let handler: DonationEventHandler;
   let notificationService: NotificationService;
@@ -193,7 +194,7 @@ describe('DonationEventHandler', () => {
       const notiSpy = jest.spyOn(notificationService, 'createNoti');
       const deleteDepositSpy = jest
         .spyOn(deleteDepositUseCase, 'execute')
-        .mockResolvedValue(mockDeposit);
+        .mockResolvedValue(new DepositDto(mockDeposit));
       const decreaseFundSumSpy = jest.spyOn(decreaseFundSumUseCase, 'execute');
 
       await handler.handleDonationDeleted(event);
