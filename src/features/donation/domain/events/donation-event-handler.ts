@@ -123,23 +123,6 @@ export class DonationEventHandler {
 
   /**
    * 후원이 삭제되었습니다. 후원자에게 후원 삭제 알림을 보냅니다.
-   */
-  @OnEvent(DonationDeletedEvent.name, { async: true })
-  async handleDonationDeleted(event: DonationDeletedEvent) {
-    const { donId, donorId } = event;
-
-    const createNotificationDtoForDonor = new CreateNotificationDto({
-      recvId: donorId,
-      sendId: undefined,
-      notiType: NotiType.DonationDeleted,
-      subId: donId.toString(),
-    });
-
-    this.notificationService.createNoti(createNotificationDtoForDonor);
-  }
-
-  /**
-   * 후원 삭제가 실패했습니다. 후원자에게 후원 삭제 실패 알림을 보냅니다.
    *
    * [정책]
    * 삭제된 후원은 이체내역도 함께 삭제시킨다
@@ -147,14 +130,14 @@ export class DonationEventHandler {
    * [정책]
    * 삭제된 후원 펀딩금액을 감액 시킨다
    */
-  @OnEvent(DonationDeleteFailedEvent.name, { async: true })
-  async handleDonationDeleteFailed(event: DonationDeleteFailedEvent) {
+  @OnEvent(DonationDeletedEvent.name, { async: true })
+  async handleDonationDeleted(event: DonationDeletedEvent) {
     const { donId, donorId, fundId } = event;
 
     const createNotificationDtoForDonor = new CreateNotificationDto({
       recvId: donorId,
       sendId: undefined,
-      notiType: NotiType.DonationDeleteFailed,
+      notiType: NotiType.DonationDeleted,
       subId: donId.toString(),
     });
 
@@ -168,5 +151,22 @@ export class DonationEventHandler {
       fundId,
       amount: deletedDeposit.amount,
     });
+  }
+
+  /**
+   * 후원 삭제가 실패했습니다. 후원자에게 후원 삭제 실패 알림을 보냅니다.
+   */
+  @OnEvent(DonationDeleteFailedEvent.name, { async: true })
+  async handleDonationDeleteFailed(event: DonationDeleteFailedEvent) {
+    const { donId, donorId } = event;
+
+    const createNotificationDtoForDonor = new CreateNotificationDto({
+      recvId: donorId,
+      sendId: undefined,
+      notiType: NotiType.DonationDeleteFailed,
+      subId: donId.toString(),
+    });
+
+    this.notificationService.createNoti(createNotificationDtoForDonor);
   }
 }
