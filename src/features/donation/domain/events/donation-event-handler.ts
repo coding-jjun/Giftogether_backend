@@ -14,6 +14,7 @@ import { CreateNotificationDto } from '../../../notification/dto/create-notifica
 import { NotiType } from '../../../../enums/noti-type.enum';
 import { DonationRefundCancelledEvent } from './donation-refund-cancelled.event';
 import { AdminAssignedForDonationRefundEvent } from './admin-assigned-for-refune.event';
+import { DonationRefundCompletedEvent } from './donation-refund-completed.event';
 
 @Injectable()
 export class DonationEventHandler {
@@ -95,5 +96,22 @@ export class DonationEventHandler {
     });
 
     this.notificationService.createNoti(createNotificationDtoForAdmin);
+  }
+
+  /**
+   * 후원 환불이 완료되었습니다. 후원자에게 환불 완료 알림을 보냅니다.
+   */
+  @OnEvent(DonationRefundCompletedEvent.name, { async: true })
+  async handleDonationRefundCompleted(event: DonationRefundCompletedEvent) {
+    const { donId, donorId } = event;
+
+    const createNotificationDtoForDonor = new CreateNotificationDto({
+      recvId: donorId,
+      sendId: undefined,
+      notiType: NotiType.DonationRefundCompleted,
+      subId: donId.toString(),
+    });
+
+    this.notificationService.createNoti(createNotificationDtoForDonor);
   }
 }

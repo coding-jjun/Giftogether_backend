@@ -13,6 +13,7 @@ export enum NotiType {
   DonationRefundRequested = 'DonationRefundRequested', // 후원 환불 요청
   DepositUnmatched = 'DepositUnmatched', // 이체내역이 어디에도 매치하지 않는 경우
   DonationRefundCancelled = 'DonationRefundCancelled', // 후원 환불 요청 취소
+  DonationRefundCompleted = 'DonationRefundCompleted', // 후원 환불 완료
 }
 
 export enum ReqType {
