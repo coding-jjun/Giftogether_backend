@@ -132,8 +132,9 @@ export class DonationEventHandler {
    */
   @OnEvent(DonationDeletedEvent.name, { async: true })
   async handleDonationDeleted(event: DonationDeletedEvent) {
-    const { donId, donorId, fundId } = event;
+    const { donId, donorId, fundId, adminId } = event;
 
+    // 후원자에게 후원 삭제 알림을 보냅니다.
     const createNotificationDtoForDonor = new CreateNotificationDto({
       recvId: donorId,
       sendId: undefined,
@@ -142,6 +143,16 @@ export class DonationEventHandler {
     });
 
     this.notificationService.createNoti(createNotificationDtoForDonor);
+
+    // 관리자에게 후원 삭제 알림을 보냅니다.
+    const createNotificationDtoForAdmin = new CreateNotificationDto({
+      recvId: adminId,
+      sendId: undefined,
+      notiType: NotiType.DonationDeleted,
+      subId: donId.toString(),
+    });
+
+    this.notificationService.createNoti(createNotificationDtoForAdmin);
 
     // 이체내역 삭제
     const deletedDeposit = await this.deleteDepositUseCase.execute(donId);

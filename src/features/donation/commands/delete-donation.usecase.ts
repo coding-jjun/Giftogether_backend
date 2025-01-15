@@ -34,6 +34,7 @@ export class DeleteDonationUseCase {
       donation.donId,
       donation.userId,
       donation.funding.fundId,
+      adminId,
     );
     try {
       donation.transition(event.name, this.donationFsmService);
@@ -41,12 +42,12 @@ export class DeleteDonationUseCase {
       /**
        * 후원 삭제에 실패함! 보상절차를 시작합니다.
        */
-      const event = new DonationDeleteFailedEvent(
+      const failedEvent = new DonationDeleteFailedEvent(
         donation.donId,
         donation.userId,
         adminId,
       );
-      this.eventEmitter.emit(DonationDeleteFailedEvent.name, event);
+      this.eventEmitter.emit(failedEvent.name, failedEvent);
       return false;
     }
 
@@ -56,6 +57,11 @@ export class DeleteDonationUseCase {
         await transactionalEntityManager.softDelete(Donation, { donId }); // softDelete
       },
     );
+
+    /**
+     * 후원 삭제 성공!
+     */
+    this.eventEmitter.emit(event.name, event);
     return true;
   }
 }

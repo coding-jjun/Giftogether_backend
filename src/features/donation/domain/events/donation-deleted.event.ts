@@ -5,6 +5,7 @@ export class DonationDeletedEvent extends BaseEvent {
     public readonly donId: number,
     public readonly donorId: number,
     public readonly fundId: number,
+    public readonly adminId: number,
   ) {
     super();
   }
