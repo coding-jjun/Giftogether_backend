@@ -82,4 +82,6 @@ export enum ErrorMsg {
   InvalidStatusChange = '유효하지 않은 상태 변화입니다.',
   InvalidStatus = '유효하지 않은 상태가 발견되었습니다.',
   InconsistentAggregationError = '애그리게이션이 일관적이지 않습니다.',
+  InvalidPage = '잘못된 페이지 번호입니다.',
+  InvalidLimit = '잘못된 페이지 크기입니다.',
 }

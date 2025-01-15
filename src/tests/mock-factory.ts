@@ -209,6 +209,7 @@ export const createMockFundingWithRelations = async (
           ),
         ),
       );
+      mockFunding.donations = donations;
       // conform fundSum
       mockFunding.fundSum = donations.reduce(
         (sum, donation) => sum + donation.donAmnt,

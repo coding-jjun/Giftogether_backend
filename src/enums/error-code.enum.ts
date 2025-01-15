@@ -84,4 +84,6 @@ export enum ErrorCode {
   InvalidStatusChange = '1600',
   InvalidStatus = '1800',
   InconsistentAggregationError = '1700',
+  InvalidPage = '1701',
+  InvalidLimit = '1702',
 }
