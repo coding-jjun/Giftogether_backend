@@ -23,11 +23,6 @@ import { DecreaseFundSumUseCase } from '../../../funding/commands/decrease-funds
 @Injectable()
 export class DonationEventHandler {
   constructor(
-    private readonly donationFsmService: DonationFsmService,
-    @InjectRepository(Donation)
-    private readonly donationRepo: Repository<Donation>,
-    private readonly eventEmitter: EventEmitter2,
-    private readonly g2gException: GiftogetherExceptions,
     private readonly notificationService: NotificationService,
     private readonly findAllAdmins: FindAllAdminsUseCase,
     private readonly deleteDepositUseCase: DeleteDepositUseCase,
