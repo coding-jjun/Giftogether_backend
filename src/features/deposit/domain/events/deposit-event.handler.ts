@@ -192,10 +192,6 @@ export class DepositEventHandler {
    */
   @OnEvent(DepositDeletedEvent.name, { async: true })
   async handleDepositDeleted(event: DepositDeletedEvent) {
-    const { deposit } = event;
-    // deposit.delete(); // !FIXME
-
-    this.depositRepo.save(deposit);
-    this.depositRepo.softDelete(deposit.depositId);
+    const { depositId } = event;
   }
 }

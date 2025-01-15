@@ -32,7 +32,7 @@ export class DeleteDepositUseCase {
       throw this.g2gException.DepositNotFound;
     }
 
-    const event = new DepositDeletedEvent(deposit, deposit.senderSig);
+    const event = new DepositDeletedEvent(deposit.depositId, deposit.senderSig);
 
     deposit.transition(event.name, this.depositFsmService);
 
@@ -49,10 +49,7 @@ export class DeleteDepositUseCase {
       },
     );
 
-    this.eventEmitter.emit(DepositDeletedEvent.name, {
-      depositId,
-      senderSig: deposit.senderSig,
-    });
+    this.eventEmitter.emit(event.name, event);
 
     return new DepositDto(
       deposit.senderSig,
