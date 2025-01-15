@@ -51,14 +51,6 @@ export class DeleteDepositUseCase {
 
     this.eventEmitter.emit(event.name, event);
 
-    return new DepositDto(
-      deposit.senderSig,
-      deposit.receiver,
-      deposit.amount,
-      deposit.transferDate,
-      deposit.depositBank,
-      deposit.depositAccount,
-      deposit.withdrawalAccount,
-    );
+    return new DepositDto(deposit);
   }
 }
