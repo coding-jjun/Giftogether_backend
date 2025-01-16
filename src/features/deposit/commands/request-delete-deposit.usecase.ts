@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { DepositService } from '../deposit.service';
-import { DepositDto } from '../dto/deposit.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Deposit } from '../../../entities/deposit.entity';
 import { DepositFsmService } from '../domain/deposit-fsm.service';
 import { GiftogetherExceptions } from '../../../filters/giftogether-exception';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { IEvent } from '../../../interfaces/event.interface';
+import { DepositStatus } from '../../../enums/deposit-status.enum';
+import { MatchedDepositDeleteRequestedEvent } from '../domain/events/matched-deposit-delete-requested.event';
+import { PartiallyMatchedDepositDeleteRequestedEvent } from '../domain/events/partially-matched-deposit-delete-requested.event';
+import { DeleteDepositUseCase } from './delete-deposit.usecase';
 import { DepositDeletedEvent } from '../domain/events/deposit-deleted.event';
 
 /**
@@ -23,6 +27,7 @@ export class RequestDeleteDepositUseCase {
     private readonly g2gException: GiftogetherExceptions,
     private readonly eventEmitter: EventEmitter2,
     private readonly depositService: DepositService,
+    private readonly deleteDeposit: DeleteDepositUseCase,
   ) {}
 
   async execute(depositId: number): Promise<void> {
@@ -34,11 +39,27 @@ export class RequestDeleteDepositUseCase {
       throw this.g2gException.DepositNotFound;
     }
 
-    // fsm service에 상태변화가 가능한 상태인지 질의
-    this.depositFsmService.transition(deposit.status, DepositDeletedEvent.name); // throws!!
-
     // 이벤트 발송
-    const event = new DepositDeletedEvent(deposit.depositId, deposit.senderSig);
+    let event: IEvent;
+    if (deposit.status === DepositStatus.Matched) {
+      event = new MatchedDepositDeleteRequestedEvent(
+        deposit.depositId,
+        deposit.senderSig,
+      );
+    } else if (deposit.status === DepositStatus.PartiallyMatched) {
+      event = new PartiallyMatchedDepositDeleteRequestedEvent(
+        deposit.depositId,
+        deposit.senderSig,
+      );
+    } else if (
+      deposit.status === DepositStatus.Unmatched ||
+      deposit.status === DepositStatus.Orphan
+    ) {
+      // 즉각적인 삭제 가능
+      await this.deleteDeposit.execute(depositId);
+      event = new DepositDeletedEvent(deposit.depositId, deposit.senderSig);
+    }
+
     this.eventEmitter.emit(event.name, event);
   }
 }

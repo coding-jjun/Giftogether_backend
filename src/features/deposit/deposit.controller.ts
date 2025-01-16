@@ -6,7 +6,6 @@ import {
   Post,
   Query,
   ParseIntPipe,
-  BadRequestException,
   Delete,
 } from '@nestjs/common';
 import { DepositService } from './deposit.service';

@@ -29,11 +29,6 @@ export class DepositFsmService implements IFsmService<State> {
     },
     {
       from: State.Matched,
-      to: State.Deleted,
-      event: DepositDeletedEvent.name,
-    },
-    {
-      from: State.Matched,
       to: State.Matched,
       event: DepositDeleteFailedEvent.name,
     },
@@ -44,6 +39,16 @@ export class DepositFsmService implements IFsmService<State> {
     },
     {
       from: State.Orphan,
+      to: State.Deleted,
+      event: DepositDeletedEvent.name,
+    },
+    {
+      from: State.Matched,
+      to: State.Deleted,
+      event: DepositDeletedEvent.name,
+    },
+    {
+      from: State.PartiallyMatched,
       to: State.Deleted,
       event: DepositDeletedEvent.name,
     },
