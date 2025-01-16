@@ -7,6 +7,7 @@ import { DepositRefundedEvent } from './events/deposit-refunded.event';
 import { IFsmService } from 'src/interfaces/fsm-service.interface';
 import { DepositDeletedEvent } from './events/deposit-deleted.event';
 import { DepositDeleteFailedEvent } from './events/deposit-delete-failed.event';
+import { InvalidStatus } from '../../../exceptions/invalid-status';
 
 @Injectable()
 export class DepositFsmService implements IFsmService<State> {
@@ -41,6 +42,11 @@ export class DepositFsmService implements IFsmService<State> {
       to: State.Deleted,
       event: DepositDeletedEvent.name,
     },
+    {
+      from: State.Orphan,
+      to: State.Deleted,
+      event: DepositDeletedEvent.name,
+    },
   ];
 
   transition(current: State, event: EventName): State {
@@ -49,8 +55,7 @@ export class DepositFsmService implements IFsmService<State> {
     );
 
     if (!transition) {
-      throw new Error(
-        // !FIXME: 구체적인 에러타입 throw 하기
+      throw new InvalidStatus(
         `Invalid transition: No transition for event "${event}" from state "${current}"`,
       );
     }
