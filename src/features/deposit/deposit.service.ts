@@ -76,4 +76,8 @@ export class DepositService {
   async deleteDeposit(depositId: number): Promise<DepositDto> {
     return await this.deleteDepositUseCase.execute(depositId);
   }
+
+  async requestDeleteDeposit(id: number): Promise<DepositDto> {
+    return await this.deleteDepositUseCase.execute(id);
+  }
 }
