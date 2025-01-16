@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { DonationRefundRequestedEvent } from './donation-refund-requested.event';
 import { NotificationService } from '../../../notification/notification.service';
 import { FindAllAdminsUseCase } from '../../../admin/queries/find-all-admins.usecase';
@@ -12,6 +12,10 @@ import { DonationDeletedEvent } from './donation-deleted.event';
 import { DonationDeleteFailedEvent } from './donation-delete-failed.event';
 import { DeleteDepositUseCase } from '../../../deposit/commands/delete-deposit.usecase';
 import { DecreaseFundSumUseCase } from '../../../funding/commands/decrease-fundsum.usecase';
+import { GiftogetherExceptions } from '../../../../filters/giftogether-exception';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Donation } from '../../../../entities/donation.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class DonationEventHandler {
@@ -20,6 +24,10 @@ export class DonationEventHandler {
     private readonly findAllAdmins: FindAllAdminsUseCase,
     private readonly deleteDepositUseCase: DeleteDepositUseCase,
     private readonly decreaseFundSumUseCase: DecreaseFundSumUseCase,
+    private readonly g2gException: GiftogetherExceptions,
+    @InjectRepository(Donation)
+    private readonly donationRepo: Repository<Donation>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -113,14 +121,19 @@ export class DonationEventHandler {
    * 후원이 삭제되었습니다. 후원자에게 후원 삭제 알림을 보냅니다.
    *
    * [정책]
-   * 삭제된 후원은 이체내역도 함께 삭제시킨다
-   *
-   * [정책]
    * 삭제된 후원 펀딩금액을 감액 시킨다
    */
   @OnEvent(DonationDeletedEvent.name, { async: true })
   async handleDonationDeleted(event: DonationDeletedEvent) {
     const { donId, donorId, fundId, adminId } = event;
+
+    const donation = await this.donationRepo.findOne({
+      where: { donId },
+    });
+
+    if (!donation) {
+      throw this.g2gException.DonationNotExists;
+    }
 
     // 후원자에게 후원 삭제 알림을 보냅니다.
     const createNotificationDtoForDonor = new CreateNotificationDto({
@@ -142,13 +155,10 @@ export class DonationEventHandler {
 
     this.notificationService.createNoti(createNotificationDtoForAdmin);
 
-    // 이체내역 삭제
-    const deletedDeposit = await this.deleteDepositUseCase.execute(donId);
-
     // 펀딩금액 감액
     await this.decreaseFundSumUseCase.execute({
       fundId,
-      amount: deletedDeposit.amount,
+      amount: donation.donAmnt,
     });
   }
 

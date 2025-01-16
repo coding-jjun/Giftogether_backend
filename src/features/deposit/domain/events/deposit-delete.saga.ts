@@ -9,6 +9,8 @@ import { PartiallyMatchedDepositDeleteRequestedEvent } from './partially-matched
 import { DeleteDonationUseCase } from '../../../donation/commands/delete-donation.usecase';
 import { DonationDeleteFailedEvent } from '../../../donation/domain/events/donation-delete-failed.event';
 import { DonationDeletedEvent } from '../../../donation/domain/events/donation-deleted.event';
+import { ProvisionalDonationResetEvent } from '../../../donation/domain/events/provisional-donation-reset.event';
+import { ProvisionalDonationMatchCancelledEvent } from '../../../donation/domain/events/provisional-donation-match-cancelled.event';
 
 @Injectable()
 export class DepositDeleteSaga {
@@ -70,5 +72,16 @@ export class DepositDeleteSaga {
   async handleDonationDeleted(event: DonationDeletedEvent) {
     const { donId, donorId, fundId, adminId } = event;
     // TODO - 후원 삭제 성공 시 처리
+  }
+
+  /**
+   * 예비 후원 매치 취소 성공시 처리
+   */
+  @OnEvent(ProvisionalDonationMatchCancelledEvent.name, { async: true })
+  async handleProvDonMatchCancelled(
+    event: ProvisionalDonationMatchCancelledEvent,
+  ) {
+    const { senderSig } = event;
+    // TODO - 예비후원 매치취소 성공 시 처리
   }
 }
