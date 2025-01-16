@@ -6,7 +6,7 @@ import { createDataSourceOptions } from 'src/tests/data-source-options';
 import { DepositModule } from './deposit.module';
 import { Deposit } from '../../entities/deposit.entity';
 import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Funding } from 'src/entities/funding.entity';
@@ -25,14 +25,9 @@ import { EventModule } from '../event/event.module';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { waitForEventJobs } from 'src/tests/wait-for-events';
 import { NotiType } from 'src/enums/noti-type.enum';
-import { ProvisionalDonationApprovedEvent } from '../donation/domain/events/provisional-donation-approved.event';
-import { DonationModule } from '../donation/donation.module';
-import { NotificationModule } from '../notification/notification.module';
 import { NotificationService } from '../notification/notification.service';
 import { ProvisionalDonationEventHandler } from '../donation/domain/events/provisional-donation-event-handler';
 import { ProvisionalDonationFsmService } from '../donation/domain/services/provisional-donation-fsm.service';
-import { AuthModule } from '../auth/auth.module';
-import { ConfigService } from '@nestjs/config';
 import { CsBoard } from '../../entities/cs-board.entity';
 import { CsComment } from '../../entities/cs-comment.entity';
 import {
@@ -414,6 +409,8 @@ describe('Deposit API E2E Test', () => {
   });
 
   afterAll(async () => {
+    const dataSource = app.get(DataSource);
+    await dataSource.destroy();
     await app.close();
   });
 });
