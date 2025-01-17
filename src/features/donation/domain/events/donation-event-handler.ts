@@ -9,7 +9,6 @@ import { DonationRefundCancelledEvent } from './donation-refund-cancelled.event'
 import { AdminAssignedForDonationRefundEvent } from './admin-assigned-for-refune.event';
 import { DonationRefundCompletedEvent } from './donation-refund-completed.event';
 import { DonationDeletedEvent } from './donation-deleted.event';
-import { DonationDeleteFailedEvent } from './donation-delete-failed.event';
 import { DeleteDepositUseCase } from '../../../deposit/commands/delete-deposit.usecase';
 import { DecreaseFundSumUseCase } from '../../../funding/commands/decrease-fundsum.usecase';
 import { GiftogetherExceptions } from '../../../../filters/giftogether-exception';
@@ -150,31 +149,5 @@ export class DonationEventHandler {
       fundId,
       amount: donation.donAmnt,
     });
-  }
-
-  /**
-   * 후원 삭제가 실패했습니다. 후원자와 관리자에게 후원 삭제 실패 알림을 보냅니다.
-   */
-  @OnEvent(DonationDeleteFailedEvent.name, { async: true })
-  async handleDonationDeleteFailed(event: DonationDeleteFailedEvent) {
-    const { donId, donorId, adminId } = event;
-
-    const createNotificationDtoForDonor = new CreateNotificationDto({
-      recvId: donorId,
-      sendId: undefined,
-      notiType: NotiType.DonationDeleteFailed,
-      subId: donId.toString(),
-    });
-
-    this.notificationService.createNoti(createNotificationDtoForDonor);
-
-    const createNotificationDtoForAdmin = new CreateNotificationDto({
-      recvId: adminId,
-      sendId: undefined,
-      notiType: NotiType.DonationDeleteFailed,
-      subId: donId.toString(),
-    });
-
-    this.notificationService.createNoti(createNotificationDtoForAdmin);
   }
 }
