@@ -48,8 +48,29 @@ export class DepositDeleteSaga {
       throw this.g2gException.DepositNotFound;
     }
 
-    // 후원 삭제, 실패시 아래 DonationDeleteFailedEvent에서 보상조치를 처리합니다.
-    await this.deleteDonation.execute(deposit.donation.donId, adminId);
+    // 후원 삭제 프로세스, 실패할 수 있음.
+    try {
+      await this.deleteDonation.execute(
+        deposit.donation.donId,
+        adminId,
+        depositId,
+      );
+    } catch (error) {
+      /**
+       * 후원 삭제에 실패함! 보상절차를 시작합니다.
+       */
+      if (error instanceof InvalidStatus) {
+        const notiDto = new CreateNotificationDto({
+          recvId: adminId,
+          sendId: undefined,
+          notiType: NotiType.DonationDeleteFailed,
+          subId: deposit.donation.donId.toString(),
+        });
+        await this.notiService.createNoti(notiDto);
+      } else {
+        throw error;
+      }
+    }
   }
 
   /**
@@ -79,22 +100,6 @@ export class DepositDeleteSaga {
         throw error;
       }
     }
-  }
-
-  /**
-   * 후원 삭제 실패시 관리자에게 알림을 보냅니다.
-   */
-  @OnEvent(DonationDeleteFailedEvent.name, { async: true })
-  async handleDonationDeleteFailed(event: DonationDeleteFailedEvent) {
-    const { adminId } = event;
-
-    // send notification to admin
-    const notiDto = new CreateNotificationDto({
-      recvId: adminId,
-      sendId: undefined,
-      notiType: NotiType.DonationDeleteFailed,
-    });
-    await this.notiService.createNoti(notiDto);
   }
 
   /**
