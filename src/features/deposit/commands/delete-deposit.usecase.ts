@@ -24,7 +24,10 @@ export class DeleteDepositUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async execute(depositId: number): Promise<DepositDto> {
+  async execute(
+    depositId: number,
+    adminId: number, // !FIXME - Event Sourcing 패턴을 도입하여 불필요한 파라메터 제거
+  ): Promise<DepositDto> {
     const deposit = await this.depositRepository.findOne({
       where: { depositId },
     });
@@ -33,7 +36,11 @@ export class DeleteDepositUseCase {
       throw this.g2gException.DepositNotFound;
     }
 
-    const event = new DepositDeletedEvent(deposit.depositId, deposit.senderSig);
+    const event = new DepositDeletedEvent(
+      deposit.depositId,
+      deposit.senderSig,
+      adminId,
+    );
 
     deposit.transition(event.name, this.depositFsmService);
 

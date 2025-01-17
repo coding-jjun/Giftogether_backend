@@ -50,6 +50,7 @@ export class RequestDeleteDepositUseCase {
       event = new PartiallyMatchedDepositDeleteRequestedEvent(
         deposit.depositId,
         deposit.senderSig,
+        adminId,
       );
     } else if (
       deposit.status === DepositStatus.Unmatched ||
@@ -57,7 +58,11 @@ export class RequestDeleteDepositUseCase {
     ) {
       // 즉각적인 삭제 가능
       await this.deleteDeposit.execute(depositId);
-      event = new DepositDeletedEvent(deposit.depositId, deposit.senderSig);
+      event = new DepositDeletedEvent(
+        deposit.depositId,
+        deposit.senderSig,
+        adminId,
+      );
     }
 
     this.eventEmitter.emit(event.name, event);

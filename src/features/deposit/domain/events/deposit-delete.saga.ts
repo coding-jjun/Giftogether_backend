@@ -16,6 +16,7 @@ import { NotificationService } from 'src/features/notification/notification.serv
 import { NotiDto } from 'src/features/notification/dto/notification.dto';
 import { CreateNotificationDto } from 'src/features/notification/dto/create-notification.dto';
 import { NotiType } from 'src/enums/noti-type.enum';
+import { DeleteDepositUseCase } from '../../commands/delete-deposit.usecase';
 
 @Injectable()
 export class DepositDeleteSaga {
@@ -24,6 +25,7 @@ export class DepositDeleteSaga {
     private readonly depositRepository: Repository<Deposit>,
     private readonly g2gException: GiftogetherExceptions,
     private readonly deleteDonation: DeleteDonationUseCase,
+    private readonly deleteDeposit: DeleteDepositUseCase,
     private readonly cancelMatchProvDon: CancelMatchProvisionalDonationUseCase,
     private readonly notiService: NotificationService,
   ) {}
@@ -88,7 +90,7 @@ export class DepositDeleteSaga {
    */
   @OnEvent(DonationDeletedEvent.name, { async: true })
   async handleDonationDeleted(event: DonationDeletedEvent) {
-    const { donId, adminId } = event;
+    const { donId, adminId, depositId } = event;
 
     // 관리자에게 후원 삭제 알림을 보냅니다.
     const createNotificationDtoForAdmin = new CreateNotificationDto({
@@ -101,7 +103,7 @@ export class DepositDeleteSaga {
     await this.notiService.createNoti(createNotificationDtoForAdmin);
 
     // 마참내..! 이체내역 삭제 💀
-    await this.deleteDonation.execute(donId, adminId);
+    await this.deleteDeposit.execute(depositId, adminId);
   }
 
   /**
