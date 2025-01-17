@@ -18,6 +18,7 @@ export enum NotiType {
   DonationDeleteFailed = 'DonationDeleteFailed',
   AdminAssignedForDonationRefund = 'AdminAssignedForDonationRefund', // 후원 환불 관리자가 할당되었습니다. 관리자에게 환불 요청 알림을 보냅니다.
   ProvisionalDonationMatchCancelFailed = 'ProvisionalDonationMatchCancelFailed', // 예비 후원 매치가 실패했습니다. 관리자에게 후원 삭제 실패 알림을 보냅니다.
+  DepositDeleted = 'DepositDeleted', // 이체내역 삭제완료
 }
 
 export enum ReqType {

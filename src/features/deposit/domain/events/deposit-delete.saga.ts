@@ -9,16 +9,14 @@ import { PartiallyMatchedDepositDeleteRequestedEvent } from './partially-matched
 import { DeleteDonationUseCase } from '../../../donation/commands/delete-donation.usecase';
 import { DonationDeleteFailedEvent } from '../../../donation/domain/events/donation-delete-failed.event';
 import { DonationDeletedEvent } from '../../../donation/domain/events/donation-deleted.event';
-import { ProvisionalDonationResetEvent } from '../../../donation/domain/events/provisional-donation-reset.event';
 import { ProvisionalDonationMatchCancelledEvent } from '../../../donation/domain/events/provisional-donation-match-cancelled.event';
 import { CancelMatchProvisionalDonationUseCase } from 'src/features/donation/commands/cancel-match-provisional-donation.usecase';
 import { NotificationService } from 'src/features/notification/notification.service';
-import { NotiDto } from 'src/features/notification/dto/notification.dto';
 import { CreateNotificationDto } from 'src/features/notification/dto/create-notification.dto';
 import { NotiType } from 'src/enums/noti-type.enum';
 import { DeleteDepositUseCase } from '../../commands/delete-deposit.usecase';
-import { ProvisionalDonationMatchCancelFailedEvent } from 'src/features/donation/domain/events/provisional-donation-match-cancel-failed.event';
 import { InvalidStatus } from 'src/exceptions/invalid-status';
+import { DepositDeletedEvent } from './deposit-deleted.event';
 
 @Injectable()
 export class DepositDeleteSaga {
@@ -137,5 +135,21 @@ export class DepositDeleteSaga {
       throw this.g2gException.DepositNotFound;
     }
     await this.deleteDeposit.execute(deposit.depositId, adminId);
+  }
+
+  /**
+   * 이체내역을 성공적으로 삭제했습니다. 관리자에게 알림을 보냅니다.
+   */
+  @OnEvent(DepositDeletedEvent.name, { async: true })
+  async handleDepositDeleted(event: DepositDeletedEvent) {
+    const { depositId, adminId } = event;
+
+    const notiDto = new CreateNotificationDto({
+      recvId: adminId,
+      sendId: undefined,
+      notiType: NotiType.DepositDeleted,
+      subId: depositId.toString(),
+    });
+    await this.notiService.createNoti(notiDto);
   }
 }
