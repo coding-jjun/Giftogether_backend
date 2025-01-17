@@ -83,6 +83,8 @@ export class DepositDeleteSaga {
 
   /**
    * 후원 삭제 성공 시 처리
+   *
+   * 관리자에게 후원 삭제 알림을 보내고 이체내역을 삭제한다.
    */
   @OnEvent(DonationDeletedEvent.name, { async: true })
   async handleDonationDeleted(event: DonationDeletedEvent) {
@@ -96,7 +98,10 @@ export class DepositDeleteSaga {
       subId: donId.toString(),
     });
 
-    this.notiService.createNoti(createNotificationDtoForAdmin);
+    await this.notiService.createNoti(createNotificationDtoForAdmin);
+
+    // 마참내..! 이체내역 삭제 💀
+    await this.deleteDonation.execute(donId, adminId);
   }
 
   /**
