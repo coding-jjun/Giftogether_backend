@@ -77,6 +77,8 @@ export class DepositDeleteSaga {
           subId: event.senderSig,
         });
         await this.notiService.createNoti(notiDto);
+      } else {
+        throw error;
       }
     }
   }
