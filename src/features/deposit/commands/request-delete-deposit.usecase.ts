@@ -57,7 +57,7 @@ export class RequestDeleteDepositUseCase {
       deposit.status === DepositStatus.Orphan
     ) {
       // 즉각적인 삭제 가능
-      await this.deleteDeposit.execute(depositId);
+      await this.deleteDeposit.execute(depositId, adminId);
       event = new DepositDeletedEvent(
         deposit.depositId,
         deposit.senderSig,
