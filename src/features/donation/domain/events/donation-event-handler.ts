@@ -125,7 +125,7 @@ export class DonationEventHandler {
    */
   @OnEvent(DonationDeletedEvent.name, { async: true })
   async handleDonationDeleted(event: DonationDeletedEvent) {
-    const { donId, donorId, fundId, adminId } = event;
+    const { donId, donorId, fundId } = event;
 
     const donation = await this.donationRepo.findOne({
       where: { donId },
@@ -144,16 +144,6 @@ export class DonationEventHandler {
     });
 
     this.notificationService.createNoti(createNotificationDtoForDonor);
-
-    // 관리자에게 후원 삭제 알림을 보냅니다.
-    const createNotificationDtoForAdmin = new CreateNotificationDto({
-      recvId: adminId,
-      sendId: undefined,
-      notiType: NotiType.DonationDeleted,
-      subId: donId.toString(),
-    });
-
-    this.notificationService.createNoti(createNotificationDtoForAdmin);
 
     // 펀딩금액 감액
     await this.decreaseFundSumUseCase.execute({

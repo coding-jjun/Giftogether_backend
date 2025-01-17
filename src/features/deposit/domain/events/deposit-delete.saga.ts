@@ -86,8 +86,17 @@ export class DepositDeleteSaga {
    */
   @OnEvent(DonationDeletedEvent.name, { async: true })
   async handleDonationDeleted(event: DonationDeletedEvent) {
-    const { donId, donorId, fundId, adminId } = event;
-    // TODO - 후원 삭제 성공 시 처리
+    const { donId, adminId } = event;
+
+    // 관리자에게 후원 삭제 알림을 보냅니다.
+    const createNotificationDtoForAdmin = new CreateNotificationDto({
+      recvId: adminId,
+      sendId: undefined,
+      notiType: NotiType.DonationDeleted,
+      subId: donId.toString(),
+    });
+
+    this.notiService.createNoti(createNotificationDtoForAdmin);
   }
 
   /**
