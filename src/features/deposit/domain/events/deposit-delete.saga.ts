@@ -11,6 +11,11 @@ import { DonationDeleteFailedEvent } from '../../../donation/domain/events/donat
 import { DonationDeletedEvent } from '../../../donation/domain/events/donation-deleted.event';
 import { ProvisionalDonationResetEvent } from '../../../donation/domain/events/provisional-donation-reset.event';
 import { ProvisionalDonationMatchCancelledEvent } from '../../../donation/domain/events/provisional-donation-match-cancelled.event';
+import { CancelMatchProvisionalDonationUseCase } from 'src/features/donation/commands/cancel-match-provisional-donation.usecase';
+import { NotificationService } from 'src/features/notification/notification.service';
+import { NotiDto } from 'src/features/notification/dto/notification.dto';
+import { CreateNotificationDto } from 'src/features/notification/dto/create-notification.dto';
+import { NotiType } from 'src/enums/noti-type.enum';
 
 @Injectable()
 export class DepositDeleteSaga {
@@ -19,7 +24,8 @@ export class DepositDeleteSaga {
     private readonly depositRepository: Repository<Deposit>,
     private readonly g2gException: GiftogetherExceptions,
     private readonly deleteDonation: DeleteDonationUseCase,
-    // private readonly unmatchProvDon: UnmatchProvDonUseCase, // TODO - implement
+    private readonly cancelMatchProvDon: CancelMatchProvisionalDonationUseCase,
+    private readonly notiService: NotificationService,
   ) {}
 
   /**
@@ -29,15 +35,19 @@ export class DepositDeleteSaga {
   async handleMatchedDepositDeleteRequested(
     event: MatchedDepositDeleteRequestedEvent,
   ) {
-    const { depositId } = event;
+    const { depositId, adminId } = event;
 
     const deposit = await this.depositRepository.findOne({
       where: { depositId },
+      relations: { donation: true },
     });
 
     if (!deposit) {
       throw this.g2gException.DepositNotFound;
     }
+
+    // 후원 삭제, 실패시 아래 DonationDeleteFailedEvent에서 보상조치를 처리합니다.
+    await this.deleteDonation.execute(deposit.donation.donId, adminId);
   }
 
   @OnEvent(PartiallyMatchedDepositDeleteRequestedEvent.name, { async: true })
@@ -56,13 +66,19 @@ export class DepositDeleteSaga {
   }
 
   /**
-   * 후원 삭제 실패시 보상조치를 처리하는 로직이 담겨있습니다.
+   * 후원 삭제 실패시 관리자에게 알림을 보냅니다.
    */
   @OnEvent(DonationDeleteFailedEvent.name, { async: true })
   async handleDonationDeleteFailed(event: DonationDeleteFailedEvent) {
-    const { donId, donorId, adminId } = event;
+    const { adminId } = event;
 
-    // TODO - 후원 삭제 실패 시 처리
+    // send notification to admin
+    const notiDto = new CreateNotificationDto({
+      recvId: adminId,
+      sendId: undefined,
+      notiType: NotiType.DonationDeleteFailed,
+    });
+    await this.notiService.createNoti(notiDto);
   }
 
   /**

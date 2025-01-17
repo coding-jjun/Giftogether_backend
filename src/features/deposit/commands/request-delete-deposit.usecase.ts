@@ -30,7 +30,7 @@ export class RequestDeleteDepositUseCase {
     private readonly deleteDeposit: DeleteDepositUseCase,
   ) {}
 
-  async execute(depositId: number): Promise<void> {
+  async execute(depositId: number, adminId: number): Promise<void> {
     const deposit = await this.depositRepository.findOne({
       where: { depositId },
     });
@@ -44,7 +44,7 @@ export class RequestDeleteDepositUseCase {
     if (deposit.status === DepositStatus.Matched) {
       event = new MatchedDepositDeleteRequestedEvent(
         deposit.depositId,
-        deposit.senderSig,
+        adminId,
       );
     } else if (deposit.status === DepositStatus.PartiallyMatched) {
       event = new PartiallyMatchedDepositDeleteRequestedEvent(
