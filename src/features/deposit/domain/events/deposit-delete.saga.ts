@@ -17,6 +17,8 @@ import { NotiDto } from 'src/features/notification/dto/notification.dto';
 import { CreateNotificationDto } from 'src/features/notification/dto/create-notification.dto';
 import { NotiType } from 'src/enums/noti-type.enum';
 import { DeleteDepositUseCase } from '../../commands/delete-deposit.usecase';
+import { ProvisionalDonationMatchCancelFailedEvent } from 'src/features/donation/domain/events/provisional-donation-match-cancel-failed.event';
+import { InvalidStatus } from 'src/exceptions/invalid-status';
 
 @Injectable()
 export class DepositDeleteSaga {
@@ -52,18 +54,30 @@ export class DepositDeleteSaga {
     await this.deleteDonation.execute(deposit.donation.donId, adminId);
   }
 
+  /**
+   * 연관 예비후원의 상태를 초기화한 뒤 이체내역을 삭제합니다.
+   */
   @OnEvent(PartiallyMatchedDepositDeleteRequestedEvent.name, { async: true })
   async handlePartiallyMatchedDepositDeleteRequested(
     event: PartiallyMatchedDepositDeleteRequestedEvent,
   ) {
-    const { depositId } = event;
+    const { depositId, senderSig, adminId } = event;
 
-    const deposit = await this.depositRepository.findOne({
-      where: { depositId },
-    });
-
-    if (!deposit) {
-      throw this.g2gException.DepositNotFound;
+    // 예비후원 매치 취소
+    try {
+      await this.cancelMatchProvDon.execute(senderSig, depositId, adminId);
+    } catch (error) {
+      if (error instanceof InvalidStatus) {
+        // 예비후원 매치 취소 실패! 보상 절차를 진행합니다
+        // send notification to admin
+        const notiDto = new CreateNotificationDto({
+          recvId: adminId,
+          sendId: undefined,
+          notiType: NotiType.ProvisionalDonationMatchCancelFailed,
+          subId: event.senderSig,
+        });
+        await this.notiService.createNoti(notiDto);
+      }
     }
   }
 
@@ -113,7 +127,13 @@ export class DepositDeleteSaga {
   async handleProvDonMatchCancelled(
     event: ProvisionalDonationMatchCancelledEvent,
   ) {
-    const { senderSig } = event;
-    // TODO - 예비후원 매치취소 성공 시 처리
+    const { depositId, adminId } = event;
+    const deposit = await this.depositRepository.findOne({
+      where: { depositId },
+    });
+    if (!deposit) {
+      throw this.g2gException.DepositNotFound;
+    }
+    await this.deleteDeposit.execute(deposit.depositId, adminId);
   }
 }
