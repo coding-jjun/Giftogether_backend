@@ -7,7 +7,6 @@ import { GiftogetherExceptions } from '../../../../filters/giftogether-exception
 import { MatchedDepositDeleteRequestedEvent } from './matched-deposit-delete-requested.event';
 import { PartiallyMatchedDepositDeleteRequestedEvent } from './partially-matched-deposit-delete-requested.event';
 import { DeleteDonationUseCase } from '../../../donation/commands/delete-donation.usecase';
-import { DonationDeleteFailedEvent } from '../../../donation/domain/events/donation-delete-failed.event';
 import { DonationDeletedEvent } from '../../../donation/domain/events/donation-deleted.event';
 import { ProvisionalDonationMatchCancelledEvent } from '../../../donation/domain/events/provisional-donation-match-cancelled.event';
 import { CancelMatchProvisionalDonationUseCase } from 'src/features/donation/commands/cancel-match-provisional-donation.usecase';
