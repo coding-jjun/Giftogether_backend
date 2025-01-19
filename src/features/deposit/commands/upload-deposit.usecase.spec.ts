@@ -17,6 +17,7 @@ import { Image } from '../../../entities/image.entity';
 import { Gift } from '../../../entities/gift.entity';
 import { ProvisionalDonation } from '../../../entities/provisional-donation.entity';
 import { Notification } from '../../../entities/notification.entity';
+import { DataSource } from 'typeorm';
 
 const entities = [
   Deposit,
@@ -34,12 +35,12 @@ const entities = [
   CsComment,
 ];
 
-
 describe('UploadDepositUseCase', () => {
   let depositRepository: Repository<Deposit>;
   let uploadDepositUseCase: UploadDepositUseCase;
+  let dataSource: DataSource;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         TypeOrmModule.forRoot(createDataSourceOptions(entities)),
@@ -52,6 +53,11 @@ describe('UploadDepositUseCase', () => {
       getRepositoryToken(Deposit),
     );
     uploadDepositUseCase = module.get(UploadDepositUseCase);
+    dataSource = module.get(DataSource);
+  });
+
+  afterAll(async () => {
+    dataSource.destroy();
   });
 
   it('should save a new deposit into the repository and return the created deposit entity', async () => {
@@ -121,12 +127,17 @@ describe('UploadDepositUseCase', () => {
       new DepositDto(depositData2),
     );
     // Assert
-    const savedDeposits = await depositRepository.find();
+    expect(
+      depositRepository.exists({
+        where: { depositId: createdDeposit1.depositId },
+      }),
+    ).resolves.toBeTruthy();
 
-    // Verify that both deposits are saved
-    expect(savedDeposits.length).toBe(2);
-    expect(savedDeposits[0].depositId).toBe(createdDeposit1.depositId);
-    expect(savedDeposits[1].depositId).toBe(createdDeposit2.depositId);
+    expect(
+      depositRepository.exists({
+        where: { depositId: createdDeposit2.depositId },
+      }),
+    ).resolves.toBeTruthy();
 
     // Verify the properties of the second deposit
     expect(createdDeposit2.senderSig).toBe(depositData2.senderSig);

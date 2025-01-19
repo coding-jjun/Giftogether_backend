@@ -9,13 +9,12 @@ import { DecreaseFundSumUseCase } from '../../../funding/commands/decrease-funds
 import { DonationRefundRequestedEvent } from './donation-refund-requested.event';
 import { DonationRefundCancelledEvent } from './donation-refund-cancelled.event';
 import { DonationDeletedEvent } from './donation-deleted.event';
-import { NotiType } from '../../../../enums/noti-type.enum';
 import { User } from '../../../../entities/user.entity';
 import { Notification } from '../../../../entities/notification.entity';
 import { Funding } from '../../../../entities/funding.entity';
 import { Donation } from '../../../../entities/donation.entity';
 import { Deposit } from '../../../../entities/deposit.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { GiftogetherExceptions } from '../../../../filters/giftogether-exception';
 import { DepositFsmService } from '../../../deposit/domain/deposit-fsm.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -42,6 +41,7 @@ describe('DonationEventHandler (Integration)', () => {
   let mockFunding: Funding;
   let mockDonation: Donation;
   let mockDeposit: Deposit;
+  let dataSource: DataSource;
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -71,6 +71,7 @@ describe('DonationEventHandler (Integration)', () => {
     notificationRepo = module.get<Repository<Notification>>(
       getRepositoryToken(Notification),
     );
+    dataSource = module.get(DataSource);
 
     // Create test data
     mockUser = await userRepo.save(createMockUser({ userId: 1 }));
@@ -96,6 +97,7 @@ describe('DonationEventHandler (Integration)', () => {
   });
 
   afterAll(async () => {
+    await dataSource.destroy();
     await module.close();
   });
 
