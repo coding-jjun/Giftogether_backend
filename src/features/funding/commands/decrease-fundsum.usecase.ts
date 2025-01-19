@@ -12,14 +12,14 @@ export class DecreaseFundSumUseCase {
   ) {}
 
   async execute(cmd: DecreaseFundSumCommand) {
-    const { funding, amount } = cmd;
+    const { fundId, amount } = cmd;
 
     await this.fundingRepo
       .createQueryBuilder()
-      .update(funding)
+      .update(Funding)
       .set({ fundSum: () => 'fundSum - :amount' })
       .setParameter('amount', amount)
-      .where('fundId = :fundId', { fundId: funding.fundId })
+      .where('fundId = :fundId', { fundId })
       .execute();
   }
 }

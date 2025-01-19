@@ -301,6 +301,12 @@ export class GiftogetherExceptions {
     HttpStatus.BAD_REQUEST,
   );
 
+  DepositNotFound = new GiftogetherException(
+    ErrorMsg.DepositNotFound,
+    ErrorCode.DepositNotFound,
+    HttpStatus.NOT_FOUND,
+  );
+
   // Generic
   InvalidStatus = new GiftogetherException(
     ErrorMsg.InvalidStatus,

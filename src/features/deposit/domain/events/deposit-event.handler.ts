@@ -176,7 +176,10 @@ export class DepositEventHandler {
        * 2. fundSum을 donAmnt 만큼 decrease 시키는 도메인 이벤트를 발생시킵니다.
        */
       this.decreaseFundSum.execute(
-        new DecreaseFundSumCommand(deposit.donation.funding, deposit.amount),
+        new DecreaseFundSumCommand(
+          deposit.donation.funding.fundId,
+          deposit.amount,
+        ),
       );
     }
 
@@ -189,10 +192,6 @@ export class DepositEventHandler {
    */
   @OnEvent(DepositDeletedEvent.name, { async: true })
   async handleDepositDeleted(event: DepositDeletedEvent) {
-    const { deposit } = event;
-    // deposit.delete(); // !FIXME
-
-    this.depositRepo.save(deposit);
-    this.depositRepo.softDelete(deposit.depositId);
+    const { depositId } = event;
   }
 }
