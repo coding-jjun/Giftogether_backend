@@ -1,24 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request = require('supertest');
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { createDataSourceOptions } from 'src/tests/data-source-options';
 import { DepositModule } from './deposit.module';
 import { Deposit } from '../../entities/deposit.entity';
 import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Funding } from 'src/entities/funding.entity';
 import { User } from 'src/entities/user.entity';
-import { AuthType } from 'src/enums/auth-type.enum';
 import { Account } from 'src/entities/account.entity';
 import { Comment } from 'src/entities/comment.entity';
 import { Address } from 'src/entities/address.entity';
 import { Image } from 'src/entities/image.entity';
 import { Gift } from 'src/entities/gift.entity';
 import { Donation } from 'src/entities/donation.entity';
-import { FundTheme } from 'src/enums/fund-theme.enum';
 import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 import { CommonResponse } from 'src/interfaces/common-response.interface';
 import { DepositStatus } from 'src/enums/deposit-status.enum';
@@ -27,8 +25,6 @@ import { EventModule } from '../event/event.module';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { waitForEventJobs } from 'src/tests/wait-for-events';
 import { NotiType } from 'src/enums/noti-type.enum';
-import { CsBoard } from 'src/entities/cs-board.entity';
-import { CsComment } from 'src/entities/cs-comment.entity';
 import { ProvisionalDonationApprovedEvent } from '../donation/domain/events/provisional-donation-approved.event';
 import { DonationModule } from '../donation/donation.module';
 import { NotificationModule } from '../notification/notification.module';
@@ -37,6 +33,13 @@ import { ProvisionalDonationEventHandler } from '../donation/domain/events/provi
 import { ProvisionalDonationFsmService } from '../donation/domain/services/provisional-donation-fsm.service';
 import { AuthModule } from '../auth/auth.module';
 import { ConfigService } from '@nestjs/config';
+import { CsBoard } from '../../entities/cs-board.entity';
+import { CsComment } from '../../entities/cs-comment.entity';
+import {
+  createMockUser,
+  createMockUserWithRelations,
+} from '../../tests/mock-factory';
+import { FundTheme } from '../../enums/fund-theme.enum';
 
 const entities = [
   Deposit,
@@ -95,29 +98,22 @@ describe('Deposit API E2E Test', () => {
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     await app.init();
 
-    mockFundingOwner = new User();
-    Object.assign(mockFundingOwner, {
-      authId: 'mockUser',
-      authType: AuthType.Jwt,
-      userNick: 'mockUser',
-      userPw: 'password',
-      userName: '펀딩주인',
-      userPhone: '010-1234-5678',
-      userBirth: new Date('1997-09-26'),
-      account: null,
-      regAt: new Date(Date.now()),
-      uptAt: new Date(Date.now()),
-      delAt: null,
-      userEmail: 'mockFundingOwner@example.com',
-      defaultImgId: undefined,
-      createdImages: [],
-      image: null,
-      isAdmin: false,
-    });
-    await userRepo.insert(mockFundingOwner);
+    mockFundingOwner = await createMockUserWithRelations(
+      {
+        userRepo,
+        fundingRepo,
+      },
+      {
+        userName: '펀딩주인',
+      },
+      {
+        funding: 1,
+      },
+    );
 
-    mockDonor = Object.create(mockFundingOwner) as User;
-    Object.assign(mockDonor, {
+    mockFunding = mockFundingOwner.fundings[0];
+
+    mockDonor = createMockUser({
       userName: '후원자',
       userEmail: 'mockDonor@example.com',
       userNick: '후원자',
@@ -245,7 +241,9 @@ describe('Deposit API E2E Test', () => {
           );
         });
 
-      const foundDeposits = await depositRepo.find();
+      const foundDeposits = await depositRepo.find({
+        where: { senderSig: 'UNKNOWN-1234' },
+      });
       expect(foundDeposits).toHaveLength(1);
       expect(foundDeposits[0].status).toBe(DepositStatus.Orphan);
     });
@@ -291,8 +289,6 @@ describe('Deposit API E2E Test', () => {
   });
 
   afterAll(async () => {
-    // 테스트 데이터베이스를 DROP하는 명령어. 모든 테이블과 데이터가 사라집니다!! 💀
-    await app.get(DataSource).dropDatabase();
     await app.close();
   });
 });
