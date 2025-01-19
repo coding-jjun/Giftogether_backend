@@ -5,8 +5,35 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { createDataSourceOptions } from 'src/tests/data-source-options';
 import { DepositDto } from '../dto/deposit.dto';
+import { Donation } from '../../../entities/donation.entity';
+import { Funding } from '../../../entities/funding.entity';
+import { User } from '../../../entities/user.entity';
+import { CsBoard } from '../../../entities/cs-board.entity';
+import { CsComment } from '../../../entities/cs-comment.entity';
+import { Account } from '../../../entities/account.entity';
+import { Comment } from '../../../entities/comment.entity';
+import { Address } from '../../../entities/address.entity';
+import { Image } from '../../../entities/image.entity';
+import { Gift } from '../../../entities/gift.entity';
+import { ProvisionalDonation } from '../../../entities/provisional-donation.entity';
+import { Notification } from '../../../entities/notification.entity';
 
-const entities = [Deposit];
+const entities = [
+  Deposit,
+  ProvisionalDonation,
+  User,
+  Account,
+  Comment,
+  Address,
+  Image,
+  Gift,
+  Donation,
+  Funding,
+  Notification,
+  CsBoard,
+  CsComment,
+];
+
 
 describe('UploadDepositUseCase', () => {
   let depositRepository: Repository<Deposit>;
@@ -41,17 +68,8 @@ describe('UploadDepositUseCase', () => {
 
     // Act
     const createdDeposit = await uploadDepositUseCase.execute(
-      new DepositDto(
-        depositData.senderSig,
-        depositData.receiver,
-        depositData.amount,
-        depositData.transferDate,
-        depositData.depositBank,
-        depositData.depositAccount,
-        depositData.withdrawalAccount,
-      ),
+      new DepositDto(depositData),
     );
-
     // Assert
     const savedDeposits = await depositRepository.find({
       where: { depositId: createdDeposit.depositId },
@@ -97,26 +115,10 @@ describe('UploadDepositUseCase', () => {
     };
     // Act
     const createdDeposit1 = await uploadDepositUseCase.execute(
-      new DepositDto(
-        depositData1.senderSig,
-        depositData1.receiver,
-        depositData1.amount,
-        depositData1.transferDate,
-        depositData1.depositBank,
-        depositData1.depositAccount,
-        depositData1.withdrawalAccount,
-      ),
+      new DepositDto(depositData1),
     );
     const createdDeposit2 = await uploadDepositUseCase.execute(
-      new DepositDto(
-        depositData2.senderSig,
-        depositData2.receiver,
-        depositData2.amount,
-        depositData2.transferDate,
-        depositData2.depositBank,
-        depositData2.depositAccount,
-        depositData2.withdrawalAccount,
-      ),
+      new DepositDto(depositData2),
     );
     // Assert
     const savedDeposits = await depositRepository.find();
