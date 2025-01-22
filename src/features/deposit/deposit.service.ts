@@ -6,6 +6,7 @@ import { Deposit } from '../../entities/deposit.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RequestDeleteDepositUseCase } from './commands/request-delete-deposit.usecase';
+import { CreateDepositDto } from './dto/create-deposit.dto';
 
 @Injectable()
 export class DepositService {
@@ -63,13 +64,13 @@ export class DepositService {
     return new DepositDto(deposit);
   }
 
-  async uploadDeposit(depositData: DepositDto): Promise<DepositDto> {
+  async uploadDeposit(depositData: CreateDepositDto): Promise<DepositDto> {
     const deposit: Deposit =
       await this.uploadDepositUseCase.execute(depositData);
 
     await this.matchDepositUseCase.execute(deposit);
 
-    return depositData;
+    return new DepositDto(deposit);
   }
 
   async requestDeleteDeposit(id: number, adminId: number): Promise<void> {
