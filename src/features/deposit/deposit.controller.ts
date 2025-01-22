@@ -9,6 +9,9 @@ import {
   Delete,
   UseGuards,
   Req,
+  Delete,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { DepositService } from './deposit.service';
 import { DepositDto } from './dto/deposit.dto';
@@ -17,6 +20,7 @@ import { GiftogetherExceptions } from '../../filters/giftogether-exception';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth-guard';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
+import { CreateDepositDto } from './dto/create-deposit.dto';
 
 @Controller('deposits')
 export class DepositController {
@@ -52,7 +56,7 @@ export class DepositController {
 
   @Post()
   async uploadDeposit(
-    @Body() depositData: DepositDto,
+    @Body() depositData: CreateDepositDto,
   ): Promise<CommonResponse> {
     return {
       message: '성공적으로 입금내역이 추가되었습니다.',
