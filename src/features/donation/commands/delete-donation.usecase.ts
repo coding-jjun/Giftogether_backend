@@ -32,6 +32,7 @@ export class DeleteDonationUseCase {
   ): Promise<void> {
     const donation = await this.donationRepo.findOne({
       where: { donId },
+      relations: { funding: true },
     });
     if (!donation) {
       throw this.g2gException.DonationNotExists;
