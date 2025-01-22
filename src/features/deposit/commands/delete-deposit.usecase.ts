@@ -9,7 +9,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DepositDto } from '../dto/deposit.dto';
 
 /**
- * 입금내역 삭제
+ * 입금내역 삭제. 관리자가 직접 이 유스케이스를 호출할 수는 없고, 관리자의 삭제요청을 받아
+ * 시스템이 연관 엔티티들의 상태를 적절하게 변경한 뒤 최종적으로 삭제할때 사용합니다.
  *
  * Deposit의 상태를 삭제 상태로 변경하고, 삭제 이벤트를 발송한다.
  */
@@ -23,7 +24,10 @@ export class DeleteDepositUseCase {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async execute(depositId: number): Promise<DepositDto> {
+  async execute(
+    depositId: number,
+    adminId: number, // !FIXME - Event Sourcing 패턴을 도입하여 불필요한 파라메터 제거
+  ): Promise<DepositDto> {
     const deposit = await this.depositRepository.findOne({
       where: { depositId },
     });
@@ -32,7 +36,11 @@ export class DeleteDepositUseCase {
       throw this.g2gException.DepositNotFound;
     }
 
-    const event = new DepositDeletedEvent(deposit.depositId, deposit.senderSig);
+    const event = new DepositDeletedEvent(
+      deposit.depositId,
+      deposit.senderSig,
+      adminId,
+    );
 
     deposit.transition(event.name, this.depositFsmService);
 

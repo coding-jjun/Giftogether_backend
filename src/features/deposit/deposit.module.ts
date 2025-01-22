@@ -20,6 +20,14 @@ import { FindAllAdminsUseCase } from '../admin/queries/find-all-admins.usecase';
 import { DepositFsmService } from './domain/deposit-fsm.service';
 import { EventModule } from '../event/event.module';
 import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
+import { RequestDeleteDepositUseCase } from './commands/request-delete-deposit.usecase';
+import { AuthModule } from '../auth/auth.module';
+import { DepositDeleteSaga } from './domain/events/deposit-delete.saga';
+import { DeleteDonationUseCase } from '../donation/commands/delete-donation.usecase';
+import { DonationFsmService } from '../donation/domain/services/donation-fsm.service';
+import { CancelMatchProvisionalDonationUseCase } from '../donation/commands/cancel-match-provisional-donation.usecase';
+import { ProvisionalDonationFsmService } from '../donation/domain/services/provisional-donation-fsm.service';
+import { DonationEventHandler } from '../donation/domain/events/donation-event-handler';
 
 @Module({
   imports: [
@@ -32,6 +40,7 @@ import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
       Deposit,
       ProvisionalDonation,
     ]),
+    AuthModule,
   ],
   controllers: [DepositController],
   providers: [
@@ -47,6 +56,13 @@ import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
     FindAllAdminsUseCase,
     DepositFsmService,
     DeleteDepositUseCase,
+    RequestDeleteDepositUseCase,
+    DonationFsmService,
+    DeleteDonationUseCase,
+    DepositDeleteSaga,
+    CancelMatchProvisionalDonationUseCase,
+    ProvisionalDonationFsmService,
+    DonationEventHandler,
   ],
 })
 export class DepositModule {}

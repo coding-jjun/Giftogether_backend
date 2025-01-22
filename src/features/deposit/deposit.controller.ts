@@ -60,4 +60,22 @@ export class DepositController {
       data: await this.depositService.uploadDeposit(depositData),
     };
   }
+
+  /**
+   * 관리자는 입금내역을 바로 삭제할 수 없습니다. 대신 입금내역을 삭제요청을 시스템에게 보내고
+   * 시스템은 입금내역을 삭제하는 이벤트를 발송합니다. 자세한 내용은 [Deposit 삭제요청 및 삭제처리](https://www.notion.so/Deposit-294de66d7ad64e669f3eaed80f68df38?pvs=4) 문서를 참고하세요.
+   */
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  async requestDeleteDeposit(
+    @Req() req: Request,
+    @Param('id') id: number,
+  ): Promise<CommonResponse> {
+    const user = req.user! as User;
+    return {
+      message:
+        '성공적으로 입금내역 삭제요청이 완료되었습니다. Notification을 확인해주세요.',
+      data: await this.depositService.requestDeleteDeposit(id, user.userId),
+    };
+  }
 }

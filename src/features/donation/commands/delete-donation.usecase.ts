@@ -6,8 +6,7 @@ import { GiftogetherExceptions } from '../../../filters/giftogether-exception';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DonationDeletedEvent } from '../domain/events/donation-deleted.event';
 import { DonationFsmService } from '../domain/services/donation-fsm.service';
-import { DonationDeleteFailedEvent } from '../domain/events/donation-delete-failed.event';
-import { InvalidStatus } from '../../../exceptions/invalid-status';
+import { DecreaseFundSumUseCase } from 'src/features/funding/commands/decrease-fundsum.usecase';
 
 /**
  * 후원 삭제 요청을 처리하는 유스케이스입니다.
@@ -21,39 +20,44 @@ export class DeleteDonationUseCase {
     private readonly donationFsmService: DonationFsmService,
     private readonly eventEmitter: EventEmitter2,
     private readonly g2gException: GiftogetherExceptions,
+    private readonly decreaseFundSumUseCase: DecreaseFundSumUseCase,
   ) {}
 
-  async execute(donId: number, adminId: number): Promise<boolean> {
+  /**
+   * [정책]
+   * 후원을 삭제하기 위해선 펀딩금액을 먼저 감액 시킨다
+   *
+   * @throws DonationNotExists
+   * @throws InvalidStatus
+   */
+  async execute(
+    donId: number,
+    adminId: number,
+    depositId: number, // !FIXME - Event Sourcing 패턴 구현하여 불필요한 파라메터 제거 필요
+  ): Promise<void> {
     const donation = await this.donationRepo.findOne({
       where: { donId },
+      relations: { funding: true },
     });
     if (!donation) {
       throw this.g2gException.DonationNotExists;
     }
 
+    // 펀딩금액 감액
+    await this.decreaseFundSumUseCase.execute({
+      fundId: donation.funding.fundId,
+      amount: donation.donAmnt,
+    });
+
     const event = new DonationDeletedEvent(
       donation.donId,
       donation.userId,
       donation.funding.fundId,
+      depositId,
       adminId,
     );
-    try {
-      donation.transition(event.name, this.donationFsmService);
-    } catch (error) {
-      /**
-       * 후원 삭제에 실패함! 보상절차를 시작합니다.
-       */
-      if (error instanceof InvalidStatus) {
-        const failedEvent = new DonationDeleteFailedEvent(
-          donation.donId,
-          donation.userId,
-          adminId,
-        );
-        this.eventEmitter.emit(failedEvent.name, failedEvent);
-        return false;
-      }
-      throw error;
-    }
+
+    donation.transition(event.name, this.donationFsmService);
 
     await this.donationRepo.manager.transaction(
       async (transactionalEntityManager) => {
@@ -66,6 +70,5 @@ export class DeleteDonationUseCase {
      * 후원 삭제 성공!
      */
     this.eventEmitter.emit(event.name, event);
-    return true;
   }
 }

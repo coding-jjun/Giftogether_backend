@@ -1,9 +1,8 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UploadDepositUseCase } from './commands/upload-deposit.usecase';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { DepositDto } from './dto/deposit.dto';
 import { Deposit } from '../../entities/deposit.entity';
-import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RequestDeleteDepositUseCase } from './commands/request-delete-deposit.usecase';
@@ -14,7 +13,7 @@ export class DepositService {
   constructor(
     private readonly uploadDepositUseCase: UploadDepositUseCase,
     private readonly matchDepositUseCase: MatchDepositUseCase,
-    private readonly deleteDepositUseCase: DeleteDepositUseCase,
+    private readonly requestDeleteDepositUseCase: RequestDeleteDepositUseCase,
     @InjectRepository(Deposit)
     private readonly depositRepo: Repository<Deposit>,
   ) {}
@@ -74,7 +73,7 @@ export class DepositService {
     return new DepositDto(deposit);
   }
 
-  async deleteDeposit(depositId: number): Promise<DepositDto> {
-    return await this.deleteDepositUseCase.execute(depositId);
+  async requestDeleteDeposit(id: number, adminId: number): Promise<void> {
+    await this.requestDeleteDepositUseCase.execute(id, adminId);
   }
 }
