@@ -16,8 +16,15 @@ export class DepositDto {
   donation?: DonationDto;
 
   constructor(deposit: Partial<Deposit>) {
-    Object.assign(this, deposit);
+    this.senderSig = deposit.senderSig;
+    this.receiver = deposit.receiver;
+    this.amount = deposit.amount;
+    this.transferDate = deposit.transferDate;
+    this.depositBank = deposit.depositBank;
+    this.depositAccount = deposit.depositAccount;
+    this.withdrawalAccount = deposit.withdrawalAccount;
     this.status = deposit.status;
+    this.depositId = deposit.depositId;
     this.donation = deposit.donation
       ? new DonationDto(
           deposit.donation.donId,
