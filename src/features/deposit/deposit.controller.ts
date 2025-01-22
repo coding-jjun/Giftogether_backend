@@ -7,11 +7,16 @@ import {
   Query,
   ParseIntPipe,
   Delete,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { DepositService } from './deposit.service';
 import { DepositDto } from './dto/deposit.dto';
 import { CommonResponse } from '../../interfaces/common-response.interface';
 import { GiftogetherExceptions } from '../../filters/giftogether-exception';
+import { JwtAuthGuard } from '../auth/guard/jwt-auth-guard';
+import { Request } from 'express';
+import { User } from 'src/entities/user.entity';
 
 @Controller('deposits')
 export class DepositController {
@@ -60,11 +65,16 @@ export class DepositController {
    * 시스템은 입금내역을 삭제하는 이벤트를 발송합니다. 자세한 내용은 [Deposit 삭제요청 및 삭제처리](https://www.notion.so/Deposit-294de66d7ad64e669f3eaed80f68df38?pvs=4) 문서를 참고하세요.
    */
   @Delete(':id')
-  async requestDeleteDeposit(@Param('id') id: number): Promise<CommonResponse> {
+  @UseGuards(JwtAuthGuard)
+  async requestDeleteDeposit(
+    @Req() req: Request,
+    @Param('id') id: number,
+  ): Promise<CommonResponse> {
+    const user = req.user! as User;
     return {
       message:
         '성공적으로 입금내역 삭제요청이 완료되었습니다. Notification을 확인해주세요.',
-      data: await this.depositService.requestDeleteDeposit(id),
+      data: await this.depositService.requestDeleteDeposit(id, user.userId),
     };
   }
 }

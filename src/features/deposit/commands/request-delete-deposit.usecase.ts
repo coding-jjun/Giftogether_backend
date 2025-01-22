@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { DepositService } from '../deposit.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Deposit } from '../../../entities/deposit.entity';
-import { DepositFsmService } from '../domain/deposit-fsm.service';
 import { GiftogetherExceptions } from '../../../filters/giftogether-exception';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IEvent } from '../../../interfaces/event.interface';
@@ -23,10 +21,8 @@ export class RequestDeleteDepositUseCase {
   constructor(
     @InjectRepository(Deposit)
     private readonly depositRepository: Repository<Deposit>,
-    private readonly depositFsmService: DepositFsmService,
     private readonly g2gException: GiftogetherExceptions,
     private readonly eventEmitter: EventEmitter2,
-    private readonly depositService: DepositService,
     private readonly deleteDeposit: DeleteDepositUseCase,
   ) {}
 

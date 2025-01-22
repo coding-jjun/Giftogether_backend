@@ -20,6 +20,8 @@ import { FindAllAdminsUseCase } from '../admin/queries/find-all-admins.usecase';
 import { DepositFsmService } from './domain/deposit-fsm.service';
 import { EventModule } from '../event/event.module';
 import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
+import { RequestDeleteDepositUseCase } from './commands/request-delete-deposit.usecase';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
@@ -32,6 +34,7 @@ import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
       Deposit,
       ProvisionalDonation,
     ]),
+    AuthModule,
   ],
   controllers: [DepositController],
   providers: [
@@ -47,6 +50,7 @@ import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
     FindAllAdminsUseCase,
     DepositFsmService,
     DeleteDepositUseCase,
+    RequestDeleteDepositUseCase,
   ],
 })
 export class DepositModule {}

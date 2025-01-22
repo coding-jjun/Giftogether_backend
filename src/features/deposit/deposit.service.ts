@@ -3,7 +3,6 @@ import { UploadDepositUseCase } from './commands/upload-deposit.usecase';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { DepositDto } from './dto/deposit.dto';
 import { Deposit } from '../../entities/deposit.entity';
-import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RequestDeleteDepositUseCase } from './commands/request-delete-deposit.usecase';
@@ -73,7 +72,7 @@ export class DepositService {
     return depositData;
   }
 
-  async requestDeleteDeposit(id: number): Promise<void> {
-    await this.requestDeleteDepositUseCase.execute(id);
+  async requestDeleteDeposit(id: number, adminId: number): Promise<void> {
+    await this.requestDeleteDepositUseCase.execute(id, adminId);
   }
 }
