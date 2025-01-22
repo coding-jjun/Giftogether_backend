@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 export class OpenBankApiClient {
   private openApiUrl = 'https://testapi.openbanking.or.kr/oauth/2.0/';
@@ -34,9 +34,9 @@ export class OpenBankApiClient {
       return responseToken.data;
     } catch (error) {
       console.error('Error requesting Open Bank token:', error);
-      if (error.response) {
+      if (error instanceof AxiosError) {
         throw new Error(
-          `API Error: ${error.response.status} ${error.response.data.error}`,
+          `API Error: ${error.response?.status} ${error.response?.data.error}`,
         );
       } else {
         throw new Error(

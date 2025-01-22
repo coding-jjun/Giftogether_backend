@@ -40,9 +40,9 @@ export enum ErrorCode {
   NotValidNick = '0705',
   PasswordIncorrect = '0706',
   UserFailedToCreate = '0707',
-  UserAccessDenied = "0708",
+  UserAccessDenied = '0708',
   // Admin
-  SnsLoginBlocked = "0710",
+  SnsLoginBlocked = '0710',
 
   // Friend
   AlreadySendRequest = '0800',
@@ -58,7 +58,7 @@ export enum ErrorCode {
   FailedLogout = '0906',
   RedisServerError = '0907',
   InvalidUserRole = '0908',
-  
+
   // Default image
   DefaultImgIdNotExist = '1000',
   DefaultImgNotExist = '1001',
@@ -78,9 +78,12 @@ export enum ErrorCode {
   // Deposits
   DepositUnmatched = '1500',
   DepositPartiallyMatched = '1501',
+  DepositNotFound = '1502',
 
   // Generic
   InvalidStatusChange = '1600',
   InvalidStatus = '1800',
   InconsistentAggregationError = '1700',
+  InvalidPage = '1701',
+  InvalidLimit = '1702',
 }

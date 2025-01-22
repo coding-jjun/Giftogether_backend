@@ -19,6 +19,7 @@ import { DecreaseFundSumUseCase } from '../funding/commands/decrease-fundsum.use
 import { FindAllAdminsUseCase } from '../admin/queries/find-all-admins.usecase';
 import { DepositFsmService } from './domain/deposit-fsm.service';
 import { EventModule } from '../event/event.module';
+import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { EventModule } from '../event/event.module';
     NotificationService,
     FindAllAdminsUseCase,
     DepositFsmService,
+    DeleteDepositUseCase,
   ],
 })
 export class DepositModule {}

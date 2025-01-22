@@ -3,15 +3,12 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { DepositStatus } from '../enums/deposit-status.enum';
 import { IsInt, Min } from 'class-validator';
-import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Donation } from 'src/entities/donation.entity';
-import { InconsistentAggregationError } from 'src/exceptions/inconsistent-aggregation';
 import { EventName } from 'src/interfaces/transition.interface';
 import { IFsmService } from 'src/interfaces/fsm-service.interface';
 import { ITransitionDelegate } from '../interfaces/transition-delegate.interface';
@@ -27,7 +24,10 @@ export class Deposit implements ITransitionDelegate<DepositStatus> {
   /**
    * `Deposit ||--o| Donation` 관계에서 Deposit이 강성엔티티, Donation이 약성엔티티입니다.
    */
-  @OneToOne(() => Donation, { nullable: true, onDelete: 'SET NULL' })
+  @OneToOne(() => Donation, (donation) => donation.deposit, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   readonly donation?: Donation;
 
   @Column('varchar')
@@ -56,6 +56,7 @@ export class Deposit implements ITransitionDelegate<DepositStatus> {
   @Column({
     type: 'enum',
     enum: DepositStatus,
+    default: DepositStatus.Unmatched,
     name: 'status',
   })
   private _status: DepositStatus;

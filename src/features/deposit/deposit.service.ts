@@ -1,15 +1,68 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UploadDepositUseCase } from './commands/upload-deposit.usecase';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { DepositDto } from './dto/deposit.dto';
 import { Deposit } from '../../entities/deposit.entity';
+import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { DonationDto } from '../donation/dto/donation.dto';
 
 @Injectable()
 export class DepositService {
   constructor(
     private readonly uploadDepositUseCase: UploadDepositUseCase,
     private readonly matchDepositUseCase: MatchDepositUseCase,
+    private readonly deleteDepositUseCase: DeleteDepositUseCase,
+    @InjectRepository(Deposit)
+    private readonly depositRepo: Repository<Deposit>,
   ) {}
+
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<{
+    deposits: DepositDto[];
+    total: number;
+    page: number;
+    lastPage: number;
+  }> {
+    const depositsQb = this.depositRepo
+      .createQueryBuilder('deposit')
+      .leftJoinAndSelect('deposit.donation', 'donation')
+      .leftJoinAndSelect('donation.funding', 'funding')
+      .leftJoinAndSelect('funding.fundUser', 'fundUser')
+      .leftJoinAndSelect('donation.user', 'user')
+      .orderBy('deposit.regAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const [deposits, total] = await depositsQb.getManyAndCount();
+
+    return {
+      deposits: deposits.map((deposit) => new DepositDto(deposit)),
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+    };
+  }
+
+  async findOne(id: number): Promise<DepositDto> {
+    const deposit = await this.depositRepo
+      .createQueryBuilder('deposit')
+      .leftJoinAndSelect('deposit.donation', 'donation')
+      .leftJoinAndSelect('donation.funding', 'funding')
+      .leftJoinAndSelect('funding.fundUser', 'fundUser')
+      .leftJoinAndSelect('donation.user', 'user')
+      .where('deposit.depositId = :id', { id })
+      .getOne();
+
+    if (!deposit) {
+      throw new NotFoundException('입금내역을 찾을 수 없습니다.');
+    }
+
+    return new DepositDto(deposit);
+  }
 
   async uploadDeposit(depositData: DepositDto): Promise<DepositDto> {
     const deposit: Deposit =
@@ -18,5 +71,9 @@ export class DepositService {
     await this.matchDepositUseCase.execute(deposit);
 
     return depositData;
+  }
+
+  async deleteDeposit(depositId: number): Promise<DepositDto> {
+    return await this.deleteDepositUseCase.execute(depositId);
   }
 }

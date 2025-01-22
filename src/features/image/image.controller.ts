@@ -14,7 +14,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { CommonResponse } from 'src/interfaces/common-response.interface';
 import { ImageDto } from './dto/image.dto';
 import { v4 as uuidv4 } from 'uuid';
-import * as sharp from 'sharp';
+import sharp from 'sharp';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth-guard';
 import { UrlDto } from './dto/url.dto';
 import { S3Service } from './s3.service';
