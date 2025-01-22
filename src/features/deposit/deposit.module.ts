@@ -27,6 +27,7 @@ import { DeleteDonationUseCase } from '../donation/commands/delete-donation.usec
 import { DonationFsmService } from '../donation/domain/services/donation-fsm.service';
 import { CancelMatchProvisionalDonationUseCase } from '../donation/commands/cancel-match-provisional-donation.usecase';
 import { ProvisionalDonationFsmService } from '../donation/domain/services/provisional-donation-fsm.service';
+import { DonationEventHandler } from '../donation/domain/events/donation-event-handler';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { ProvisionalDonationFsmService } from '../donation/domain/services/provi
     DepositDeleteSaga,
     CancelMatchProvisionalDonationUseCase,
     ProvisionalDonationFsmService,
+    DonationEventHandler,
   ],
 })
 export class DepositModule {}

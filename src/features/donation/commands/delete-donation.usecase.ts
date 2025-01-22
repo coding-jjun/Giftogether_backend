@@ -6,6 +6,7 @@ import { GiftogetherExceptions } from '../../../filters/giftogether-exception';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DonationDeletedEvent } from '../domain/events/donation-deleted.event';
 import { DonationFsmService } from '../domain/services/donation-fsm.service';
+import { DecreaseFundSumUseCase } from 'src/features/funding/commands/decrease-fundsum.usecase';
 
 /**
  * 후원 삭제 요청을 처리하는 유스케이스입니다.
@@ -19,9 +20,13 @@ export class DeleteDonationUseCase {
     private readonly donationFsmService: DonationFsmService,
     private readonly eventEmitter: EventEmitter2,
     private readonly g2gException: GiftogetherExceptions,
+    private readonly decreaseFundSumUseCase: DecreaseFundSumUseCase,
   ) {}
 
   /**
+   * [정책]
+   * 후원을 삭제하기 위해선 펀딩금액을 먼저 감액 시킨다
+   *
    * @throws DonationNotExists
    * @throws InvalidStatus
    */
@@ -37,6 +42,12 @@ export class DeleteDonationUseCase {
     if (!donation) {
       throw this.g2gException.DonationNotExists;
     }
+
+    // 펀딩금액 감액
+    await this.decreaseFundSumUseCase.execute({
+      fundId: donation.funding.fundId,
+      amount: donation.donAmnt,
+    });
 
     const event = new DonationDeletedEvent(
       donation.donId,

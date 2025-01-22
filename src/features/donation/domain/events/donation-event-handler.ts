@@ -118,16 +118,14 @@ export class DonationEventHandler {
 
   /**
    * 후원이 삭제되었습니다. 후원자에게 후원 삭제 알림을 보냅니다.
-   *
-   * [정책]
-   * 삭제된 후원 펀딩금액을 감액 시킨다
    */
   @OnEvent(DonationDeletedEvent.name, { async: true })
   async handleDonationDeleted(event: DonationDeletedEvent) {
-    const { donId, donorId, fundId } = event;
+    const { donId, donorId } = event;
 
     const donation = await this.donationRepo.findOne({
       where: { donId },
+      withDeleted: true,
     });
 
     if (!donation) {
@@ -143,11 +141,5 @@ export class DonationEventHandler {
     });
 
     this.notificationService.createNoti(createNotificationDtoForDonor);
-
-    // 펀딩금액 감액
-    await this.decreaseFundSumUseCase.execute({
-      fundId,
-      amount: donation.donAmnt,
-    });
   }
 }
