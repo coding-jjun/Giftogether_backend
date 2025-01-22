@@ -22,6 +22,11 @@ import { EventModule } from '../event/event.module';
 import { DeleteDepositUseCase } from './commands/delete-deposit.usecase';
 import { RequestDeleteDepositUseCase } from './commands/request-delete-deposit.usecase';
 import { AuthModule } from '../auth/auth.module';
+import { DepositDeleteSaga } from './domain/events/deposit-delete.saga';
+import { DeleteDonationUseCase } from '../donation/commands/delete-donation.usecase';
+import { DonationFsmService } from '../donation/domain/services/donation-fsm.service';
+import { CancelMatchProvisionalDonationUseCase } from '../donation/commands/cancel-match-provisional-donation.usecase';
+import { ProvisionalDonationFsmService } from '../donation/domain/services/provisional-donation-fsm.service';
 
 @Module({
   imports: [
@@ -51,6 +56,11 @@ import { AuthModule } from '../auth/auth.module';
     DepositFsmService,
     DeleteDepositUseCase,
     RequestDeleteDepositUseCase,
+    DonationFsmService,
+    DeleteDonationUseCase,
+    DepositDeleteSaga,
+    CancelMatchProvisionalDonationUseCase,
+    ProvisionalDonationFsmService,
   ],
 })
 export class DepositModule {}
