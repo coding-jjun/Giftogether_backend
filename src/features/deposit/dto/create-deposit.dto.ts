@@ -1,4 +1,4 @@
-import { IsDate, IsNumber, IsString } from 'class-validator';
+import { IsDateString, IsNumber, IsString } from 'class-validator';
 
 export class CreateDepositDto {
   @IsString()
@@ -10,7 +10,7 @@ export class CreateDepositDto {
   @IsNumber()
   amount: number;
 
-  @IsDate()
+  @IsDateString()
   transferDate: Date;
 
   @IsString()
@@ -21,7 +21,4 @@ export class CreateDepositDto {
 
   @IsString()
   withdrawalAccount: string;
-
-  @IsNumber()
-  depositId: number;
 }
