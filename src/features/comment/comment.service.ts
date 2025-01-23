@@ -94,9 +94,10 @@ export class CommentService {
         { isDel: false },
       )
       .leftJoinAndSelect('comment.author', 'author')
-      .leftJoinAndSelect(
-        'image',
-        'authorImage',
+      .leftJoinAndMapOne(
+        'author.image', // map to property 'image' of 'author'
+        'image', // property name of 'author'
+        'authorImage', // alias of 'image' table
         `
         (author.defaultImgId IS NOT NULL AND authorImage.imgId = author.defaultImgId)
         OR
