@@ -108,8 +108,6 @@ export class CommentService {
       .where('funding.fundUuid = :fundUuid', { fundUuid })
       .orderBy('comment.regAt', 'DESC');
 
-    Logger.log(fundingQb.getSql());
-
     const funding = await fundingQb.getOne();
     if (!funding) {
       throw this.g2gException.FundingNotExists;
