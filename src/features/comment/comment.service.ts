@@ -141,9 +141,9 @@ export class CommentService {
 
     this.commentRepository.save(comment);
 
-    comment.author.image = await this.imageInstanceManager.getImages(
-      comment.author,
-    )[0];
+    comment.author.image = await this.imageInstanceManager
+      .getImages(comment.author)
+      .then((images) => images[0]);
     return convertToGetCommentDto(comment);
   }
 
