@@ -6,5 +6,6 @@ export class GetCommentDto {
     public isMod: boolean,
     public authorId: number,
     public authorName: string,
+    public authorImg: string,
   ) {}
 }

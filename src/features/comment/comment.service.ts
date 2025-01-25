@@ -10,11 +10,21 @@ import { User } from 'src/entities/user.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { ValidCheck } from 'src/util/valid-check';
+import { ImageInstanceManager } from '../image/image-instance-manager';
+import { ImageType } from 'src/enums/image-type.enum';
 
 function convertToGetCommentDto(comment: Comment): GetCommentDto {
   const { comId, content, regAt, isMod, authorId, author } = comment;
   const authorName = author?.userName ?? 'ANONYMOUS';
-  return new GetCommentDto(comId, content, regAt, isMod, authorId, authorName);
+  return new GetCommentDto(
+    comId,
+    content,
+    regAt,
+    isMod,
+    authorId,
+    authorName,
+    author?.image?.imgUrl,
+  );
 }
 
 @Injectable()
@@ -26,6 +36,7 @@ export class CommentService {
     private eventEmitter: EventEmitter2,
     private readonly g2gException: GiftogetherExceptions,
     private readonly validCheck: ValidCheck,
+    private readonly imageInstanceManager: ImageInstanceManager,
   ) {}
 
   async create(
@@ -46,6 +57,9 @@ export class CommentService {
     if (!author) {
       throw this.g2gException.UserNotFound;
     }
+    author.image = await this.imageInstanceManager
+      .getImages(author)
+      .then((images) => images[0]);
 
     const newComment = new Comment({
       funding,
@@ -71,7 +85,7 @@ export class CommentService {
    * @returns Comment[]
    */
   async findMany(fundUuid: string): Promise<GetCommentDto[]> {
-    const funding = await this.fundingRepository
+    const fundingQb = this.fundingRepository
       .createQueryBuilder('funding')
       .leftJoinAndSelect(
         'funding.comments',
@@ -80,9 +94,21 @@ export class CommentService {
         { isDel: false },
       )
       .leftJoinAndSelect('comment.author', 'author')
+      .leftJoinAndMapOne(
+        'author.image', // map to property 'image' of 'author'
+        'image', // property name of 'author'
+        'authorImage', // alias of 'image' table
+        `
+        (author.defaultImgId IS NOT NULL AND authorImage.imgId = author.defaultImgId)
+        OR
+        (author.defaultImgId IS NULL AND authorImage.subId = author.userId AND authorImage.imgType = :imgType)
+        `,
+        { imgType: ImageType.User },
+      )
       .where('funding.fundUuid = :fundUuid', { fundUuid })
-      .orderBy('comment.regAt', 'DESC')
-      .getOne();
+      .orderBy('comment.regAt', 'DESC');
+
+    const funding = await fundingQb.getOne();
     if (!funding) {
       throw this.g2gException.FundingNotExists;
     }
@@ -113,6 +139,9 @@ export class CommentService {
 
     this.commentRepository.save(comment);
 
+    comment.author.image = await this.imageInstanceManager
+      .getImages(comment.author)
+      .then((images) => images[0]);
     return convertToGetCommentDto(comment);
   }
 
@@ -133,6 +162,9 @@ export class CommentService {
     comment.isDel = true;
     this.commentRepository.save(comment);
 
+    comment.author.image = await this.imageInstanceManager
+      .getImages(comment.author)
+      .then((images) => images[0]);
     return convertToGetCommentDto(comment);
   }
 }
