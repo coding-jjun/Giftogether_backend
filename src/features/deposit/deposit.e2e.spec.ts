@@ -43,8 +43,10 @@ describe('Deposit API E2E Test', () => {
   let mockFunding: Funding;
   let mockFundingOwner: User;
   let mockDonor: User;
+  let mockAdmin: User;
   let g2gException: GiftogetherExceptions;
   let eventEmitter: EventEmitter2;
+  let testAuthBase: TestAuthBase;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -61,6 +63,7 @@ describe('Deposit API E2E Test', () => {
     notiRepo = moduleFixture.get(getRepositoryToken(Notification));
     g2gException = moduleFixture.get(GiftogetherExceptions);
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
+    testAuthBase = await moduleFixture.resolve(TestAuthBase); // REQUEST scoped provider
     await app.init();
 
     mockFundingOwner = await createMockUserWithRelations(
@@ -86,6 +89,17 @@ describe('Deposit API E2E Test', () => {
     } as User);
     await userRepo.insert(mockDonor);
 
+    mockAdmin = createMockUser({
+      userName: '관리자',
+      userEmail: 'admin@admin.com',
+      userNick: '관리자',
+      isAdmin: true,
+    } as User);
+    await userRepo.insert(mockAdmin);
+
+    // create cookies from mockAdmin
+    await testAuthBase.login(mockAdmin);
+
     mockFunding = new Funding(
       mockFundingOwner,
       'mockFunding',
@@ -110,7 +124,6 @@ describe('Deposit API E2E Test', () => {
 
   describe('POST /deposits', () => {
     it('should handle matched deposit', async () => {
-
       // Create matching provisional donation
       const senderSig = 'HONG-1234';
       const provDon = ProvisionalDonation.create(
@@ -124,6 +137,7 @@ describe('Deposit API E2E Test', () => {
 
       await request(app.getHttpServer())
         .post('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .send({
           senderSig,
           receiver: 'GIFTOGETHER',
@@ -150,9 +164,7 @@ describe('Deposit API E2E Test', () => {
         where: { senderSig },
       });
       expect(foundProvDons.length).toBe(1);
-      expect(foundProvDons[0].status).toBe(
-        ProvisionalDonationStatus.Approved,
-      );
+      expect(foundProvDons[0].status).toBe(ProvisionalDonationStatus.Approved);
 
       // Donation 하나가 새로 생성되어야 합니다.
       const foundDonations = await donationRepo.find({
