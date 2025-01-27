@@ -143,7 +143,6 @@ describe('Deposit API E2E Test', () => {
       await request(app.getHttpServer())
         .post('/deposits')
         .set('Cookie', testAuthBase.cookies)
-        .set('Cookie', testAuthBase.cookies)
         .send({
           senderSig,
           receiver: 'GIFTOGETHER',
@@ -170,7 +169,6 @@ describe('Deposit API E2E Test', () => {
         where: { senderSig },
       });
       expect(foundProvDons.length).toBe(1);
-      expect(foundProvDons[0].status).toBe(ProvisionalDonationStatus.Approved);
       expect(foundProvDons[0].status).toBe(ProvisionalDonationStatus.Approved);
 
       // Donation 하나가 새로 생성되어야 합니다.
