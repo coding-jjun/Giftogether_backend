@@ -21,9 +21,11 @@ import { InvalidStatus } from '../../../exceptions/invalid-status';
 import { Deposit } from 'src/entities/deposit.entity';
 import { DecreaseFundSumUseCase } from 'src/features/funding/commands/decrease-fundsum.usecase';
 import { createMockRepository } from 'src/tests/create-mock-repository';
+import { DecreaseFundSumCommand } from 'src/features/funding/commands/decrease-fundsum.command';
 
 describe('DeleteDonationUseCase', () => {
   let useCase: DeleteDonationUseCase;
+  let decreaseFundSumUsecase: DecreaseFundSumUseCase;
   let donationRepo: Repository<Donation>;
   let donationFsmService: DonationFsmService;
   let eventEmitter: EventEmitter2;
@@ -64,6 +66,9 @@ describe('DeleteDonationUseCase', () => {
     }).compile();
 
     useCase = module.get<DeleteDonationUseCase>(DeleteDonationUseCase);
+    decreaseFundSumUsecase = module.get<DecreaseFundSumUseCase>(
+      DecreaseFundSumUseCase,
+    );
     donationRepo = module.get<Repository<Donation>>(
       getRepositoryToken(Donation),
     );
@@ -102,6 +107,7 @@ describe('DeleteDonationUseCase', () => {
       jest.spyOn(donationRepo, 'findOne').mockResolvedValue(mockDonation);
       jest.spyOn(donationRepo.manager, 'transaction');
       jest.spyOn(eventEmitter, 'emit');
+      jest.spyOn(decreaseFundSumUsecase, 'execute');
 
       // Act
       await useCase.execute(
@@ -111,6 +117,12 @@ describe('DeleteDonationUseCase', () => {
       );
 
       // Assert
+      expect(decreaseFundSumUsecase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fundId: mockFunding.fundId,
+          amount: mockDonation.donAmnt,
+        } as DecreaseFundSumCommand),
+      );
       expect(donationRepo.findOne).toHaveBeenCalledTimes(1);
       expect(mockDonation.transition).toHaveBeenCalledWith(
         DonationDeletedEvent.name,
