@@ -56,6 +56,7 @@ export class DepositController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: number): Promise<CommonResponse> {
     return {
       message: '성공적으로 입금내역을 조회했습니다.',
@@ -64,6 +65,7 @@ export class DepositController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   async uploadDeposit(
     @Body() depositData: CreateDepositDto,
   ): Promise<CommonResponse> {

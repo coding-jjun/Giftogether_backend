@@ -248,6 +248,7 @@ describe('Deposit API E2E Test', () => {
     it('should handle unmatched deposit', async () => {
       await request(app.getHttpServer())
         .post('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .send({
           senderSig: 'UNKNOWN-1234',
           amount: 10000,
@@ -286,6 +287,7 @@ describe('Deposit API E2E Test', () => {
 
       await request(app.getHttpServer())
         .post('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .send({
           senderSig: 'PARK-1234',
           amount: 10000,
@@ -347,6 +349,7 @@ describe('Deposit API E2E Test', () => {
     it('should return empty array when no deposits exist', async () => {
       const response = await request(app.getHttpServer())
         .get('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .expect(200);
 
       expect(response.body.data.deposits).toHaveLength(0);
@@ -366,6 +369,7 @@ describe('Deposit API E2E Test', () => {
       // Test negative page
       const responseNegative = await request(app.getHttpServer())
         .get('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .query({ page: -1 })
         .expect(400);
       expect(responseNegative.body.message).toBe('잘못된 페이지 번호입니다.');
@@ -373,6 +377,7 @@ describe('Deposit API E2E Test', () => {
       // Test page beyond last page
       const responseBeyond = await request(app.getHttpServer())
         .get('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .query({ page: 999 })
         .expect(200);
       expect(responseBeyond.body.data.deposits).toHaveLength(0);
@@ -390,6 +395,7 @@ describe('Deposit API E2E Test', () => {
 
       const response = await request(app.getHttpServer())
         .get(`/deposits/${deposit.depositId}`)
+        .set('Cookie', testAuthBase.cookies)
         .expect(200);
 
       expect(response.body.data.depositId).toBe(deposit.depositId);
@@ -404,6 +410,7 @@ describe('Deposit API E2E Test', () => {
     it('should return 404 when deposit not found', async () => {
       await request(app.getHttpServer())
         .get('/deposits/999999')
+        .set('Cookie', testAuthBase.cookies)
         .expect(404)
         .expect((res) => {
           expect(res.body.message).toBe('입금내역을 찾을 수 없습니다.');
@@ -429,6 +436,7 @@ describe('Deposit API E2E Test', () => {
 
       const response = await request(app.getHttpServer())
         .get(`/deposits/${deposit.depositId}`)
+        .set('Cookie', testAuthBase.cookies)
         .expect(200);
 
       expect(response.body.data.depositId).toBe(deposit.depositId);
