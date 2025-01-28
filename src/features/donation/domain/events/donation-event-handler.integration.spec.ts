@@ -128,6 +128,7 @@ describe('DonationEventHandler (Integration)', () => {
         mockDonation.donId,
         mockUser.userId,
         mockFunding.fundId,
+        mockDeposit.depositId,
         mockAdmin1.userId,
       );
 
