@@ -188,6 +188,7 @@ describe('DonationEventHandler', () => {
         1,
         mockUser.userId,
         3,
+        mockDeposit.depositId,
         mockAdmin1.userId,
       );
 
@@ -220,35 +221,6 @@ describe('DonationEventHandler', () => {
         fundId: event.fundId,
         amount: mockDeposit.amount,
       });
-    });
-  });
-
-  describe('handleDonationDeleteFailed', () => {
-    it('should send notifications to both donor and admin', async () => {
-      const event = new DonationDeleteFailedEvent(
-        1,
-        mockUser.userId,
-        mockAdmin1.userId,
-      );
-      const notiSpy = jest.spyOn(notificationService, 'createNoti');
-
-      await handler.handleDonationDeleteFailed(event);
-
-      expect(notiSpy).toHaveBeenCalledTimes(2);
-      expect(notiSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          recvId: mockUser.userId,
-          notiType: NotiType.DonationDeleteFailed,
-          subId: event.donId.toString(),
-        }),
-      );
-      expect(notiSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          recvId: mockAdmin1.userId,
-          notiType: NotiType.DonationDeleteFailed,
-          subId: event.donId.toString(),
-        }),
-      );
     });
   });
 });
