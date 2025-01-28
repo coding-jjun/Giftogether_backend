@@ -14,6 +14,7 @@ import { EventModule } from 'src/features/event/event.module';
 import { DepositModule } from '../../deposit.module';
 import { ConfigModule } from '@nestjs/config';
 import { RedisModule } from 'src/features/auth/redis.module';
+import { TestsModule } from 'src/tests/tests.module';
 
 /**
  * TODO - 사전 작업을 먼저 끝내논 뒤에 테스트 코드 작성.
@@ -43,6 +44,7 @@ describe('DepositDeleteSaga', () => {
         EventModule,
         AuthModule,
         DepositModule,
+        TestsModule,
       ],
       providers: [],
     }).compile();
