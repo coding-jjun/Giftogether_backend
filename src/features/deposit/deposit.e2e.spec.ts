@@ -41,8 +41,9 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from '../auth/auth.module';
 import { RedisModule } from '../auth/redis.module';
 import { TestAuthBase } from 'src/tests/test-auth-base';
-import { TokenService } from '../auth/token.service';
 import cookieParser from 'cookie-parser';
+import { TestsModule } from 'src/tests/tests.module';
+import { TokenModule } from '../open-bank/token/token.module';
 
 const entities = [
   Deposit,
@@ -89,15 +90,12 @@ describe('Deposit API E2E Test', () => {
           // cache: true,
           expandVariables: true,
         }),
-        RedisModule,
-        AuthModule,
+        TestsModule,
       ],
       providers: [
         GiftogetherExceptions,
-        NotificationService,
         ProvisionalDonationEventHandler,
         ProvisionalDonationFsmService,
-        TestAuthBase,
       ],
     }).compile();
 
