@@ -42,7 +42,7 @@ import { AuthModule } from '../auth/auth.module';
 import { RedisModule } from '../auth/redis.module';
 import { TestAuthBase } from 'src/tests/test-auth-base';
 import { TokenService } from '../auth/token.service';
-import cookieParser = require('cookie-parser');
+import cookieParser from 'cookie-parser';
 
 const entities = [
   Deposit,
