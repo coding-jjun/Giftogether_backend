@@ -46,6 +46,7 @@ export class AuthService {
     return new Date(year, month, day);
   }
 
+
   async isValidPassword(plainPw: string, hashPw: string): Promise<Boolean> {
     const isValidPw = await bcrypt.compare(plainPw, hashPw);
     if (!isValidPw) {
@@ -103,12 +104,7 @@ export class AuthService {
         // 사용자 정의 이미지 제공시,
         // 1. userId를 subid로 갖는 새 image 생성 및 저장
         // 2. user의 defaultImgId 컬럼을 null로 초기화
-        const imgSaved = await this.imgService.save(
-          userImg,
-          user,
-          ImageType.User,
-          userId,
-        );
+        const imgSaved = await this.imgService.save(userImg, user, ImageType.User, userId);
 
         imgUrl = imgSaved.imgUrl;
         user.defaultImgId = null;
@@ -251,18 +247,18 @@ export class AuthService {
     return true;
   }
 
+  
   async logout(refreshToken: string) {
     const tokenInfo = await this.tokenService.verifyRefreshToken(refreshToken);
     const userId = tokenInfo.sub;
 
     await this.tokenService.chkValidRefreshToken(refreshToken);
-    await this.tokenService.setRefreshTokenToBlackList(userId, refreshToken);
+    await this.tokenService.setRefreshTokenToBlackList (userId, refreshToken);
   }
 
   async createRandomNickname(): Promise<string> {
-    const adjectiveIndex = Math.floor(
-      Math.random() * this.NICKNAME_ARRAY_LENGTH,
-    );
+
+    const adjectiveIndex = Math.floor(Math.random() * this.NICKNAME_ARRAY_LENGTH);
     const nounIndex = Math.floor(Math.random() * this.NICKNAME_ARRAY_LENGTH);
 
     const adjective = this.nickName.adjective[adjectiveIndex];
@@ -271,19 +267,18 @@ export class AuthService {
 
     // userNick이 baseNick으로 시작하는 모든 사용자 조회
     const duplicateNicknames = await this.userRepository.count({
-      where: { userNick: Like(`${baseNick}%`) },
+      where: { userNick: Like(`${baseNick}%`) }
     });
-    if (duplicateNicknames > 0) {
-      return adjective + noun + (duplicateNicknames + 1);
+    if (duplicateNicknames > 0){
+      return adjective+noun+(duplicateNicknames+1);
     }
 
-    return adjective + noun;
+    return adjective+noun;
   }
 
-  async loginGuest(guestLoginDto: GuestLoginDto) {
-    const guest = await this.donationService.getGuestInfoByOrderId(
-      guestLoginDto.orderId,
-    );
+
+  async loginGuest(guestLoginDto: GuestLoginDto){
+    const guest = await this.donationService.getGuestInfoByOrderId(guestLoginDto.orderId);
     await this.isValidPassword(guestLoginDto.userPw, guest.userPw);
 
     return guest;
