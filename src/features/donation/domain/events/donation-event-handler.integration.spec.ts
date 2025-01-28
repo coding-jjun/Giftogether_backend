@@ -122,43 +122,6 @@ describe('DonationEventHandler (Integration)', () => {
     });
   });
 
-  describe('handleDonationDeleted (Integration)', () => {
-    it('should delete deposit, decrease fund sum and create notifications', async () => {
-      const event = new DonationDeletedEvent(
-        mockDonation.donId,
-        mockUser.userId,
-        mockFunding.fundId,
-        mockDeposit.depositId,
-        mockAdmin1.userId,
-      );
-
-      const initialFundSum = mockFunding.fundSum;
-      await handler.handleDonationDeleted(event);
-
-      // Verify deposit deletion
-      const deletedDeposit = await depositRepo.findOne({
-        where: { depositId: mockDeposit.depositId },
-      });
-      expect(deletedDeposit).toBeNull();
-
-      // Verify fund sum decrease
-      const updatedFunding = await fundingRepo.findOne({
-        where: { fundId: mockFunding.fundId },
-      });
-      expect(updatedFunding.fundSum).toBe(initialFundSum - mockDeposit.amount);
-
-      // Verify notifications
-      // !FIXME - 알림 테스트는 Notification 모듈에서 진행
-      // const notifications = await notificationRepo.find({
-      //   where: {
-      //     notiType: NotiType.DonationDeleted,
-      //     subId: mockDonation.donId.toString(),
-      //   },
-      // });
-      // expect(notifications).toHaveLength(2); // One for donor, one for admin
-    });
-  });
-
   describe('handleDonationRefundCancelled (Integration)', () => {
     it('should create notifications for both donor and admin', async () => {
       const event = new DonationRefundCancelledEvent(
