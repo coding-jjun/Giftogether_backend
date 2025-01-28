@@ -42,6 +42,7 @@ import { AuthModule } from '../auth/auth.module';
 import { RedisModule } from '../auth/redis.module';
 import { TestAuthBase } from 'src/tests/test-auth-base';
 import { TokenService } from '../auth/token.service';
+import cookieParser = require('cookie-parser');
 
 const entities = [
   Deposit,
@@ -110,6 +111,7 @@ describe('Deposit API E2E Test', () => {
     g2gException = moduleFixture.get(GiftogetherExceptions);
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     testAuthBase = await moduleFixture.resolve(TestAuthBase); // REQUEST scoped provider
+    app.use(cookieParser());
     await app.init();
 
     mockFundingOwner = await createMockUserWithRelations(
@@ -326,6 +328,7 @@ describe('Deposit API E2E Test', () => {
 
       const response = await request(app.getHttpServer())
         .get('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .query({ page: 1, limit: 2 })
         .expect(200);
 
