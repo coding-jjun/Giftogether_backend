@@ -25,6 +25,7 @@ export class DepositDto {
     this.withdrawalAccount = deposit.withdrawalAccount;
     this.status = deposit.status;
     this.depositId = deposit.depositId;
+    this.regAt = deposit.regAt;
     this.donation = deposit.donation
       ? new DonationDto(
           deposit.donation.donId,

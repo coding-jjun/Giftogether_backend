@@ -37,6 +37,13 @@ import {
   createMockFundingWithRelations,
 } from '../../tests/mock-factory';
 import { FundTheme } from '../../enums/fund-theme.enum';
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from '../auth/auth.module';
+import { RedisModule } from '../auth/redis.module';
+import { TestAuthBase } from 'src/tests/test-auth-base';
+import cookieParser from 'cookie-parser';
+import { TestsModule } from 'src/tests/tests.module';
+import { TokenModule } from '../open-bank/token/token.module';
 
 const entities = [
   Deposit,
@@ -65,8 +72,10 @@ describe('Deposit API E2E Test', () => {
   let mockFunding: Funding;
   let mockFundingOwner: User;
   let mockDonor: User;
+  let mockAdmin: User;
   let g2gException: GiftogetherExceptions;
   let eventEmitter: EventEmitter2;
+  let testAuthBase: TestAuthBase;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -75,10 +84,16 @@ describe('Deposit API E2E Test', () => {
         TypeOrmModule.forFeature(entities),
         DepositModule,
         EventModule,
+        ConfigModule.forRoot({
+          isGlobal: true,
+          envFilePath: ['.env'],
+          // cache: true,
+          expandVariables: true,
+        }),
+        TestsModule,
       ],
       providers: [
         GiftogetherExceptions,
-        NotificationService,
         ProvisionalDonationEventHandler,
         ProvisionalDonationFsmService,
       ],
@@ -93,6 +108,8 @@ describe('Deposit API E2E Test', () => {
     notiRepo = moduleFixture.get(getRepositoryToken(Notification));
     g2gException = moduleFixture.get(GiftogetherExceptions);
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
+    testAuthBase = await moduleFixture.resolve(TestAuthBase); // REQUEST scoped provider
+    app.use(cookieParser());
     await app.init();
 
     mockFundingOwner = await createMockUserWithRelations(
@@ -118,6 +135,17 @@ describe('Deposit API E2E Test', () => {
     } as User);
     await userRepo.insert(mockDonor);
 
+    mockAdmin = createMockUser({
+      userName: '관리자',
+      userEmail: 'admin@admin.com',
+      userNick: '관리자',
+      isAdmin: true,
+    } as User);
+    await userRepo.insert(mockAdmin);
+
+    // create cookies from mockAdmin
+    await testAuthBase.login(mockAdmin);
+
     mockFunding = new Funding(
       mockFundingOwner,
       'mockFunding',
@@ -142,7 +170,6 @@ describe('Deposit API E2E Test', () => {
 
   describe('POST /deposits', () => {
     it('should handle matched deposit', async () => {
-
       // Create matching provisional donation
       const senderSig = 'HONG-1234';
       const provDon = ProvisionalDonation.create(
@@ -156,6 +183,7 @@ describe('Deposit API E2E Test', () => {
 
       await request(app.getHttpServer())
         .post('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .send({
           senderSig,
           receiver: 'GIFTOGETHER',
@@ -182,9 +210,7 @@ describe('Deposit API E2E Test', () => {
         where: { senderSig },
       });
       expect(foundProvDons.length).toBe(1);
-      expect(foundProvDons[0].status).toBe(
-        ProvisionalDonationStatus.Approved,
-      );
+      expect(foundProvDons[0].status).toBe(ProvisionalDonationStatus.Approved);
 
       // Donation 하나가 새로 생성되어야 합니다.
       const foundDonations = await donationRepo.find({
@@ -220,6 +246,7 @@ describe('Deposit API E2E Test', () => {
     it('should handle unmatched deposit', async () => {
       await request(app.getHttpServer())
         .post('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .send({
           senderSig: 'UNKNOWN-1234',
           amount: 10000,
@@ -258,6 +285,7 @@ describe('Deposit API E2E Test', () => {
 
       await request(app.getHttpServer())
         .post('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .send({
           senderSig: 'PARK-1234',
           amount: 10000,
@@ -300,6 +328,7 @@ describe('Deposit API E2E Test', () => {
 
       const response = await request(app.getHttpServer())
         .get('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .query({ page: 1, limit: 2 })
         .expect(200);
 
@@ -318,6 +347,7 @@ describe('Deposit API E2E Test', () => {
     it('should return empty array when no deposits exist', async () => {
       const response = await request(app.getHttpServer())
         .get('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .expect(200);
 
       expect(response.body.data.deposits).toHaveLength(0);
@@ -337,6 +367,7 @@ describe('Deposit API E2E Test', () => {
       // Test negative page
       const responseNegative = await request(app.getHttpServer())
         .get('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .query({ page: -1 })
         .expect(400);
       expect(responseNegative.body.message).toBe('잘못된 페이지 번호입니다.');
@@ -344,6 +375,7 @@ describe('Deposit API E2E Test', () => {
       // Test page beyond last page
       const responseBeyond = await request(app.getHttpServer())
         .get('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .query({ page: 999 })
         .expect(200);
       expect(responseBeyond.body.data.deposits).toHaveLength(0);
@@ -361,6 +393,7 @@ describe('Deposit API E2E Test', () => {
 
       const response = await request(app.getHttpServer())
         .get(`/deposits/${deposit.depositId}`)
+        .set('Cookie', testAuthBase.cookies)
         .expect(200);
 
       expect(response.body.data.depositId).toBe(deposit.depositId);
@@ -375,6 +408,7 @@ describe('Deposit API E2E Test', () => {
     it('should return 404 when deposit not found', async () => {
       await request(app.getHttpServer())
         .get('/deposits/999999')
+        .set('Cookie', testAuthBase.cookies)
         .expect(404)
         .expect((res) => {
           expect(res.body.message).toBe('입금내역을 찾을 수 없습니다.');
@@ -400,6 +434,7 @@ describe('Deposit API E2E Test', () => {
 
       const response = await request(app.getHttpServer())
         .get(`/deposits/${deposit.depositId}`)
+        .set('Cookie', testAuthBase.cookies)
         .expect(200);
 
       expect(response.body.data.depositId).toBe(deposit.depositId);
