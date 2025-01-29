@@ -94,7 +94,6 @@ export const createMockProvisionalDonation = (
   const defaultProvDonation = {
     senderSig: DonationService.createSenderSig(faker.person.fullName()),
     amount: faker.number.int({ min: 1000, max: 100000 }),
-    status: ProvisionalDonationStatus.Pending,
     regAt: faker.date.recent(),
   } as ProvisionalDonation;
 

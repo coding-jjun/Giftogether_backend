@@ -46,6 +46,10 @@ import cookieParser from 'cookie-parser';
 import { TestsModule } from 'src/tests/tests.module';
 import { TokenModule } from '../open-bank/token/token.module';
 import { ProvisionalDonationMatchCancelledEvent } from '../donation/domain/events/provisional-donation-match-cancelled.event';
+import { MatchDepositUseCase } from './commands/match-deposit.usecase';
+import { ProvisionalDonationPartiallyMatchedEvent } from '../donation/domain/events/provisional-donation-partially-matched.event';
+import { DepositMatchedEvent } from './domain/events/deposit-matched.event';
+import { DepositPartiallyMatchedEvent } from './domain/events/deposit-partially-matched.event';
 
 const entities = [
   Deposit,
@@ -78,6 +82,7 @@ describe('Deposit API E2E Test', () => {
   let g2gException: GiftogetherExceptions;
   let eventEmitter: EventEmitter2;
   let testAuthBase: TestAuthBase;
+  let matchDepositUseCase: MatchDepositUseCase;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -111,6 +116,7 @@ describe('Deposit API E2E Test', () => {
     g2gException = moduleFixture.get(GiftogetherExceptions);
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     testAuthBase = await moduleFixture.resolve(TestAuthBase); // REQUEST scoped provider
+    matchDepositUseCase = moduleFixture.get(MatchDepositUseCase);
     app.use(cookieParser());
     await app.init();
 
@@ -481,10 +487,11 @@ describe('Deposit API E2E Test', () => {
       expect(foundDeposit).toBeNull();
     });
 
-    it('should change status from approved to pending of provisional donation', async () => {
+    it('should change status from rejected to pending of provisional donation', async () => {
       const deposit = await depositRepo.save(
         createMockDeposit({
           status: DepositStatus.Matched,
+          amount: 10000,
         }),
       );
 
@@ -493,11 +500,14 @@ describe('Deposit API E2E Test', () => {
         createMockProvisionalDonation({
           senderSig: deposit.senderSig,
           provDonId: mockDonor.userId,
-          amount: deposit.amount,
+          amount: deposit.amount + 1, // different amount
           funding: mockFunding,
-          status: ProvisionalDonationStatus.Approved,
         }),
       );
+
+      // Manually match deposit with provisional donation to change status to Approved
+      await expect(matchDepositUseCase.execute(deposit)).rejects.toThrow();
+      await eventEmitter.waitFor(ProvisionalDonationPartiallyMatchedEvent.name);
 
       await request(app.getHttpServer())
         .delete(`/deposits/${deposit.depositId}`)
