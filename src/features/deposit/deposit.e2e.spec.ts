@@ -35,6 +35,7 @@ import {
   createMockUserWithRelations,
   createMockDeposit,
   createMockFundingWithRelations,
+  createMockProvisionalDonation,
 } from '../../tests/mock-factory';
 import { FundTheme } from '../../enums/fund-theme.enum';
 import { ConfigModule } from '@nestjs/config';
@@ -44,6 +45,7 @@ import { TestAuthBase } from 'src/tests/test-auth-base';
 import cookieParser from 'cookie-parser';
 import { TestsModule } from 'src/tests/tests.module';
 import { TokenModule } from '../open-bank/token/token.module';
+import { ProvisionalDonationMatchCancelledEvent } from '../donation/domain/events/provisional-donation-match-cancelled.event';
 
 const entities = [
   Deposit,
@@ -473,6 +475,43 @@ describe('Deposit API E2E Test', () => {
         .set('Cookie', testAuthBase.cookies)
         .expect(200);
 
+      const foundDeposit = await depositRepo.findOne({
+        where: { depositId: deposit.depositId },
+      });
+      expect(foundDeposit).toBeNull();
+    });
+
+    it('should change status from approved to pending of provisional donation', async () => {
+      const deposit = await depositRepo.save(
+        createMockDeposit({
+          status: DepositStatus.Matched,
+        }),
+      );
+
+      // Create matching provisional donation
+      await provDonRepo.save(
+        createMockProvisionalDonation({
+          senderSig: deposit.senderSig,
+          provDonId: mockDonor.userId,
+          amount: deposit.amount,
+          funding: mockFunding,
+          status: ProvisionalDonationStatus.Approved,
+        }),
+      );
+
+      await request(app.getHttpServer())
+        .delete(`/deposits/${deposit.depositId}`)
+        .set('Cookie', testAuthBase.cookies)
+        .expect(200);
+
+      // Provisional Donation의 상태가 Pending이어야 합니다.
+      const foundProvDons = await provDonRepo.find({
+        where: { senderSig: deposit.senderSig },
+      });
+      expect(foundProvDons.length).toBe(1);
+      expect(foundProvDons[0].status).toBe(ProvisionalDonationStatus.Pending);
+
+      // Deposit은 삭제되어야 합니다.
       const foundDeposit = await depositRepo.findOne({
         where: { depositId: deposit.depositId },
       });
