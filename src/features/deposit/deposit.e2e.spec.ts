@@ -463,6 +463,21 @@ describe('Deposit API E2E Test', () => {
       });
       expect(foundDeposit).toBeNull();
     });
+    it('should delete deposit if orphaned', async () => {
+      const deposit = await depositRepo.save(
+        createMockDeposit({ status: DepositStatus.Orphan }),
+      );
+
+      await request(app.getHttpServer())
+        .delete(`/deposits/${deposit.depositId}`)
+        .set('Cookie', testAuthBase.cookies)
+        .expect(200);
+
+      const foundDeposit = await depositRepo.findOne({
+        where: { depositId: deposit.depositId },
+      });
+      expect(foundDeposit).toBeNull();
+    });
   });
 
   afterAll(async () => {
