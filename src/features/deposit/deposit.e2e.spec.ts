@@ -443,6 +443,28 @@ describe('Deposit API E2E Test', () => {
     });
   });
 
+  describe('DELETE /deposits/:id', () => {
+    it('should return 404 when deposit not found', async () => {
+      await request(app.getHttpServer())
+        .delete('/deposits/999999')
+        .set('Cookie', testAuthBase.cookies)
+        .expect(404);
+    });
+    it('should delete deposit if unmatched', async () => {
+      const deposit = await depositRepo.save(createMockDeposit());
+
+      await request(app.getHttpServer())
+        .delete(`/deposits/${deposit.depositId}`)
+        .set('Cookie', testAuthBase.cookies)
+        .expect(200);
+
+      const foundDeposit = await depositRepo.findOne({
+        where: { depositId: deposit.depositId },
+      });
+      expect(foundDeposit).toBeNull();
+    });
+  });
+
   afterAll(async () => {
     const dataSource = app.get(DataSource);
     await dataSource.destroy();
