@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import entities from 'src/entities/entities';
 import { DepositDeleteSaga } from './deposit-delete.saga';
@@ -50,6 +50,7 @@ const services = [
   DonationFsmService,
 ];
 
+@Global()
 @Module({
   imports: [TypeOrmModule.forFeature(entities)],
   providers: [
