@@ -1,8 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request = require('supertest');
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { createDataSourceOptions } from 'src/tests/data-source-options';
 import { DepositModule } from './deposit.module';
 import { Deposit } from '../../entities/deposit.entity';
 import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
@@ -11,11 +9,6 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Funding } from 'src/entities/funding.entity';
 import { User } from 'src/entities/user.entity';
-import { Account } from 'src/entities/account.entity';
-import { Comment } from 'src/entities/comment.entity';
-import { Address } from 'src/entities/address.entity';
-import { Image } from 'src/entities/image.entity';
-import { Gift } from 'src/entities/gift.entity';
 import { Donation } from 'src/entities/donation.entity';
 import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 import { CommonResponse } from 'src/interfaces/common-response.interface';
@@ -25,11 +18,7 @@ import { EventModule } from '../event/event.module';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { waitForEventJobs } from 'src/tests/wait-for-events';
 import { NotiType } from 'src/enums/noti-type.enum';
-import { NotificationService } from '../notification/notification.service';
-import { ProvisionalDonationEventHandler } from '../../event-handlers/provisional-donation-event-handler';
 import { ProvisionalDonationFsmService } from '../donation/domain/services/provisional-donation-fsm.service';
-import { CsBoard } from '../../entities/cs-board.entity';
-import { CsComment } from '../../entities/cs-comment.entity';
 import {
   createMockUser,
   createMockUserWithRelations,
@@ -37,19 +26,11 @@ import {
   createMockFundingWithRelations,
 } from '../../tests/mock-factory';
 import { FundTheme } from '../../enums/fund-theme.enum';
-import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from '../auth/auth.module';
-import { RedisModule } from '../auth/redis.module';
 import { TestAuthBase } from 'src/tests/test-auth-base';
 import cookieParser from 'cookie-parser';
 import { TestsModule } from 'src/tests/tests.module';
-import { TokenModule } from '../open-bank/token/token.module';
-import { ProvisionalDonationMatchCancelledEvent } from '../donation/domain/events/provisional-donation-match-cancelled.event';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { ProvisionalDonationPartiallyMatchedEvent } from '../donation/domain/events/provisional-donation-partially-matched.event';
-import { DepositMatchedEvent } from './domain/events/deposit-matched.event';
-import { DepositPartiallyMatchedEvent } from './domain/events/deposit-partially-matched.event';
-import entities from 'src/entities/entities';
 
 describe('Deposit API E2E Test', () => {
   let app: INestApplication;
@@ -67,12 +48,7 @@ describe('Deposit API E2E Test', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot(createDataSourceOptions(entities)),
-        TypeOrmModule.forFeature(entities),
-        DepositModule,
-        EventModule,
-      ],
+      imports: [DepositModule, EventModule, TestsModule],
       providers: [GiftogetherExceptions, ProvisionalDonationFsmService],
     }).compile();
 
