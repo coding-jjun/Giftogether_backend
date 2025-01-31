@@ -10,11 +10,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DepositFsmService } from '../domain/deposit-fsm.service';
-import { ProvisionalDonationEventHandler } from '../../../features/donation/domain/events/provisional-donation-event-handler';
+import { ProvisionalDonationEventHandler } from '../../../event-handlers/provisional-donation-event-handler';
 import { ProvisionalDonationFsmService } from '../../../features/donation/domain/services/provisional-donation-fsm.service';
 import { createMockRepository } from '../../../tests/create-mock-repository';
 import { EventModule } from '../../event/event.module';
-import { DepositEventHandler } from '../domain/events/deposit-event.handler';
+import { DepositEventHandler } from '../../../event-handlers/deposit-event.handler';
 import { createMockDeposit, createMockFundingWithRelations, createMockProvisionalDonation, createMockUser } from '../../../tests/mock-factory';
 
 describe('MatchDepositUseCase', () => {

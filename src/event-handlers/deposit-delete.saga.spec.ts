@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { createDataSourceOptions } from '../../../../tests/data-source-options';
+import { createDataSourceOptions } from '../tests/data-source-options';
 import { DepositDeleteSaga } from './deposit-delete.saga';
 import { Repository } from 'typeorm';
-import { Deposit } from '../../../../entities/deposit.entity';
-import { Donation } from '../../../../entities/donation.entity';
-import { Funding } from '../../../../entities/funding.entity';
-import { User } from '../../../../entities/user.entity';
-import { ProvisionalDonation } from '../../../../entities/provisional-donation.entity';
-import entities from '../../../../entities/entities';
+import { Deposit } from '../entities/deposit.entity';
+import { Donation } from '../entities/donation.entity';
+import { Funding } from '../entities/funding.entity';
+import { User } from '../entities/user.entity';
+import { ProvisionalDonation } from '../entities/provisional-donation.entity';
+import entities from '../entities/entities';
 import { AuthModule } from 'src/features/auth/auth.module';
 import { EventModule } from 'src/features/event/event.module';
-import { DepositModule } from '../../deposit.module';
+import { DepositModule } from '../features/deposit/deposit.module';
 import { ConfigModule } from '@nestjs/config';
 import { RedisModule } from 'src/features/auth/redis.module';
 
