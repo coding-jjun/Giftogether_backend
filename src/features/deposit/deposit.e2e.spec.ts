@@ -50,22 +50,7 @@ import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { ProvisionalDonationPartiallyMatchedEvent } from '../donation/domain/events/provisional-donation-partially-matched.event';
 import { DepositMatchedEvent } from './domain/events/deposit-matched.event';
 import { DepositPartiallyMatchedEvent } from './domain/events/deposit-partially-matched.event';
-
-const entities = [
-  Deposit,
-  ProvisionalDonation,
-  User,
-  Account,
-  Comment,
-  Address,
-  Image,
-  Gift,
-  Donation,
-  Funding,
-  Notification,
-  CsBoard,
-  CsComment,
-];
+import entities from 'src/entities/entities';
 
 describe('Deposit API E2E Test', () => {
   let app: INestApplication;
@@ -99,11 +84,7 @@ describe('Deposit API E2E Test', () => {
         }),
         TestsModule,
       ],
-      providers: [
-        GiftogetherExceptions,
-        ProvisionalDonationEventHandler,
-        ProvisionalDonationFsmService,
-      ],
+      providers: [GiftogetherExceptions, ProvisionalDonationFsmService],
     }).compile();
 
     app = moduleFixture.createNestApplication();
