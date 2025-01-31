@@ -37,22 +37,19 @@ import {
   createMockFundingWithRelations,
 } from '../../tests/mock-factory';
 import { FundTheme } from '../../enums/fund-theme.enum';
-
-const entities = [
-  Deposit,
-  ProvisionalDonation,
-  User,
-  Account,
-  Comment,
-  Address,
-  Image,
-  Gift,
-  Donation,
-  Funding,
-  Notification,
-  CsBoard,
-  CsComment,
-];
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from '../auth/auth.module';
+import { RedisModule } from '../auth/redis.module';
+import { TestAuthBase } from 'src/tests/test-auth-base';
+import cookieParser from 'cookie-parser';
+import { TestsModule } from 'src/tests/tests.module';
+import { TokenModule } from '../open-bank/token/token.module';
+import { ProvisionalDonationMatchCancelledEvent } from '../donation/domain/events/provisional-donation-match-cancelled.event';
+import { MatchDepositUseCase } from './commands/match-deposit.usecase';
+import { ProvisionalDonationPartiallyMatchedEvent } from '../donation/domain/events/provisional-donation-partially-matched.event';
+import { DepositMatchedEvent } from './domain/events/deposit-matched.event';
+import { DepositPartiallyMatchedEvent } from './domain/events/deposit-partially-matched.event';
+import entities from 'src/entities/entities';
 
 describe('Deposit API E2E Test', () => {
   let app: INestApplication;
@@ -76,12 +73,7 @@ describe('Deposit API E2E Test', () => {
         DepositModule,
         EventModule,
       ],
-      providers: [
-        GiftogetherExceptions,
-        NotificationService,
-        ProvisionalDonationEventHandler,
-        ProvisionalDonationFsmService,
-      ],
+      providers: [GiftogetherExceptions, ProvisionalDonationFsmService],
     }).compile();
 
     app = moduleFixture.createNestApplication();
