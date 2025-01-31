@@ -26,7 +26,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { waitForEventJobs } from 'src/tests/wait-for-events';
 import { NotiType } from 'src/enums/noti-type.enum';
 import { NotificationService } from '../notification/notification.service';
-import { ProvisionalDonationEventHandler } from '../donation/domain/events/provisional-donation-event-handler';
+import { ProvisionalDonationEventHandler } from '../../event-handlers/provisional-donation-event-handler';
 import { ProvisionalDonationFsmService } from '../donation/domain/services/provisional-donation-fsm.service';
 import { CsBoard } from '../../entities/cs-board.entity';
 import { CsComment } from '../../entities/cs-comment.entity';
