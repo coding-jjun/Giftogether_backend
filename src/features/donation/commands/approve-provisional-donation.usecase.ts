@@ -1,20 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProvisionalDonation } from 'src/entities/provisional-donation.entity';
-import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
-import { IFsmService } from 'src/interfaces/fsm-service.interface';
 import { Repository } from 'typeorm';
 import { ApproveProvisionalDonationCommand } from './approve-provisional-donation.command';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { ProvisionalDonationApprovedEvent } from '../domain/events/provisional-donation-approved.event';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ProvisionalDonationFsmService } from '../domain/services/provisional-donation-fsm.service';
 
 @Injectable()
 export class ApproveProvisionalDonationUsecase {
   constructor(
     @InjectRepository(ProvisionalDonation)
     private readonly provDonRepo: Repository<ProvisionalDonation>,
-    private readonly fsmService: IFsmService<ProvisionalDonationStatus>,
+    private readonly fsmService: ProvisionalDonationFsmService,
     private readonly g2gException: GiftogetherExceptions,
     private readonly eventEmitter: EventEmitter2,
   ) {}

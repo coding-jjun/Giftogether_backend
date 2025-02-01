@@ -7,25 +7,13 @@ import { FriendModule } from './features/friend/friend.module';
 import { FundingModule } from './features/funding/funding.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { User } from './entities/user.entity';
-import { Funding } from './entities/funding.entity';
-import { Comment } from './entities/comment.entity';
-import { Donation } from './entities/donation.entity';
-import { RollingPaper } from './entities/rolling-paper.entity';
 import { DonationModule } from './features/donation/donation.module';
 import { RollingPaperModule } from './features/rolling-paper/rolling-paper.module';
 import { readFileSync } from 'fs';
-import { Friend } from './entities/friend.entity';
-import { Address } from './entities/address.entity';
 import { AddressModule } from './features/address/address.module';
 import { CommentModule } from './features/comment/comment.module';
-import { Gratitude } from './entities/gratitude.entity';
 import { GratitudeModule } from './features/gratitude/gratitude.module';
-import { Image } from './entities/image.entity';
-import { Notification } from './entities/notification.entity';
 import { TokenModule } from './features/open-bank/token/token.module';
-import { OpenBankToken } from './entities/open-bank-token.entity';
-import { Account } from './entities/account.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MulterModule } from '@nestjs/platform-express';
 import { ImageModule } from './features/image/image.module';
@@ -38,16 +26,13 @@ import { AccountModule } from './features/account/account.module';
 import { ValidCheckModule } from './util/valid-check.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TransformInterceptor } from './transform/transform.interceptor';
-import { Gift } from './entities/gift.entity';
-import { GiftogetherError } from './entities/error.entity';
 import { GiftogetherMiddleware } from './interfaces/giftogether.middleware';
 import { DepositModule } from './features/deposit/deposit.module';
-import { Deposit } from './entities/deposit.entity';
-import { ProvisionalDonation } from './entities/provisional-donation.entity';
-import { CsBoard } from './entities/cs-board.entity';
-import { CsComment } from './entities/cs-comment.entity';
 import { CsBoardModule } from './features/cs-board/cs-board.module';
 import { CsCommentModule } from './features/cs-comment/cs-comment.module';
+import entities from './entities/entities';
+import { EventHandlersModule } from './event-handlers/event-handlers.module';
+
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -66,27 +51,7 @@ import { CsCommentModule } from './features/cs-comment/cs-comment.module';
       database: process.env.DB_DEV_DATABASE,
       synchronize: true,
       logging: process.env.DEBUG === 'true',
-      entities: [
-        Account,
-        User,
-        Funding,
-        Comment,
-        Donation,
-        RollingPaper,
-        Notification,
-        Friend,
-        Address,
-        Gratitude,
-        Image,
-        OpenBankToken,
-        Account,
-        Gift,
-        GiftogetherError,
-        Deposit,
-        ProvisionalDonation,
-        CsBoard,
-        CsComment
-      ],
+      entities,
       ssl: {
         ca: readFileSync('global-bundle.pem'),
       },
@@ -118,6 +83,7 @@ import { CsCommentModule } from './features/cs-comment/cs-comment.module';
     DepositModule,
     CsBoardModule,
     CsCommentModule,
+    EventHandlersModule,
   ],
   controllers: [AppController],
   providers: [
