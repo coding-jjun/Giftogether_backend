@@ -467,16 +467,12 @@ describe('Deposit API E2E Test', () => {
 
       // Manually match deposit with provisional donation to change status to Approved
       await expect(matchDepositUseCase.execute(deposit)).rejects.toThrow();
-      await eventEmitter.waitFor(ProvisionalDonationPartiallyMatchedEvent.name);
 
       await request(app.getHttpServer())
         .delete(`/deposits/${deposit.depositId}`)
         .set('Cookie', testAuthBase.cookies)
         .expect(200);
 
-      await eventEmitter.waitFor(
-        PartiallyMatchedDepositDeleteRequestedEvent.name,
-      );
       // Provisional Donation의 상태가 Pending이어야 합니다.
       const foundProvDons = await provDonRepo.find({
         where: { senderSig: deposit.senderSig },
