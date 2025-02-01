@@ -46,6 +46,7 @@ describe('Deposit API E2E Test', () => {
   let mockFundingOwner: User;
   let mockDonor: User;
   let mockAdmin: User;
+  let mockAdmin: User;
   let g2gException: GiftogetherExceptions;
   let eventEmitter: EventEmitter2;
   let testAuthBase: TestAuthBase;
@@ -105,6 +106,17 @@ describe('Deposit API E2E Test', () => {
     // create cookies from mockAdmin
     await testAuthBase.login(mockAdmin);
 
+    mockAdmin = createMockUser({
+      userName: '관리자',
+      userEmail: 'admin@admin.com',
+      userNick: '관리자',
+      isAdmin: true,
+    } as User);
+    await userRepo.insert(mockAdmin);
+
+    // create cookies from mockAdmin
+    await testAuthBase.login(mockAdmin);
+
     mockFunding = new Funding(
       mockFundingOwner,
       'mockFunding',
@@ -143,6 +155,7 @@ describe('Deposit API E2E Test', () => {
       await request(app.getHttpServer())
         .post('/deposits')
         .set('Cookie', testAuthBase.cookies)
+        .set('Cookie', testAuthBase.cookies)
         .send({
           senderSig,
           receiver: 'GIFTOGETHER',
@@ -169,6 +182,7 @@ describe('Deposit API E2E Test', () => {
         where: { senderSig },
       });
       expect(foundProvDons.length).toBe(1);
+      expect(foundProvDons[0].status).toBe(ProvisionalDonationStatus.Approved);
       expect(foundProvDons[0].status).toBe(ProvisionalDonationStatus.Approved);
 
       // Donation 하나가 새로 생성되어야 합니다.
@@ -296,6 +310,7 @@ describe('Deposit API E2E Test', () => {
 
       const response = await request(app.getHttpServer())
         .get('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .set('Cookie', testAuthBase.cookies)
         .query({ page: 1, limit: 2 })
         .expect(200);
