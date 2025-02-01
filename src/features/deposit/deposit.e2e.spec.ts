@@ -46,7 +46,6 @@ describe('Deposit API E2E Test', () => {
   let mockFundingOwner: User;
   let mockDonor: User;
   let mockAdmin: User;
-  let mockAdmin: User;
   let g2gException: GiftogetherExceptions;
   let eventEmitter: EventEmitter2;
   let testAuthBase: TestAuthBase;
