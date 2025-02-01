@@ -1,32 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { DonationRefundRequestedEvent } from './donation-refund-requested.event';
-import { NotificationService } from '../../../notification/notification.service';
-import { FindAllAdminsUseCase } from '../../../admin/queries/find-all-admins.usecase';
-import { CreateNotificationDto } from '../../../notification/dto/create-notification.dto';
-import { NotiType } from '../../../../enums/noti-type.enum';
-import { DonationRefundCancelledEvent } from './donation-refund-cancelled.event';
-import { AdminAssignedForDonationRefundEvent } from './admin-assigned-for-refune.event';
-import { DonationRefundCompletedEvent } from './donation-refund-completed.event';
-import { DonationDeletedEvent } from './donation-deleted.event';
-import { DeleteDepositUseCase } from '../../../deposit/commands/delete-deposit.usecase';
-import { DecreaseFundSumUseCase } from '../../../funding/commands/decrease-fundsum.usecase';
-import { GiftogetherExceptions } from '../../../../filters/giftogether-exception';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Donation } from '../../../../entities/donation.entity';
-import { Repository } from 'typeorm';
+import { OnEvent } from '@nestjs/event-emitter';
+import { DonationRefundRequestedEvent } from '../features/donation/domain/events/donation-refund-requested.event';
+import { NotificationService } from '../features/notification/notification.service';
+import { FindAllAdminsUseCase } from '../features/admin/queries/find-all-admins.usecase';
+import { CreateNotificationDto } from '../features/notification/dto/create-notification.dto';
+import { NotiType } from '../enums/noti-type.enum';
+import { DonationRefundCancelledEvent } from '../features/donation/domain/events/donation-refund-cancelled.event';
+import { AdminAssignedForDonationRefundEvent } from '../features/donation/domain/events/admin-assigned-for-refune.event';
+import { DonationRefundCompletedEvent } from '../features/donation/domain/events/donation-refund-completed.event';
+import { DonationDeletedEvent } from '../features/donation/domain/events/donation-deleted.event';
 
 @Injectable()
 export class DonationEventHandler {
   constructor(
     private readonly notificationService: NotificationService,
     private readonly findAllAdmins: FindAllAdminsUseCase,
-    private readonly deleteDepositUseCase: DeleteDepositUseCase,
-    private readonly decreaseFundSumUseCase: DecreaseFundSumUseCase,
-    private readonly g2gException: GiftogetherExceptions,
-    @InjectRepository(Donation)
-    private readonly donationRepo: Repository<Donation>,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
@@ -38,7 +26,7 @@ export class DonationEventHandler {
 
     // !FIXME - 관리자들에게 알림을 일괄적으로 보내는 방법 강구
     this.findAllAdmins.execute().then((admins) => {
-      admins.forEach((admin) => {
+      admins.forEach(async (admin) => {
         const createNotificationDtoForAdmins = new CreateNotificationDto({
           recvId: admin.userId,
           sendId: donorId,
@@ -46,7 +34,9 @@ export class DonationEventHandler {
           subId: donId.toString(),
         });
 
-        this.notificationService.createNoti(createNotificationDtoForAdmins);
+        await this.notificationService.createNoti(
+          createNotificationDtoForAdmins,
+        );
       });
     });
   }
@@ -66,7 +56,7 @@ export class DonationEventHandler {
       subId: donId.toString(),
     });
 
-    this.notificationService.createNoti(createNotificationDtoForDonor);
+    await this.notificationService.createNoti(createNotificationDtoForDonor);
 
     if (assignedAdminId) {
       const createNotificationDtoForAdmin = new CreateNotificationDto({
@@ -76,7 +66,7 @@ export class DonationEventHandler {
         subId: donId.toString(),
       });
 
-      this.notificationService.createNoti(createNotificationDtoForAdmin);
+      await this.notificationService.createNoti(createNotificationDtoForAdmin);
     }
   }
 
@@ -96,7 +86,7 @@ export class DonationEventHandler {
       subId: donId.toString(),
     });
 
-    this.notificationService.createNoti(createNotificationDtoForAdmin);
+    await this.notificationService.createNoti(createNotificationDtoForAdmin);
   }
 
   /**
@@ -113,7 +103,7 @@ export class DonationEventHandler {
       subId: donId.toString(),
     });
 
-    this.notificationService.createNoti(createNotificationDtoForDonor);
+    await this.notificationService.createNoti(createNotificationDtoForDonor);
   }
 
   /**
@@ -123,15 +113,6 @@ export class DonationEventHandler {
   async handleDonationDeleted(event: DonationDeletedEvent) {
     const { donId, donorId } = event;
 
-    const donation = await this.donationRepo.findOne({
-      where: { donId },
-      withDeleted: true,
-    });
-
-    if (!donation) {
-      throw this.g2gException.DonationNotExists;
-    }
-
     // 후원자에게 후원 삭제 알림을 보냅니다.
     const createNotificationDtoForDonor = new CreateNotificationDto({
       recvId: donorId,
@@ -140,6 +121,6 @@ export class DonationEventHandler {
       subId: donId.toString(),
     });
 
-    this.notificationService.createNoti(createNotificationDtoForDonor);
+    await this.notificationService.createNoti(createNotificationDtoForDonor);
   }
 }

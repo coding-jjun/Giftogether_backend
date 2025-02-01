@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { DepositMatchedEvent } from './deposit-matched.event';
-import { DepositPartiallyMatchedEvent } from './deposit-partially-matched.event';
-import { DepositUnmatchedEvent } from './deposit-unmatched.event';
+import { DepositMatchedEvent } from '../features/deposit/domain/events/deposit-matched.event';
+import { DepositPartiallyMatchedEvent } from '../features/deposit/domain/events/deposit-partially-matched.event';
+import { DepositUnmatchedEvent } from '../features/deposit/domain/events/deposit-unmatched.event';
 import { NotificationService } from 'src/features/notification/notification.service';
 import { CreateNotificationDto } from 'src/features/notification/dto/create-notification.dto';
 import { NotiType } from 'src/enums/noti-type.enum';
@@ -12,15 +12,15 @@ import { IncreaseFundSumUseCase } from 'src/features/funding/commands/increase-f
 import { IncreaseFundSumCommand } from 'src/features/funding/commands/increase-fundsum.command';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Repository } from 'typeorm';
-import { Deposit } from '../../../../entities/deposit.entity';
+import { Deposit } from '../entities/deposit.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindAllAdminsUseCase } from 'src/features/admin/queries/find-all-admins.usecase';
 import { User } from 'src/entities/user.entity';
 import { DecreaseFundSumUseCase } from 'src/features/funding/commands/decrease-fundsum.usecase';
-import { DepositRefundedEvent } from './deposit-refunded.event';
+import { DepositRefundedEvent } from '../features/deposit/domain/events/deposit-refunded.event';
 import { DepositStatus } from 'src/enums/deposit-status.enum';
 import { DecreaseFundSumCommand } from 'src/features/funding/commands/decrease-fundsum.command';
-import { DepositDeletedEvent } from './deposit-deleted.event';
+import { DepositDeletedEvent } from '../features/deposit/domain/events/deposit-deleted.event';
 import { ProvisionalDonationApprovedEvent } from 'src/features/donation/domain/events/provisional-donation-approved.event';
 import { ProvisionalDonationPartiallyMatchedEvent } from 'src/features/donation/domain/events/provisional-donation-partially-matched.event';
 
