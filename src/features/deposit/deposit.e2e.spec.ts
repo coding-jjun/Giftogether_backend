@@ -32,7 +32,7 @@ import cookieParser from 'cookie-parser';
 import { TestsModule } from 'src/tests/tests.module';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { ProvisionalDonationPartiallyMatchedEvent } from '../donation/domain/events/provisional-donation-partially-matched.event';
-import { PartiallyMatchedDepositDeleteRequestedEvent } from './domain/events/partially-matched-deposit-delete-requested.event';
+import { DonationDeletedEvent } from '../donation/domain/events/donation-deleted.event';
 
 describe('Deposit API E2E Test', () => {
   let app: INestApplication;
@@ -130,7 +130,7 @@ describe('Deposit API E2E Test', () => {
   describe('POST /deposits', () => {
     it('should handle matched deposit', async () => {
       // Create matching provisional donation
-      const senderSig = 'HONG-1234';
+      const senderSig = 'POST-1234';
       const provDon = ProvisionalDonation.create(
         g2gException,
         senderSig,
