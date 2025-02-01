@@ -59,7 +59,7 @@ export class Deposit implements ITransitionDelegate<DepositStatus> {
     default: DepositStatus.Unmatched,
     name: 'status',
   })
-  private _status: DepositStatus;
+  public _status: DepositStatus;
 
   public get status(): DepositStatus {
     return this._status;
