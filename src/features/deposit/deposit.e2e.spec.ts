@@ -32,6 +32,7 @@ import cookieParser from 'cookie-parser';
 import { TestsModule } from 'src/tests/tests.module';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { ProvisionalDonationPartiallyMatchedEvent } from '../donation/domain/events/provisional-donation-partially-matched.event';
+import { PartiallyMatchedDepositDeleteRequestedEvent } from './domain/events/partially-matched-deposit-delete-requested.event';
 
 describe('Deposit API E2E Test', () => {
   let app: INestApplication;
@@ -262,11 +263,20 @@ describe('Deposit API E2E Test', () => {
           );
         });
 
+      await eventEmitter.waitFor(ProvisionalDonationPartiallyMatchedEvent.name);
+
       const foundProvDon = await provDonRepo.findOne({
         where: { senderSig: 'PARK-1234' },
       });
-      expect(foundProvDon.status).toBe(
-        ProvisionalDonationStatus.Rejected.toString(),
+      expect(foundProvDon.status).toBe(ProvisionalDonationStatus.Rejected);
+
+      const foundDeposit = await depositRepo.findOne({
+        where: { senderSig: 'PARK-1234' },
+      });
+      expect(foundDeposit).not.toBeNull();
+      expect(foundDeposit).toHaveProperty(
+        'status',
+        DepositStatus.PartiallyMatched,
       );
     });
   });
@@ -464,6 +474,9 @@ describe('Deposit API E2E Test', () => {
         .set('Cookie', testAuthBase.cookies)
         .expect(200);
 
+      await eventEmitter.waitFor(
+        PartiallyMatchedDepositDeleteRequestedEvent.name,
+      );
       // Provisional Donation의 상태가 Pending이어야 합니다.
       const foundProvDons = await provDonRepo.find({
         where: { senderSig: deposit.senderSig },
