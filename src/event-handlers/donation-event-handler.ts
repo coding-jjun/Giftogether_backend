@@ -26,7 +26,7 @@ export class DonationEventHandler {
 
     // !FIXME - 관리자들에게 알림을 일괄적으로 보내는 방법 강구
     this.findAllAdmins.execute().then((admins) => {
-      admins.forEach((admin) => {
+      admins.forEach(async (admin) => {
         const createNotificationDtoForAdmins = new CreateNotificationDto({
           recvId: admin.userId,
           sendId: donorId,
@@ -34,7 +34,9 @@ export class DonationEventHandler {
           subId: donId.toString(),
         });
 
-        this.notificationService.createNoti(createNotificationDtoForAdmins);
+        await this.notificationService.createNoti(
+          createNotificationDtoForAdmins,
+        );
       });
     });
   }
@@ -54,7 +56,7 @@ export class DonationEventHandler {
       subId: donId.toString(),
     });
 
-    this.notificationService.createNoti(createNotificationDtoForDonor);
+    await this.notificationService.createNoti(createNotificationDtoForDonor);
 
     if (assignedAdminId) {
       const createNotificationDtoForAdmin = new CreateNotificationDto({
@@ -64,7 +66,7 @@ export class DonationEventHandler {
         subId: donId.toString(),
       });
 
-      this.notificationService.createNoti(createNotificationDtoForAdmin);
+      await this.notificationService.createNoti(createNotificationDtoForAdmin);
     }
   }
 
@@ -84,7 +86,7 @@ export class DonationEventHandler {
       subId: donId.toString(),
     });
 
-    this.notificationService.createNoti(createNotificationDtoForAdmin);
+    await this.notificationService.createNoti(createNotificationDtoForAdmin);
   }
 
   /**
@@ -101,7 +103,7 @@ export class DonationEventHandler {
       subId: donId.toString(),
     });
 
-    this.notificationService.createNoti(createNotificationDtoForDonor);
+    await this.notificationService.createNoti(createNotificationDtoForDonor);
   }
 
   /**
@@ -119,6 +121,6 @@ export class DonationEventHandler {
       subId: donId.toString(),
     });
 
-    this.notificationService.createNoti(createNotificationDtoForDonor);
+    await this.notificationService.createNoti(createNotificationDtoForDonor);
   }
 }
