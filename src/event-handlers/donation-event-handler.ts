@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { OnEvent } from '@nestjs/event-emitter';
 import { DonationRefundRequestedEvent } from '../features/donation/domain/events/donation-refund-requested.event';
 import { NotificationService } from '../features/notification/notification.service';
 import { FindAllAdminsUseCase } from '../features/admin/queries/find-all-admins.usecase';
@@ -9,24 +9,12 @@ import { DonationRefundCancelledEvent } from '../features/donation/domain/events
 import { AdminAssignedForDonationRefundEvent } from '../features/donation/domain/events/admin-assigned-for-refune.event';
 import { DonationRefundCompletedEvent } from '../features/donation/domain/events/donation-refund-completed.event';
 import { DonationDeletedEvent } from '../features/donation/domain/events/donation-deleted.event';
-import { DeleteDepositUseCase } from '../features/deposit/commands/delete-deposit.usecase';
-import { DecreaseFundSumUseCase } from '../features/funding/commands/decrease-fundsum.usecase';
-import { GiftogetherExceptions } from '../filters/giftogether-exception';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Donation } from '../entities/donation.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class DonationEventHandler {
   constructor(
     private readonly notificationService: NotificationService,
     private readonly findAllAdmins: FindAllAdminsUseCase,
-    private readonly deleteDepositUseCase: DeleteDepositUseCase,
-    private readonly decreaseFundSumUseCase: DecreaseFundSumUseCase,
-    private readonly g2gException: GiftogetherExceptions,
-    @InjectRepository(Donation)
-    private readonly donationRepo: Repository<Donation>,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /**
