@@ -105,17 +105,6 @@ describe('Deposit API E2E Test', () => {
     // create cookies from mockAdmin
     await testAuthBase.login(mockAdmin);
 
-    mockAdmin = createMockUser({
-      userName: '관리자',
-      userEmail: 'admin@admin.com',
-      userNick: '관리자',
-      isAdmin: true,
-    } as User);
-    await userRepo.insert(mockAdmin);
-
-    // create cookies from mockAdmin
-    await testAuthBase.login(mockAdmin);
-
     mockFunding = new Funding(
       mockFundingOwner,
       'mockFunding',
