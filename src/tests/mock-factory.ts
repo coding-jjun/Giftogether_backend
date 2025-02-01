@@ -112,7 +112,7 @@ export const createMockDeposit = (overwrites?: Partial<Deposit>): Deposit => {
     depositBank: faker.finance.accountName(),
     depositAccount: faker.finance.accountNumber(),
     withdrawalAccount: faker.finance.accountNumber(),
-    status: DepositStatus.Unmatched,
+    _status: DepositStatus.Unmatched,
     regAt: faker.date.recent(),
   } as Deposit;
 
@@ -143,7 +143,7 @@ export const createMockDonation = (
  *
  * @param delegate - TypeOrm Repository 인스턴스를 대리자로 활용, 테스트 데이터 생성과 저장을 수행합니다.
  * @param overwrites - 펀딩 엔티티의 속성을 오버라이드합니다.
- * @param amount - 예치, 프로비전 후원, 후원 생성 개수를 지정합니다.
+ * @param amount - 예치, 프로비전 후원, 후원 생성 개수를 지정합니다. (후원 생성 시 예치 개수보다 많을 수 없습니다.)
  * @returns 생성된 펀딩 엔티티를 반환합니다.
  *
  * @example
@@ -173,6 +173,16 @@ export const createMockFundingWithRelations = async (
     donation?: number;
   },
 ): Promise<Funding> => {
+  if (
+    amount &&
+    amount.deposit &&
+    amount.donation &&
+    amount.deposit < amount.donation
+  ) {
+    throw new Error(
+      'The number of deposits must be greater than or equal to the number of donations',
+    );
+  }
   // First save the user (strong entity)
   const mockUser = overwrites?.fundUser
     ? overwrites.fundUser
@@ -188,32 +198,40 @@ export const createMockFundingWithRelations = async (
 
   // Handle optional deposits
   if (delegate.depositRepo) {
-    const deposits = await Promise.all(
+    const deposits = await delegate.depositRepo.save(
       Array(amount?.deposit ?? 1)
         .fill(null)
-        .map(() => delegate.depositRepo.save(createMockDeposit())),
+        .map(() => createMockDeposit()),
     );
 
     // Handle optional donations if deposits exist
     if (delegate.donationRepo) {
-      const donations = await Promise.all(
-        deposits.map((deposit) =>
-          delegate.donationRepo.save(
+      const donations = await delegate.donationRepo.save(
+        Array(amount?.donation ?? 1)
+          .fill(null)
+          .map((_, index) =>
             createMockDonation({
               funding: mockFunding,
               user: mockUser,
-              deposit,
-              donAmnt: deposit.amount,
+              deposit: deposits[index],
+              donAmnt: deposits[index].amount,
             }),
           ),
-        ),
       );
-      mockFunding.donations = donations;
-      // conform fundSum
+
+      // conform fundSum domain logic
       mockFunding.fundSum = donations.reduce(
-        (sum, donation) => sum + donation.donAmnt,
+        (acc, cur) => acc + cur.donAmnt,
         0,
       );
+
+      // conform deposit status domain logic (related deposits are matched)
+      for (const deposit of deposits.slice(0, donations.length)) {
+        deposit._status = DepositStatus.Matched;
+        await delegate.depositRepo.save(deposit);
+      }
+
+      mockFunding.donations = donations;
       await delegate.fundingRepo.save(mockFunding);
     }
   }
