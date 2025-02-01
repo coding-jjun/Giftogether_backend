@@ -486,6 +486,44 @@ describe('Deposit API E2E Test', () => {
       });
       expect(foundDeposit).toBeNull();
     });
+
+    it('should delete donation and decrease fundSum if matched', async () => {
+      // Scenario: Create matched deposit, donation, and funding
+      const funding = await createMockFundingWithRelations(
+        {
+          userRepo,
+          fundingRepo,
+          depositRepo,
+          donationRepo,
+        },
+        {
+          fundUser: mockFundingOwner,
+        },
+        { deposit: 1, donation: 1 },
+      );
+
+      const donation = funding.donations[0];
+      const deposit = donation.deposit;
+
+      await request(app.getHttpServer())
+        .delete(`/deposits/${deposit.depositId}`)
+        .set('Cookie', testAuthBase.cookies)
+        .expect(200);
+
+      await eventEmitter.waitFor(DonationDeletedEvent.name);
+
+      // Funding의 fundSum이 감소되어야 합니다.
+      const foundFunding = await fundingRepo.findOne({
+        where: { fundId: funding.fundId },
+      });
+      expect(foundFunding.fundSum).toBe(0);
+
+      // Donation은 삭제되어야 합니다.
+      const foundDonation = await donationRepo.findOne({
+        where: { donId: donation.donId },
+      });
+      expect(foundDonation).toBeNull();
+    });
   });
 
   afterAll(async () => {
