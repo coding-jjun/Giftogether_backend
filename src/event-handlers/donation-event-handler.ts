@@ -123,15 +123,6 @@ export class DonationEventHandler {
   async handleDonationDeleted(event: DonationDeletedEvent) {
     const { donId, donorId } = event;
 
-    const donation = await this.donationRepo.findOne({
-      where: { donId },
-      withDeleted: true,
-    });
-
-    if (!donation) {
-      throw this.g2gException.DonationNotExists;
-    }
-
     // 후원자에게 후원 삭제 알림을 보냅니다.
     const createNotificationDtoForDonor = new CreateNotificationDto({
       recvId: donorId,
