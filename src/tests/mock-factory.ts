@@ -148,7 +148,7 @@ export const createMockGift = (overwrites?: Partial<Gift>): Gift => {
     giftUrl: faker.internet.url(),
     giftOrd: faker.number.int({ min: 1, max: 100 }),
     giftOpt: faker.lorem.sentence(),
-    giftCont: faker.lorem.paragraph(),
+    giftCont: faker.lorem.sentence().slice(0, 20),
   } as Gift;
 
   return {
@@ -270,6 +270,18 @@ export const createMockFundingWithRelations = async (
           ),
         ),
     );
+  }
+
+  // Handler optional gifts
+  if (delegate.giftRepo) {
+    const gifts = await delegate.giftRepo.save(
+      Array(amount?.gift ?? 1)
+        .fill(null)
+        .map(() => createMockGift()),
+    );
+
+    mockFunding.gifts = gifts;
+    await delegate.fundingRepo.save(mockFunding);
   }
 
   return mockFunding;
