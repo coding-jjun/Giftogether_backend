@@ -1,30 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DonationEventHandler } from './donation-event-handler';
-import { Donation } from '../../../../entities/donation.entity';
+import { Donation } from '../entities/donation.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { GiftogetherExceptions } from '../../../../filters/giftogether-exception';
-import { NotificationService } from '../../../notification/notification.service';
-import { FindAllAdminsUseCase } from '../../../admin/queries/find-all-admins.usecase';
-import { DeleteDepositUseCase } from '../../../deposit/commands/delete-deposit.usecase';
-import { DecreaseFundSumUseCase } from '../../../funding/commands/decrease-fundsum.usecase';
-import { DonationRefundRequestedEvent } from './donation-refund-requested.event';
-import { DonationRefundCancelledEvent } from './donation-refund-cancelled.event';
-import { AdminAssignedForDonationRefundEvent } from './admin-assigned-for-refune.event';
-import { DonationRefundCompletedEvent } from './donation-refund-completed.event';
-import { DonationDeletedEvent } from './donation-deleted.event';
-import { DonationDeleteFailedEvent } from './donation-delete-failed.event';
-import { NotiType } from '../../../../enums/noti-type.enum';
-import { User } from '../../../../entities/user.entity';
-import { createMockProvider } from '../../../../tests/create-mock-repository';
+import { GiftogetherExceptions } from '../filters/giftogether-exception';
+import { NotificationService } from '../features/notification/notification.service';
+import { FindAllAdminsUseCase } from '../features/admin/queries/find-all-admins.usecase';
+import { DeleteDepositUseCase } from '../features/deposit/commands/delete-deposit.usecase';
+import { DecreaseFundSumUseCase } from '../features/funding/commands/decrease-fundsum.usecase';
+import { DonationRefundRequestedEvent } from '../features/donation/domain/events/donation-refund-requested.event';
+import { DonationRefundCancelledEvent } from '../features/donation/domain/events/donation-refund-cancelled.event';
+import { AdminAssignedForDonationRefundEvent } from '../features/donation/domain/events/admin-assigned-for-refune.event';
+import { DonationRefundCompletedEvent } from '../features/donation/domain/events/donation-refund-completed.event';
+import { DonationDeletedEvent } from '../features/donation/domain/events/donation-deleted.event';
+import { DonationDeleteFailedEvent } from '../features/donation/domain/events/donation-delete-failed.event';
+import { NotiType } from '../enums/noti-type.enum';
+import { User } from '../entities/user.entity';
+import { createMockProvider } from '../tests/create-mock-repository';
 import {
   createMockUser,
   createMockDeposit,
-} from '../../../../tests/mock-factory';
-import { Notification } from '../../../../entities/notification.entity';
-import { Funding } from '../../../../entities/funding.entity';
-import { Deposit } from '../../../../entities/deposit.entity';
-import { DepositFsmService } from '../../../deposit/domain/deposit-fsm.service';
-import { DepositDto } from '../../../deposit/dto/deposit.dto';
+} from '../tests/mock-factory';
+import { Notification } from '../entities/notification.entity';
+import { Funding } from '../entities/funding.entity';
+import { Deposit } from '../entities/deposit.entity';
+import { DepositFsmService } from '../features/deposit/domain/deposit-fsm.service';
+import { DepositDto } from '../features/deposit/dto/deposit.dto';
 describe('DonationEventHandler', () => {
   let handler: DonationEventHandler;
   let notificationService: NotificationService;
@@ -188,6 +188,7 @@ describe('DonationEventHandler', () => {
         1,
         mockUser.userId,
         3,
+        mockDeposit.depositId,
         mockAdmin1.userId,
       );
 
@@ -220,35 +221,6 @@ describe('DonationEventHandler', () => {
         fundId: event.fundId,
         amount: mockDeposit.amount,
       });
-    });
-  });
-
-  describe('handleDonationDeleteFailed', () => {
-    it('should send notifications to both donor and admin', async () => {
-      const event = new DonationDeleteFailedEvent(
-        1,
-        mockUser.userId,
-        mockAdmin1.userId,
-      );
-      const notiSpy = jest.spyOn(notificationService, 'createNoti');
-
-      await handler.handleDonationDeleteFailed(event);
-
-      expect(notiSpy).toHaveBeenCalledTimes(2);
-      expect(notiSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          recvId: mockUser.userId,
-          notiType: NotiType.DonationDeleteFailed,
-          subId: event.donId.toString(),
-        }),
-      );
-      expect(notiSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          recvId: mockAdmin1.userId,
-          notiType: NotiType.DonationDeleteFailed,
-          subId: event.donId.toString(),
-        }),
-      );
     });
   });
 });

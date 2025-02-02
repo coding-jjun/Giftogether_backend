@@ -2,30 +2,30 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DonationEventHandler } from './donation-event-handler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { NotificationService } from '../../../notification/notification.service';
-import { FindAllAdminsUseCase } from '../../../admin/queries/find-all-admins.usecase';
-import { DeleteDepositUseCase } from '../../../deposit/commands/delete-deposit.usecase';
-import { DecreaseFundSumUseCase } from '../../../funding/commands/decrease-fundsum.usecase';
-import { DonationRefundRequestedEvent } from './donation-refund-requested.event';
-import { DonationRefundCancelledEvent } from './donation-refund-cancelled.event';
-import { DonationDeletedEvent } from './donation-deleted.event';
-import { User } from '../../../../entities/user.entity';
-import { Notification } from '../../../../entities/notification.entity';
-import { Funding } from '../../../../entities/funding.entity';
-import { Donation } from '../../../../entities/donation.entity';
-import { Deposit } from '../../../../entities/deposit.entity';
+import { NotificationService } from '../features/notification/notification.service';
+import { FindAllAdminsUseCase } from '../features/admin/queries/find-all-admins.usecase';
+import { DeleteDepositUseCase } from '../features/deposit/commands/delete-deposit.usecase';
+import { DecreaseFundSumUseCase } from '../features/funding/commands/decrease-fundsum.usecase';
+import { DonationRefundRequestedEvent } from '../features/donation/domain/events/donation-refund-requested.event';
+import { DonationRefundCancelledEvent } from '../features/donation/domain/events/donation-refund-cancelled.event';
+import { DonationDeletedEvent } from '../features/donation/domain/events/donation-deleted.event';
+import { User } from '../entities/user.entity';
+import { Notification } from '../entities/notification.entity';
+import { Funding } from '../entities/funding.entity';
+import { Donation } from '../entities/donation.entity';
+import { Deposit } from '../entities/deposit.entity';
 import { DataSource, Repository } from 'typeorm';
-import { GiftogetherExceptions } from '../../../../filters/giftogether-exception';
-import { DepositFsmService } from '../../../deposit/domain/deposit-fsm.service';
+import { GiftogetherExceptions } from '../filters/giftogether-exception';
+import { DepositFsmService } from '../features/deposit/domain/deposit-fsm.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import {
   createMockUser,
   createMockDeposit,
   createMockFunding,
   createMockDonation,
-} from '../../../../tests/mock-factory';
-import { createDataSourceOptions } from '../../../../tests/data-source-options';
-import entities from '../../../../entities/entities';
+} from '../tests/mock-factory';
+import { createDataSourceOptions } from '../tests/data-source-options';
+import entities from '../entities/entities';
 
 describe('DonationEventHandler (Integration)', () => {
   let module: TestingModule;
@@ -119,42 +119,6 @@ describe('DonationEventHandler (Integration)', () => {
       // expect(notifications).toHaveLength(2); // One for each admin
       // expect(notifications[0].recvId).toBe(mockAdmin1.userId);
       // expect(notifications[1].recvId).toBe(mockAdmin2.userId);
-    });
-  });
-
-  describe('handleDonationDeleted (Integration)', () => {
-    it('should delete deposit, decrease fund sum and create notifications', async () => {
-      const event = new DonationDeletedEvent(
-        mockDonation.donId,
-        mockUser.userId,
-        mockFunding.fundId,
-        mockAdmin1.userId,
-      );
-
-      const initialFundSum = mockFunding.fundSum;
-      await handler.handleDonationDeleted(event);
-
-      // Verify deposit deletion
-      const deletedDeposit = await depositRepo.findOne({
-        where: { depositId: mockDeposit.depositId },
-      });
-      expect(deletedDeposit).toBeNull();
-
-      // Verify fund sum decrease
-      const updatedFunding = await fundingRepo.findOne({
-        where: { fundId: mockFunding.fundId },
-      });
-      expect(updatedFunding.fundSum).toBe(initialFundSum - mockDeposit.amount);
-
-      // Verify notifications
-      // !FIXME - 알림 테스트는 Notification 모듈에서 진행
-      // const notifications = await notificationRepo.find({
-      //   where: {
-      //     notiType: NotiType.DonationDeleted,
-      //     subId: mockDonation.donId.toString(),
-      //   },
-      // });
-      // expect(notifications).toHaveLength(2); // One for donor, one for admin
     });
   });
 

@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { Deposit } from '../../../../entities/deposit.entity';
+import { Deposit } from '../entities/deposit.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GiftogetherExceptions } from '../../../../filters/giftogether-exception';
-import { MatchedDepositDeleteRequestedEvent } from './matched-deposit-delete-requested.event';
-import { PartiallyMatchedDepositDeleteRequestedEvent } from './partially-matched-deposit-delete-requested.event';
-import { DeleteDonationUseCase } from '../../../donation/commands/delete-donation.usecase';
-import { DonationDeletedEvent } from '../../../donation/domain/events/donation-deleted.event';
-import { ProvisionalDonationMatchCancelledEvent } from '../../../donation/domain/events/provisional-donation-match-cancelled.event';
+import { GiftogetherExceptions } from '../filters/giftogether-exception';
+import { MatchedDepositDeleteRequestedEvent } from '../features/deposit/domain/events/matched-deposit-delete-requested.event';
+import { PartiallyMatchedDepositDeleteRequestedEvent } from '../features/deposit/domain/events/partially-matched-deposit-delete-requested.event';
+import { DeleteDonationUseCase } from '../features/donation/commands/delete-donation.usecase';
+import { DonationDeletedEvent } from '../features/donation/domain/events/donation-deleted.event';
+import { ProvisionalDonationMatchCancelledEvent } from '../features/donation/domain/events/provisional-donation-match-cancelled.event';
 import { CancelMatchProvisionalDonationUseCase } from 'src/features/donation/commands/cancel-match-provisional-donation.usecase';
 import { NotificationService } from 'src/features/notification/notification.service';
 import { CreateNotificationDto } from 'src/features/notification/dto/create-notification.dto';
 import { NotiType } from 'src/enums/noti-type.enum';
-import { DeleteDepositUseCase } from '../../commands/delete-deposit.usecase';
+import { DeleteDepositUseCase } from '../features/deposit/commands/delete-deposit.usecase';
 import { InvalidStatus } from 'src/exceptions/invalid-status';
-import { DepositDeletedEvent } from './deposit-deleted.event';
+import { DepositDeletedEvent } from '../features/deposit/domain/events/deposit-deleted.event';
 
 @Injectable()
 export class DepositDeleteSaga {

@@ -1,19 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { createDataSourceOptions } from '../../../../tests/data-source-options';
 import { DepositDeleteSaga } from './deposit-delete.saga';
 import { Repository } from 'typeorm';
-import { Deposit } from '../../../../entities/deposit.entity';
-import { Donation } from '../../../../entities/donation.entity';
-import { Funding } from '../../../../entities/funding.entity';
-import { User } from '../../../../entities/user.entity';
-import { ProvisionalDonation } from '../../../../entities/provisional-donation.entity';
-import entities from '../../../../entities/entities';
-import { AuthModule } from 'src/features/auth/auth.module';
-import { EventModule } from 'src/features/event/event.module';
-import { DepositModule } from '../../deposit.module';
+import { Deposit } from '../entities/deposit.entity';
+import { Donation } from '../entities/donation.entity';
+import { Funding } from '../entities/funding.entity';
+import { User } from '../entities/user.entity';
+import { ProvisionalDonation } from '../entities/provisional-donation.entity';
+import { DepositModule } from '../features/deposit/deposit.module';
+import { TestsModule } from 'src/tests/tests.module';
 import { ConfigModule } from '@nestjs/config';
 import { RedisModule } from 'src/features/auth/redis.module';
+import { TestsModule } from 'src/tests/tests.module';
 
 /**
  * TODO - 사전 작업을 먼저 끝내논 뒤에 테스트 코드 작성.
@@ -31,19 +28,7 @@ describe('DepositDeleteSaga', () => {
 
   beforeEach(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot(createDataSourceOptions(entities)),
-        TypeOrmModule.forFeature(entities),
-        ConfigModule.forRoot({
-          isGlobal: true,
-          envFilePath: ['.env'],
-          // cache: true,
-          expandVariables: true,
-        }),
-        EventModule,
-        AuthModule,
-        DepositModule,
-      ],
+      imports: [DepositModule, TestsModule],
       providers: [],
     }).compile();
 
