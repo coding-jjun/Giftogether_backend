@@ -48,6 +48,7 @@ import { CsBoard } from './entities/cs-board.entity';
 import { CsComment } from './entities/cs-comment.entity';
 import { CsBoardModule } from './features/cs-board/cs-board.module';
 import { CsCommentModule } from './features/cs-comment/cs-comment.module';
+import { ImageQuerySubscriber } from './tests/query-subscriber';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -95,6 +96,7 @@ import { CsCommentModule } from './features/cs-comment/cs-comment.module';
           rejectUnauthorized: false,
         },
       },
+      subscribers: [ImageQuerySubscriber],
     }),
     UserModule,
     FundingModule,
