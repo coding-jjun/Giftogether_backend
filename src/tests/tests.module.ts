@@ -41,7 +41,7 @@ const customRedisProvider: Provider = {
     TypeOrmModule.forFeature(entities),
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.test.local'],
+      envFilePath: ['.env'],
     }),
     EventModule,
     TokenModule,
