@@ -139,6 +139,24 @@ export const createMockDonation = (
 };
 
 /**
+ * 선물 객체를 생성합니다.
+ */
+export const createMockGift = (overwrites?: Partial<Gift>): Gift => {
+  const defaultGift = {
+    giftTitle: faker.commerce.productName(),
+    giftUrl: faker.internet.url(),
+    giftOrd: faker.number.int({ min: 1, max: 100 }),
+    giftOpt: faker.lorem.sentence(),
+    giftCont: faker.lorem.paragraph(),
+  } as Gift;
+
+  return {
+    ...defaultGift,
+    ...overwrites,
+  } as Gift;
+};
+
+/**
  * 펀딩을 생성합니다. 옵션으로 예치, 프로비전 후원, 후원을 생성할 수 있습니다.
  *
  * @param delegate - TypeOrm Repository 인스턴스를 대리자로 활용, 테스트 데이터 생성과 저장을 수행합니다.
