@@ -44,4 +44,7 @@
     @CreateDateColumn()
     regAt: Date;
 
+    @Column({ type: 'timestamp', nullable: true }) // 마지막 댓글의 생성 날짜 (관리자 페이지)
+    lastComAt: Date;
+
   }

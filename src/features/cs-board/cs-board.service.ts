@@ -9,6 +9,7 @@ import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { UpdateCsBoardDto } from './dto/update-cs-board.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CsType } from 'src/enums/cs-type.enum';
+import { CsComment } from 'src/entities/cs-comment.entity';
 
 @Injectable()
 export class CsBoardService {
@@ -121,5 +122,24 @@ export class CsBoardService {
     
     // csBoard.isDel = true;
     // return await this.csRepository.save(csBoard);
+    // TODO 댓글 삭제 isDelete
+    
+  }
+
+
+  /**
+   * 댓글 생성/삭제에 따른 게시글 수정
+   */
+  async updateOnCsComment(csBoard: CsBoard, lastCsComment: CsComment, isNewComment: boolean) {
+
+    let lastCommenterisAdmin = false; // 댓글이 없는 게시글
+    if(lastCsComment != null) {       // 댓글 있는 게시글
+      lastCommenterisAdmin = lastCsComment.csComUser.isAdmin;
+    }
+    if(isNewComment) {
+      csBoard.lastComAt = lastCsComment.regAt; // 새로운 댓글 생성 날짜로 업데이트
+    }
+    csBoard.isUserWaiting = lastCommenterisAdmin ? false : true;
+    await this.csRepository.save(csBoard);
   }
 }

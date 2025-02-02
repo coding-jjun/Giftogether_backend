@@ -43,12 +43,16 @@ export class CsCommentController {
   }
 
   @Delete(':cscomId')
+  @UseGuards(JwtExtendedAuthGuard)
   async deleteCsBoard(
+    @Req() req: Request,
     @Param('cscomId', ParseIntPipe) cscomId: number,
   ): Promise<CommonResponse>{
+    const user = req.user as { user: User } as any;
+
     return {
       message: "CS 댓글 삭제 완료",
-      data: await this.csComService.delete(cscomId),
+      data: await this.csComService.delete(cscomId, user.userId),
     }
   }
 
