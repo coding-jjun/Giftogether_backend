@@ -64,6 +64,7 @@ describe('Deposit API E2E Test', () => {
     g2gException = moduleFixture.get(GiftogetherExceptions);
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     testAuthBase = await moduleFixture.resolve(TestAuthBase); // REQUEST scoped provider
+    app.use(cookieParser());
     await app.init();
 
     mockFundingOwner = await createMockUserWithRelations(
@@ -280,6 +281,7 @@ describe('Deposit API E2E Test', () => {
 
       const response = await request(app.getHttpServer())
         .get('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .query({ page: 1, limit: 2 })
         .expect(200);
 
