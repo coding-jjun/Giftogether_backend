@@ -14,6 +14,7 @@ import { Nickname } from '../util/nickname';
 import { DonationService } from '../features/donation/donation.service';
 import { CreateMockFundingWithRelationsDelegate } from './create-mock-funding-delegate.interface';
 import { CreateMockUserDelegate } from './create-mock-user-delegate.interface';
+import { Gift } from 'src/entities/gift.entity';
 
 const baseNick = (): string => {
   const nickname = new Nickname();
@@ -189,6 +190,7 @@ export const createMockFundingWithRelations = async (
     deposit?: number;
     provDonation?: number;
     donation?: number;
+    gift?: number;
   },
 ): Promise<Funding> => {
   if (
