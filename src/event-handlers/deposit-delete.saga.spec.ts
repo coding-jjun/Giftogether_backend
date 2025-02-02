@@ -9,6 +9,8 @@ import { ProvisionalDonation } from '../entities/provisional-donation.entity';
 import { DepositModule } from '../features/deposit/deposit.module';
 import { TestsModule } from 'src/tests/tests.module';
 import { ConfigModule } from '@nestjs/config';
+import { RedisModule } from 'src/features/auth/redis.module';
+import { TestsModule } from 'src/tests/tests.module';
 
 /**
  * TODO - 사전 작업을 먼저 끝내논 뒤에 테스트 코드 작성.
