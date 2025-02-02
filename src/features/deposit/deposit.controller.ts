@@ -9,6 +9,7 @@ import {
   Delete,
   UseGuards,
   Req,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { DepositService } from './deposit.service';
 import { DepositDto } from './dto/deposit.dto';
@@ -27,9 +28,20 @@ export class DepositController {
   ) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async findAll(
-    @Query('page', new ParseIntPipe({ optional: true })) page: number,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit: number,
+    @Query(
+      'page',
+      new DefaultValuePipe(1),
+      new ParseIntPipe({ optional: true }),
+    )
+    page: number,
+    @Query(
+      'limit',
+      new DefaultValuePipe(10),
+      new ParseIntPipe({ optional: true }),
+    )
+    limit: number,
   ): Promise<CommonResponse> {
     if (page <= 0) {
       throw this.g2gException.InvalidPage;
@@ -44,6 +56,7 @@ export class DepositController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: number): Promise<CommonResponse> {
     return {
       message: '성공적으로 입금내역을 조회했습니다.',
@@ -52,6 +65,7 @@ export class DepositController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   async uploadDeposit(
     @Body() depositData: CreateDepositDto,
   ): Promise<CommonResponse> {
