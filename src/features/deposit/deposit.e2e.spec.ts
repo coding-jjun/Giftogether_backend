@@ -1,8 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request = require('supertest');
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { createDataSourceOptions } from 'src/tests/data-source-options';
 import { DepositModule } from './deposit.module';
 import { Deposit } from '../../entities/deposit.entity';
 import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
@@ -11,11 +9,6 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { Funding } from 'src/entities/funding.entity';
 import { User } from 'src/entities/user.entity';
-import { Account } from 'src/entities/account.entity';
-import { Comment } from 'src/entities/comment.entity';
-import { Address } from 'src/entities/address.entity';
-import { Image } from 'src/entities/image.entity';
-import { Gift } from 'src/entities/gift.entity';
 import { Donation } from 'src/entities/donation.entity';
 import { ProvisionalDonationStatus } from 'src/enums/provisional-donation-status.enum';
 import { CommonResponse } from 'src/interfaces/common-response.interface';
@@ -25,11 +18,7 @@ import { EventModule } from '../event/event.module';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { waitForEventJobs } from 'src/tests/wait-for-events';
 import { NotiType } from 'src/enums/noti-type.enum';
-import { NotificationService } from '../notification/notification.service';
-import { ProvisionalDonationEventHandler } from '../donation/domain/events/provisional-donation-event-handler';
 import { ProvisionalDonationFsmService } from '../donation/domain/services/provisional-donation-fsm.service';
-import { CsBoard } from '../../entities/cs-board.entity';
-import { CsComment } from '../../entities/cs-comment.entity';
 import {
   createMockUser,
   createMockUserWithRelations,
@@ -37,22 +26,11 @@ import {
   createMockFundingWithRelations,
 } from '../../tests/mock-factory';
 import { FundTheme } from '../../enums/fund-theme.enum';
-
-const entities = [
-  Deposit,
-  ProvisionalDonation,
-  User,
-  Account,
-  Comment,
-  Address,
-  Image,
-  Gift,
-  Donation,
-  Funding,
-  Notification,
-  CsBoard,
-  CsComment,
-];
+import { TestAuthBase } from 'src/tests/test-auth-base';
+import cookieParser from 'cookie-parser';
+import { TestsModule } from 'src/tests/tests.module';
+import { MatchDepositUseCase } from './commands/match-deposit.usecase';
+import { ProvisionalDonationPartiallyMatchedEvent } from '../donation/domain/events/provisional-donation-partially-matched.event';
 
 describe('Deposit API E2E Test', () => {
   let app: INestApplication;
@@ -65,23 +43,15 @@ describe('Deposit API E2E Test', () => {
   let mockFunding: Funding;
   let mockFundingOwner: User;
   let mockDonor: User;
+  let mockAdmin: User;
   let g2gException: GiftogetherExceptions;
   let eventEmitter: EventEmitter2;
+  let testAuthBase: TestAuthBase;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot(createDataSourceOptions(entities)),
-        TypeOrmModule.forFeature(entities),
-        DepositModule,
-        EventModule,
-      ],
-      providers: [
-        GiftogetherExceptions,
-        NotificationService,
-        ProvisionalDonationEventHandler,
-        ProvisionalDonationFsmService,
-      ],
+      imports: [DepositModule, EventModule, TestsModule],
+      providers: [GiftogetherExceptions, ProvisionalDonationFsmService],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -93,6 +63,7 @@ describe('Deposit API E2E Test', () => {
     notiRepo = moduleFixture.get(getRepositoryToken(Notification));
     g2gException = moduleFixture.get(GiftogetherExceptions);
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
+    testAuthBase = await moduleFixture.resolve(TestAuthBase); // REQUEST scoped provider
     await app.init();
 
     mockFundingOwner = await createMockUserWithRelations(
@@ -118,6 +89,17 @@ describe('Deposit API E2E Test', () => {
     } as User);
     await userRepo.insert(mockDonor);
 
+    mockAdmin = createMockUser({
+      userName: '관리자',
+      userEmail: 'admin@admin.com',
+      userNick: '관리자',
+      isAdmin: true,
+    } as User);
+    await userRepo.insert(mockAdmin);
+
+    // create cookies from mockAdmin
+    await testAuthBase.login(mockAdmin);
+
     mockFunding = new Funding(
       mockFundingOwner,
       'mockFunding',
@@ -142,7 +124,6 @@ describe('Deposit API E2E Test', () => {
 
   describe('POST /deposits', () => {
     it('should handle matched deposit', async () => {
-
       // Create matching provisional donation
       const senderSig = 'HONG-1234';
       const provDon = ProvisionalDonation.create(
@@ -156,6 +137,7 @@ describe('Deposit API E2E Test', () => {
 
       await request(app.getHttpServer())
         .post('/deposits')
+        .set('Cookie', testAuthBase.cookies)
         .send({
           senderSig,
           receiver: 'GIFTOGETHER',
@@ -182,9 +164,7 @@ describe('Deposit API E2E Test', () => {
         where: { senderSig },
       });
       expect(foundProvDons.length).toBe(1);
-      expect(foundProvDons[0].status).toBe(
-        ProvisionalDonationStatus.Approved,
-      );
+      expect(foundProvDons[0].status).toBe(ProvisionalDonationStatus.Approved);
 
       // Donation 하나가 새로 생성되어야 합니다.
       const foundDonations = await donationRepo.find({
