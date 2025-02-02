@@ -4,6 +4,7 @@ export enum CsType {
  Payment='payment',
  Delivery='delivery',
  Extra='extra',
+ Announcement = 'announcement',
  
 
 }

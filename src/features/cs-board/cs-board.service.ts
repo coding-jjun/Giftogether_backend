@@ -70,7 +70,12 @@ export class CsBoardService {
     // 게시자가 관리자일 경우 : 댓글 막기
     if(user.isAdmin){
      csBoard.isComplete = true; 
-    } 
+    }
+    // 관리자 공지사항
+    if(CsType.Announcement == createCsBoard.csType) {
+      csBoard.isComplete = true;
+      csBoard.isUserWaiting = false;
+    }
     const newBoard = await this.csRepository.save(csBoard);
     console.log("Save new Board >>> ", newBoard);
     return newBoard
