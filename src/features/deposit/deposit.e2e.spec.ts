@@ -488,7 +488,7 @@ describe('Deposit API E2E Test', () => {
       expect(foundDeposit).toBeNull();
     });
 
-    it('should delete donation and decrease fundSum if matched', async () => {
+    it('should delete donation and decrease fundSum and reset to pending on provdon if matched', async () => {
       // Scenario: Create matched deposit, donation, and funding
       const funding = await createMockFundingWithRelations(
         {
@@ -496,11 +496,12 @@ describe('Deposit API E2E Test', () => {
           fundingRepo,
           depositRepo,
           donationRepo,
+          provDonRepo,
         },
         {
           fundUser: mockFundingOwner,
         },
-        { deposit: 1, donation: 1 },
+        { deposit: 1, donation: 1, provDonation: 1 },
       );
 
       const donation = funding.donations[0];
@@ -524,6 +525,12 @@ describe('Deposit API E2E Test', () => {
         where: { donId: donation.donId },
       });
       expect(foundDonation).toBeNull();
+
+      // Provisional Donation의 상태가 Pending이어야 합니다.
+      const foundProvDon = await provDonRepo.findOne({
+        where: { senderSig: deposit.senderSig },
+      });
+      expect(foundProvDon.status).toBe(ProvisionalDonationStatus.Pending);
     });
   });
 

@@ -30,7 +30,9 @@ export class DepositDeleteSaga {
   ) {}
 
   /**
-   * 후원이 정상적으로 처리되어 연관된 후원을 먼저 제거해야 합니다. 이 프로세스는 후원 삭제 성공 여부에 따라 실패할 수 있는 프로세스로, 예외 발생시 적절한 보상조치를 수행합니다.
+   * 후원이 정상적으로 처리되어 연관된 후원을 먼저 제거해야 합니다. 그리고 예비후원의 상태를 초기화한 뒤 이체내역을 삭제합니다.
+   *
+   * 이 프로세스는 후원 삭제 성공 여부에 따라 실패할 수 있는 프로세스로, 예외 발생시 적절한 보상조치를 수행합니다.
    */
   @OnEvent(MatchedDepositDeleteRequestedEvent.name, { async: true })
   async handleMatchedDepositDeleteRequested(
@@ -64,6 +66,29 @@ export class DepositDeleteSaga {
           sendId: undefined,
           notiType: NotiType.DonationDeleteFailed,
           subId: deposit.donation.donId.toString(),
+        });
+        await this.notiService.createNoti(notiDto);
+      } else {
+        throw error;
+      }
+    }
+
+    // 예비후원 매치 취소
+    try {
+      await this.cancelMatchProvDon.execute(
+        deposit.senderSig,
+        depositId,
+        adminId,
+      );
+    } catch (error) {
+      if (error instanceof InvalidStatus) {
+        // 예비후원 매치 취소 실패! 보상 절차를 진행합니다
+        // send notification to admin
+        const notiDto = new CreateNotificationDto({
+          recvId: adminId,
+          sendId: undefined,
+          notiType: NotiType.ProvisionalDonationMatchCancelFailed,
+          subId: deposit.senderSig,
         });
         await this.notiService.createNoti(notiDto);
       } else {
