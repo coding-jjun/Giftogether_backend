@@ -94,19 +94,11 @@ export class CommentService {
         { isDel: false },
       )
       .leftJoinAndSelect('comment.author', 'author')
-      .leftJoinAndMapOne(
-        'author.image', // map to property 'image' of 'author'
-        'image', // property name of 'author'
-        'authorImage', // alias of 'image' table
-        `
-        (author.defaultImgId IS NOT NULL AND authorImage.imgId = author.defaultImgId)
-        OR
-        (author.defaultImgId IS NULL AND authorImage.subId = author.userId AND authorImage.imgType = :imgType)
-        `,
-        { imgType: ImageType.User },
-      )
       .where('funding.fundUuid = :fundUuid', { fundUuid })
       .orderBy('comment.regAt', 'DESC');
+
+    this.imageInstanceManager.mapImage(fundingQb, 'author');
+    // this.imageInstanceManager.mapImage(fundingQb, 'funding'); // NOTE - 이런 식으로 매핑하고 싶은 엔티티 alias를 붙여주면 됩니다.
 
     const funding = await fundingQb.getOne();
     if (!funding) {
