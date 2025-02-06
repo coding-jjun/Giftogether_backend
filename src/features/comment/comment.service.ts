@@ -12,6 +12,7 @@ import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { ValidCheck } from 'src/util/valid-check';
 import { ImageInstanceManager } from '../image/image-instance-manager';
 import { ImageType } from 'src/enums/image-type.enum';
+import { SelectQueryBuilder } from 'typeorm/browser';
 
 function convertToGetCommentDto(comment: Comment): GetCommentDto {
   const { comId, content, regAt, isMod, authorId, author } = comment;
@@ -117,10 +118,17 @@ export class CommentService {
   ): Promise<GetCommentDto> {
     const { content } = updateCommentDto;
 
-    const comment = await this.commentRepository.findOne({
-      relations: { funding: true, author: true },
-      where: { comId, funding: { fundUuid } },
-    });
+    const commentQb = this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.funding', 'funding')
+      .leftJoinAndSelect('comment.author', 'author')
+      .where('comment.comId = :comId AND funding.fundUuid = :fundUuid', {
+        comId,
+        fundUuid,
+      });
+    this.imageInstanceManager.mapImage(commentQb, 'author');
+
+    const comment = await commentQb.getOne();
     if (!comment) {
       throw this.g2gException.CommentNotFound;
     }
