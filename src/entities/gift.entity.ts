@@ -3,6 +3,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Funding } from './funding.entity';
@@ -46,4 +47,7 @@ export class Gift implements IImageId {
   @ManyToOne(() => Image, (image) => image.imgId)
   @JoinColumn({ name: 'defaultImgId' })
   defaultImgId?: number;
+
+  @OneToOne(() => Image, (image) => image.subId)
+  image: Image;
 }

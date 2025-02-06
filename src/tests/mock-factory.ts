@@ -14,6 +14,7 @@ import { Nickname } from '../util/nickname';
 import { DonationService } from '../features/donation/donation.service';
 import { CreateMockFundingWithRelationsDelegate } from './create-mock-funding-delegate.interface';
 import { CreateMockUserDelegate } from './create-mock-user-delegate.interface';
+import { Gift } from 'src/entities/gift.entity';
 
 const baseNick = (): string => {
   const nickname = new Nickname();
@@ -139,6 +140,24 @@ export const createMockDonation = (
 };
 
 /**
+ * 선물 객체를 생성합니다.
+ */
+export const createMockGift = (overwrites?: Partial<Gift>): Gift => {
+  const defaultGift = {
+    giftTitle: faker.commerce.productName(),
+    giftUrl: faker.internet.url(),
+    giftOrd: faker.number.int({ min: 1, max: 100 }),
+    giftOpt: faker.lorem.sentence(),
+    giftCont: faker.lorem.sentence().slice(0, 20),
+  } as Gift;
+
+  return {
+    ...defaultGift,
+    ...overwrites,
+  } as Gift;
+};
+
+/**
  * 펀딩을 생성합니다. 옵션으로 예치, 프로비전 후원, 후원을 생성할 수 있습니다.
  *
  * @param delegate - TypeOrm Repository 인스턴스를 대리자로 활용, 테스트 데이터 생성과 저장을 수행합니다.
@@ -171,6 +190,7 @@ export const createMockFundingWithRelations = async (
     deposit?: number;
     provDonation?: number;
     donation?: number;
+    gift?: number;
   },
 ): Promise<Funding> => {
   if (
@@ -250,6 +270,18 @@ export const createMockFundingWithRelations = async (
           ),
         ),
     );
+  }
+
+  // Handler optional gifts
+  if (delegate.giftRepo) {
+    const gifts = await delegate.giftRepo.save(
+      Array(amount?.gift ?? 1)
+        .fill(null)
+        .map(() => createMockGift()),
+    );
+
+    mockFunding.gifts = gifts;
+    await delegate.fundingRepo.save(mockFunding);
   }
 
   return mockFunding;

@@ -33,6 +33,7 @@ import { TestsModule } from 'src/tests/tests.module';
 import { MatchDepositUseCase } from './commands/match-deposit.usecase';
 import { ProvisionalDonationPartiallyMatchedEvent } from '../donation/domain/events/provisional-donation-partially-matched.event';
 import { DonationDeletedEvent } from '../donation/domain/events/donation-deleted.event';
+import { Gift } from 'src/entities/gift.entity';
 
 describe('Deposit API E2E Test', () => {
   let app: INestApplication;
@@ -42,6 +43,7 @@ describe('Deposit API E2E Test', () => {
   let depositRepo: Repository<Deposit>;
   let donationRepo: Repository<Donation>;
   let notiRepo: Repository<Notification>;
+  let giftRepo: Repository<Gift>;
   let mockFunding: Funding;
   let mockFundingOwner: User;
   let mockDonor: User;
@@ -64,6 +66,7 @@ describe('Deposit API E2E Test', () => {
     depositRepo = moduleFixture.get(getRepositoryToken(Deposit));
     donationRepo = moduleFixture.get(getRepositoryToken(Donation));
     notiRepo = moduleFixture.get(getRepositoryToken(Notification));
+    giftRepo = moduleFixture.get(getRepositoryToken(Gift));
     g2gException = moduleFixture.get(GiftogetherExceptions);
     eventEmitter = moduleFixture.get<EventEmitter2>(EventEmitter2);
     testAuthBase = await moduleFixture.resolve(TestAuthBase); // REQUEST scoped provider
@@ -392,10 +395,14 @@ describe('Deposit API E2E Test', () => {
           fundingRepo,
           depositRepo,
           donationRepo,
+          giftRepo,
         },
         undefined,
-        { deposit: 1, donation: 1 },
+        { deposit: 1, donation: 1, gift: 1 },
       );
+
+      // check if the gift is created
+      expect(mockFunding.gifts).toHaveLength(1);
 
       const deposit = await depositRepo.findOne({
         where: { depositId: mockFunding.donations[0].deposit.depositId },
