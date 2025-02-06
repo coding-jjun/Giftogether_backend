@@ -150,10 +150,20 @@ export class CommentService {
    * soft delete
    */
   async remove(user: Partial<User>, fundUuid: string, comId: number) {
-    const comment = await this.commentRepository.findOne({
-      relations: { funding: true, author: true },
-      where: { comId, funding: { fundUuid }, isDel: false },
-    });
+    const commentQb = this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.funding', 'funding')
+      .leftJoinAndSelect('comment.author', 'author')
+      .where('comment.comId = :comId AND funding.fundUuid = :fundUuid', {
+        comId,
+        fundUuid,
+      });
+    this.imageInstanceManager.mapImage(commentQb, 'author');
+
+    const comment = await commentQb.getOne();
+    if (!comment) {
+      throw this.g2gException.CommentNotFound;
+    }
     if (!comment) {
       throw this.g2gException.CommentNotFound;
     }
@@ -163,9 +173,6 @@ export class CommentService {
     comment.isDel = true;
     this.commentRepository.save(comment);
 
-    comment.author.image = await this.imageInstanceManager
-      .getImages(comment.author)
-      .then((images) => images[0]);
     return convertToGetCommentDto(comment);
   }
 }
