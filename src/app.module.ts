@@ -96,7 +96,7 @@ import { ImageQuerySubscriber } from './tests/query-subscriber';
           rejectUnauthorized: false,
         },
       },
-      subscribers: [ImageQuerySubscriber],
+      // subscribers: [ImageQuerySubscriber], // TODO - move to tests.module
     }),
     UserModule,
     FundingModule,
