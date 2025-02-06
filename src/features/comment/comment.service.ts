@@ -51,15 +51,16 @@ export class CommentService {
     if (!funding) {
       throw this.g2gException.FundingNotExists;
     }
-    const author = await this.userRepository.findOne({
-      where: { userId: user.userId! },
-    });
+    const authorQb = this.userRepository
+      .createQueryBuilder('author')
+      .where('author.userId = :userId', { userId: user.userId! });
+
+    this.imageInstanceManager.mapImage(authorQb);
+
+    const author = await authorQb.getOne();
     if (!author) {
       throw this.g2gException.UserNotFound;
     }
-    author.image = await this.imageInstanceManager
-      .getImages(author)
-      .then((images) => images[0]);
 
     const newComment = new Comment({
       funding,
@@ -98,7 +99,7 @@ export class CommentService {
       .orderBy('comment.regAt', 'DESC');
 
     this.imageInstanceManager.mapImage(fundingQb, 'author');
-    // this.imageInstanceManager.mapImage(fundingQb, 'funding'); // NOTE - 이런 식으로 매핑하고 싶은 엔티티 alias를 붙여주면 됩니다.
+    // this.imageInstanceManager.mapImage(fundingQb, 'funding'); //  이런 식으로 매핑하고 싶은 엔티티 alias를 붙여주면 됩니다.
 
     const funding = await fundingQb.getOne();
     if (!funding) {

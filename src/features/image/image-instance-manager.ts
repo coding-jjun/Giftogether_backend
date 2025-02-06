@@ -59,6 +59,13 @@ export class ImageInstanceManager {
     const funding = await fundingQb.getOne();
     console.log(funding.image.imgUrl);
     console.log(funding.author.image.imgUrl);
+
+    const authorQb = this.userRepository
+      .createQueryBuilder('author')
+      .where('author.userId = :userId', { userId: user.userId! });
+
+    // NOTE - 또는 아래와 같이 alias를 생략하면 query builder의 main alias가 자동으로 사용됩니다.
+    this.imageInstanceManager.mapImage(authorQb);
    */
   mapImage(
     qb: SelectQueryBuilder<User>,
@@ -114,7 +121,6 @@ export class ImageInstanceManager {
       { imgType },
     );
   }
-
 
   mapImages<T extends IImageId>(
     queryBuilder: SelectQueryBuilder<T>,
