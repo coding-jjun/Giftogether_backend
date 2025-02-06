@@ -153,6 +153,7 @@ export class CommentService {
     const commentQb = this.commentRepository
       .createQueryBuilder('comment')
       .leftJoinAndSelect('comment.funding', 'funding')
+      .leftJoinAndSelect('comment.author', 'author')
       .where('comment.comId = :comId AND funding.fundUuid = :fundUuid', {
         comId,
         fundUuid,
