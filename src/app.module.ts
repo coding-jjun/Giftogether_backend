@@ -60,6 +60,7 @@ import { EventHandlersModule } from './event-handlers/event-handlers.module';
           rejectUnauthorized: false,
         },
       },
+      // subscribers: [ImageQuerySubscriber], // TODO - move to tests.module
     }),
     UserModule,
     FundingModule,

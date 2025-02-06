@@ -12,6 +12,7 @@ import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { ValidCheck } from 'src/util/valid-check';
 import { ImageInstanceManager } from '../image/image-instance-manager';
 import { ImageType } from 'src/enums/image-type.enum';
+import { SelectQueryBuilder } from 'typeorm/browser';
 
 function convertToGetCommentDto(comment: Comment): GetCommentDto {
   const { comId, content, regAt, isMod, authorId, author } = comment;
@@ -51,15 +52,16 @@ export class CommentService {
     if (!funding) {
       throw this.g2gException.FundingNotExists;
     }
-    const author = await this.userRepository.findOne({
-      where: { userId: user.userId! },
-    });
+    const authorQb = this.userRepository
+      .createQueryBuilder('author')
+      .where('author.userId = :userId', { userId: user.userId! });
+
+    this.imageInstanceManager.mapImage(authorQb);
+
+    const author = await authorQb.getOne();
     if (!author) {
       throw this.g2gException.UserNotFound;
     }
-    author.image = await this.imageInstanceManager
-      .getImages(author)
-      .then((images) => images[0]);
 
     const newComment = new Comment({
       funding,
@@ -94,19 +96,11 @@ export class CommentService {
         { isDel: false },
       )
       .leftJoinAndSelect('comment.author', 'author')
-      .leftJoinAndMapOne(
-        'author.image', // map to property 'image' of 'author'
-        'image', // property name of 'author'
-        'authorImage', // alias of 'image' table
-        `
-        (author.defaultImgId IS NOT NULL AND authorImage.imgId = author.defaultImgId)
-        OR
-        (author.defaultImgId IS NULL AND authorImage.subId = author.userId AND authorImage.imgType = :imgType)
-        `,
-        { imgType: ImageType.User },
-      )
       .where('funding.fundUuid = :fundUuid', { fundUuid })
       .orderBy('comment.regAt', 'DESC');
+
+    this.imageInstanceManager.mapImage(fundingQb, 'author');
+    // this.imageInstanceManager.mapImage(fundingQb, 'funding'); //  이런 식으로 매핑하고 싶은 엔티티 alias를 붙여주면 됩니다.
 
     const funding = await fundingQb.getOne();
     if (!funding) {
@@ -124,10 +118,17 @@ export class CommentService {
   ): Promise<GetCommentDto> {
     const { content } = updateCommentDto;
 
-    const comment = await this.commentRepository.findOne({
-      relations: { funding: true, author: true },
-      where: { comId, funding: { fundUuid } },
-    });
+    const commentQb = this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.funding', 'funding')
+      .leftJoinAndSelect('comment.author', 'author')
+      .where('comment.comId = :comId AND funding.fundUuid = :fundUuid', {
+        comId,
+        fundUuid,
+      });
+    this.imageInstanceManager.mapImage(commentQb, 'author');
+
+    const comment = await commentQb.getOne();
     if (!comment) {
       throw this.g2gException.CommentNotFound;
     }
@@ -149,10 +150,16 @@ export class CommentService {
    * soft delete
    */
   async remove(user: Partial<User>, fundUuid: string, comId: number) {
-    const comment = await this.commentRepository.findOne({
-      relations: { funding: true, author: true },
-      where: { comId, funding: { fundUuid }, isDel: false },
-    });
+    const commentQb = this.commentRepository
+      .createQueryBuilder('comment')
+      .leftJoinAndSelect('comment.funding', 'funding')
+      .leftJoinAndSelect('comment.author', 'author')
+      .where('comment.comId = :comId AND funding.fundUuid = :fundUuid', {
+        comId,
+        fundUuid,
+      });
+
+    const comment = await commentQb.getOne();
     if (!comment) {
       throw this.g2gException.CommentNotFound;
     }
@@ -162,9 +169,6 @@ export class CommentService {
     comment.isDel = true;
     this.commentRepository.save(comment);
 
-    comment.author.image = await this.imageInstanceManager
-      .getImages(comment.author)
-      .then((images) => images[0]);
     return convertToGetCommentDto(comment);
   }
 }
