@@ -29,7 +29,7 @@ export class ImageInstanceManager {
   }
 
   /**
-   * The function inspects the main alias’s metadata to determine the entity type.
+   * The function inspects the alias’s metadata to determine the entity type.
    * It then uses that to build a join condition that first checks if the entity’s
    * defaultImgId is set (in which case it matches image.imgId to defaultImgId). If not,
    * it falls back to matching image.subId to the entity’s id field (userId, fundId, or giftId)
@@ -68,22 +68,9 @@ export class ImageInstanceManager {
     this.imageInstanceManager.mapImage(authorQb);
    */
   mapImage(
-    qb: SelectQueryBuilder<User>,
+    qb: SelectQueryBuilder<any>,
     alias?: string,
-  ): SelectQueryBuilder<User>;
-  mapImage(
-    qb: SelectQueryBuilder<Funding>,
-    alias?: string,
-  ): SelectQueryBuilder<Funding>;
-  mapImage(
-    qb: SelectQueryBuilder<Gift>,
-    alias?: string,
-  ): SelectQueryBuilder<Gift>;
-
-  mapImage(
-    qb: SelectQueryBuilder<User | Funding | Gift>,
-    alias?: string,
-  ): SelectQueryBuilder<User | Funding | Gift> {
+  ): SelectQueryBuilder<any> {
     // Use provided alias or fall back to the query builder's own alias.
     const entityAlias = alias || qb.alias;
 
