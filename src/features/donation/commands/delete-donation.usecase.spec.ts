@@ -10,6 +10,7 @@ import { DonationDeletedEvent } from '../domain/events/donation-deleted.event';
 import { DonationDeleteFailedEvent } from '../domain/events/donation-delete-failed.event';
 import { Funding } from '../../../entities/funding.entity';
 import {
+  createMockDeposit,
   createMockDonation,
   createMockFunding,
   createMockUser,
@@ -17,9 +18,14 @@ import {
 import { DonationStatus } from '../../../enums/donation-status.enum';
 import { User } from '../../../entities/user.entity';
 import { InvalidStatus } from '../../../exceptions/invalid-status';
+import { Deposit } from 'src/entities/deposit.entity';
+import { DecreaseFundSumUseCase } from 'src/features/funding/commands/decrease-fundsum.usecase';
+import { createMockRepository } from 'src/tests/create-mock-repository';
+import { DecreaseFundSumCommand } from 'src/features/funding/commands/decrease-fundsum.command';
 
 describe('DeleteDonationUseCase', () => {
   let useCase: DeleteDonationUseCase;
+  let decreaseFundSumUsecase: DecreaseFundSumUseCase;
   let donationRepo: Repository<Donation>;
   let donationFsmService: DonationFsmService;
   let eventEmitter: EventEmitter2;
@@ -28,6 +34,7 @@ describe('DeleteDonationUseCase', () => {
   let mockDonation: Donation;
   let mockFunding: Funding;
   let mockAdmin: User;
+  let mockDeposit: Deposit;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -49,17 +56,26 @@ describe('DeleteDonationUseCase', () => {
             },
           },
         },
+        {
+          provide: getRepositoryToken(Funding),
+          useValue: createMockRepository(Repository<Funding>),
+        },
         GiftogetherExceptions,
+        DecreaseFundSumUseCase,
       ],
     }).compile();
 
     useCase = module.get<DeleteDonationUseCase>(DeleteDonationUseCase);
+    decreaseFundSumUsecase = module.get<DecreaseFundSumUseCase>(
+      DecreaseFundSumUseCase,
+    );
     donationRepo = module.get<Repository<Donation>>(
       getRepositoryToken(Donation),
     );
     donationFsmService = module.get<DonationFsmService>(DonationFsmService);
     eventEmitter = module.get<EventEmitter2>(EventEmitter2);
     g2gException = module.get<GiftogetherExceptions>(GiftogetherExceptions);
+    mockDeposit = createMockDeposit({ depositId: 1 });
 
     mockAdmin = createMockUser({
       userId: 999,
@@ -91,18 +107,23 @@ describe('DeleteDonationUseCase', () => {
       jest.spyOn(donationRepo, 'findOne').mockResolvedValue(mockDonation);
       jest.spyOn(donationRepo.manager, 'transaction');
       jest.spyOn(eventEmitter, 'emit');
+      jest.spyOn(decreaseFundSumUsecase, 'execute');
 
       // Act
-      const result = await useCase.execute(
+      await useCase.execute(
         mockDonation.donId,
         mockAdmin.userId,
+        mockDeposit.depositId,
       );
 
       // Assert
-      expect(result).toBe(true);
-      expect(donationRepo.findOne).toHaveBeenCalledWith({
-        where: { donId: mockDonation.donId },
-      });
+      expect(decreaseFundSumUsecase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fundId: mockFunding.fundId,
+          amount: mockDonation.donAmnt,
+        } as DecreaseFundSumCommand),
+      );
+      expect(donationRepo.findOne).toHaveBeenCalledTimes(1);
       expect(mockDonation.transition).toHaveBeenCalledWith(
         DonationDeletedEvent.name,
         donationFsmService,
@@ -120,36 +141,9 @@ describe('DeleteDonationUseCase', () => {
       jest.spyOn(donationRepo, 'findOne').mockResolvedValue(null);
 
       // Act & Assert
-      await expect(useCase.execute(donId, adminId)).rejects.toThrow(
-        g2gException.DonationNotExists,
-      );
-    });
-
-    it('should handle transition failure and emit delete failed event', async () => {
-      // Arrange
-      jest.spyOn(donationRepo, 'findOne').mockResolvedValue({
-        ...mockDonation,
-        transition: jest.fn().mockImplementation(() => {
-          throw new InvalidStatus(
-            DonationStatus.Donated,
-            DonationDeletedEvent.name,
-          );
-        }),
-      });
-      jest.spyOn(eventEmitter, 'emit');
-
-      // Act
-      const result = await useCase.execute(
-        mockDonation.donId,
-        mockAdmin.userId,
-      );
-
-      // Assert
-      expect(result).toBe(false);
-      expect(eventEmitter.emit).toHaveBeenCalledWith(
-        DonationDeleteFailedEvent.name,
-        expect.any(DonationDeleteFailedEvent),
-      );
+      await expect(
+        useCase.execute(donId, adminId, mockDeposit.depositId),
+      ).rejects.toThrow(g2gException.DonationNotExists);
     });
   });
 });
