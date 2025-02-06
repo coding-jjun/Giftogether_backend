@@ -254,22 +254,21 @@ export const createMockFundingWithRelations = async (
       mockFunding.donations = donations;
       await delegate.fundingRepo.save(mockFunding);
     }
-  }
 
-  // Handle optional provisional donations
-  if (delegate.provDonRepo) {
-    await Promise.all(
-      Array(amount?.provDonation ?? 1)
-        .fill(null)
-        .map(() =>
-          delegate.provDonRepo.save(
+    // Handle optional provisional donations
+    if (delegate.provDonRepo) {
+      await delegate.provDonRepo.save(
+        Array(amount?.provDonation ?? 1)
+          .fill(null)
+          .map((_, index) =>
             createMockProvisionalDonation({
               funding: mockFunding,
               senderUser: mockUser,
+              senderSig: deposits[index].senderSig,
             }),
           ),
-        ),
-    );
+      );
+    }
   }
 
   // Handler optional gifts
