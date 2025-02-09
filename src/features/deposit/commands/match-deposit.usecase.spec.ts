@@ -120,6 +120,7 @@ describe('MatchDepositUseCase', () => {
       senderSig,
       amount: depositAmount,
     });
+    deposit.transition = jest.fn();
 
     const mockProvDonation = createMockProvisionalDonation({
       senderSig,
