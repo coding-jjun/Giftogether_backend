@@ -22,6 +22,7 @@ import { Funding } from '../../entities/funding.entity';
 import { Deposit } from '../../entities/deposit.entity';
 import { DepositFsmService } from '../../features/deposit/domain/deposit-fsm.service';
 import { DepositDto } from '../../features/deposit/dto/deposit.dto';
+import { EventModule } from 'src/features/event/event.module';
 
 describe('DonationEventHandler', () => {
   let handler: DonationEventHandler;
@@ -35,6 +36,7 @@ describe('DonationEventHandler', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [EventModule],
       providers: [
         DonationEventHandler,
         NotificationService,
@@ -43,7 +45,6 @@ describe('DonationEventHandler', () => {
         DepositFsmService,
         DecreaseFundSumUseCase,
         GiftogetherExceptions,
-        EventEmitter2,
         createMockProvider(Notification),
         createMockProvider(User),
         createMockProvider(Funding),
@@ -191,14 +192,10 @@ describe('DonationEventHandler', () => {
       );
 
       const notiSpy = jest.spyOn(notificationService, 'createNoti');
-      const deleteDepositSpy = jest
-        .spyOn(deleteDepositUseCase, 'execute')
-        .mockResolvedValue(new DepositDto(mockDeposit));
-      const decreaseFundSumSpy = jest.spyOn(decreaseFundSumUseCase, 'execute');
 
       await handler.handleDonationDeleted(event);
 
-      expect(notiSpy).toHaveBeenCalledTimes(2);
+      expect(notiSpy).toHaveBeenCalledTimes(1); // 2 -> 1로 변경된 이유는 DonationEventHandler에서 직접 어드민에게 알림을 보내지 않기 때문입니다.
       expect(notiSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           recvId: mockUser.userId,
@@ -206,19 +203,13 @@ describe('DonationEventHandler', () => {
           subId: event.donId.toString(),
         }),
       );
-      expect(notiSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          recvId: mockAdmin1.userId,
-          notiType: NotiType.DonationDeleted,
-          subId: event.donId.toString(),
-        }),
-      );
 
-      expect(deleteDepositSpy).toHaveBeenCalledWith(event.donId);
-      expect(decreaseFundSumSpy).toHaveBeenCalledWith({
-        fundId: event.fundId,
-        amount: mockDeposit.amount,
-      });
+      // 주석 사유: 현재 DeleteDeposit과 DecreaseFundSum UseCase는 모두 DeleteDepositSaga로 옮겨졌습니다.
+      // expect(deleteDepositSpy).toHaveBeenCalledWith(event.donId);
+      // expect(decreaseFundSumSpy).toHaveBeenCalledWith({
+      //   fundId: event.fundId,
+      //   amount: mockDeposit.amount,
+      // });
     });
   });
 });
