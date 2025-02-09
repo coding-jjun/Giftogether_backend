@@ -13,9 +13,10 @@ describe('TypeORM Query Counting', () => {
     dataSource = moduleRef.get<DataSource>(DataSource);
 
     // Listen to all queries executed
-    dataSource.driver.connection.on('query', () => {
-      queryCount++;
-    });
+    // !FIXME - 컴파일 오류로 주석처리.
+    // dataSource.driver.connection.on('query', () => {
+    //   queryCount++;
+    // });
   });
 
   beforeEach(() => {
@@ -24,7 +25,8 @@ describe('TypeORM Query Counting', () => {
 
   it('should execute expected number of queries', async () => {
     // Perform the database operation
-    await dataSource.getRepository(SomeEntity).find();
+    // !FIXME - 컴파일 오류로 주석처리
+    // await dataSource.getRepository(SomeEntity).find();
 
     console.log(`Executed SQL Queries: ${queryCount}`);
     expect(queryCount).toBeGreaterThan(0); // Replace with expected count
