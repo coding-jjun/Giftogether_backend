@@ -1,15 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DepositDeleteSaga } from './deposit-delete.saga';
 import { Repository } from 'typeorm';
-import { Deposit } from '../entities/deposit.entity';
-import { Donation } from '../entities/donation.entity';
-import { Funding } from '../entities/funding.entity';
-import { User } from '../entities/user.entity';
-import { ProvisionalDonation } from '../entities/provisional-donation.entity';
-import { DepositModule } from '../features/deposit/deposit.module';
-import { TestsModule } from 'src/tests/tests.module';
-import { ConfigModule } from '@nestjs/config';
-import { RedisModule } from 'src/features/auth/redis.module';
+import { Deposit } from '../../entities/deposit.entity';
+import { Donation } from '../../entities/donation.entity';
+import { Funding } from '../../entities/funding.entity';
+import { User } from '../../entities/user.entity';
+import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
+import { DepositModule } from '../../features/deposit/deposit.module';
 import { TestsModule } from 'src/tests/tests.module';
 
 /**

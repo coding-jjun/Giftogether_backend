@@ -1,30 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DonationEventHandler } from './donation-event-handler';
-import { Donation } from '../entities/donation.entity';
+import { Donation } from '../../entities/donation.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { GiftogetherExceptions } from '../filters/giftogether-exception';
-import { NotificationService } from '../features/notification/notification.service';
-import { FindAllAdminsUseCase } from '../features/admin/queries/find-all-admins.usecase';
-import { DeleteDepositUseCase } from '../features/deposit/commands/delete-deposit.usecase';
-import { DecreaseFundSumUseCase } from '../features/funding/commands/decrease-fundsum.usecase';
-import { DonationRefundRequestedEvent } from '../features/donation/domain/events/donation-refund-requested.event';
-import { DonationRefundCancelledEvent } from '../features/donation/domain/events/donation-refund-cancelled.event';
-import { AdminAssignedForDonationRefundEvent } from '../features/donation/domain/events/admin-assigned-for-refune.event';
-import { DonationRefundCompletedEvent } from '../features/donation/domain/events/donation-refund-completed.event';
-import { DonationDeletedEvent } from '../features/donation/domain/events/donation-deleted.event';
-import { DonationDeleteFailedEvent } from '../features/donation/domain/events/donation-delete-failed.event';
-import { NotiType } from '../enums/noti-type.enum';
-import { User } from '../entities/user.entity';
-import { createMockProvider } from '../tests/create-mock-repository';
-import {
-  createMockUser,
-  createMockDeposit,
-} from '../tests/mock-factory';
-import { Notification } from '../entities/notification.entity';
-import { Funding } from '../entities/funding.entity';
-import { Deposit } from '../entities/deposit.entity';
-import { DepositFsmService } from '../features/deposit/domain/deposit-fsm.service';
-import { DepositDto } from '../features/deposit/dto/deposit.dto';
+import { GiftogetherExceptions } from '../../filters/giftogether-exception';
+import { NotificationService } from '../../features/notification/notification.service';
+import { FindAllAdminsUseCase } from '../../features/admin/queries/find-all-admins.usecase';
+import { DeleteDepositUseCase } from '../../features/deposit/commands/delete-deposit.usecase';
+import { DecreaseFundSumUseCase } from '../../features/funding/commands/decrease-fundsum.usecase';
+import { DonationRefundRequestedEvent } from '../../features/donation/domain/events/donation-refund-requested.event';
+import { DonationRefundCancelledEvent } from '../../features/donation/domain/events/donation-refund-cancelled.event';
+import { AdminAssignedForDonationRefundEvent } from '../../features/donation/domain/events/admin-assigned-for-refune.event';
+import { DonationRefundCompletedEvent } from '../../features/donation/domain/events/donation-refund-completed.event';
+import { DonationDeletedEvent } from '../../features/donation/domain/events/donation-deleted.event';
+import { DonationDeleteFailedEvent } from '../../features/donation/domain/events/donation-delete-failed.event';
+import { NotiType } from '../../enums/noti-type.enum';
+import { User } from '../../entities/user.entity';
+import { createMockProvider } from '../../tests/create-mock-repository';
+import { createMockUser, createMockDeposit } from '../../tests/mock-factory';
+import { Notification } from '../../entities/notification.entity';
+import { Funding } from '../../entities/funding.entity';
+import { Deposit } from '../../entities/deposit.entity';
+import { DepositFsmService } from '../../features/deposit/domain/deposit-fsm.service';
+import { DepositDto } from '../../features/deposit/dto/deposit.dto';
+import { EventModule } from 'src/features/event/event.module';
+
 describe('DonationEventHandler', () => {
   let handler: DonationEventHandler;
   let notificationService: NotificationService;
@@ -37,6 +36,7 @@ describe('DonationEventHandler', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [EventModule],
       providers: [
         DonationEventHandler,
         NotificationService,
@@ -45,7 +45,6 @@ describe('DonationEventHandler', () => {
         DepositFsmService,
         DecreaseFundSumUseCase,
         GiftogetherExceptions,
-        EventEmitter2,
         createMockProvider(Notification),
         createMockProvider(User),
         createMockProvider(Funding),
@@ -193,14 +192,10 @@ describe('DonationEventHandler', () => {
       );
 
       const notiSpy = jest.spyOn(notificationService, 'createNoti');
-      const deleteDepositSpy = jest
-        .spyOn(deleteDepositUseCase, 'execute')
-        .mockResolvedValue(new DepositDto(mockDeposit));
-      const decreaseFundSumSpy = jest.spyOn(decreaseFundSumUseCase, 'execute');
 
       await handler.handleDonationDeleted(event);
 
-      expect(notiSpy).toHaveBeenCalledTimes(2);
+      expect(notiSpy).toHaveBeenCalledTimes(1); // 2 -> 1로 변경된 이유는 DonationEventHandler에서 직접 어드민에게 알림을 보내지 않기 때문입니다.
       expect(notiSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           recvId: mockUser.userId,
@@ -208,19 +203,13 @@ describe('DonationEventHandler', () => {
           subId: event.donId.toString(),
         }),
       );
-      expect(notiSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          recvId: mockAdmin1.userId,
-          notiType: NotiType.DonationDeleted,
-          subId: event.donId.toString(),
-        }),
-      );
 
-      expect(deleteDepositSpy).toHaveBeenCalledWith(event.donId);
-      expect(decreaseFundSumSpy).toHaveBeenCalledWith({
-        fundId: event.fundId,
-        amount: mockDeposit.amount,
-      });
+      // 주석 사유: 현재 DeleteDeposit과 DecreaseFundSum UseCase는 모두 DeleteDepositSaga로 옮겨졌습니다.
+      // expect(deleteDepositSpy).toHaveBeenCalledWith(event.donId);
+      // expect(decreaseFundSumSpy).toHaveBeenCalledWith({
+      //   fundId: event.fundId,
+      //   amount: mockDeposit.amount,
+      // });
     });
   });
 });
