@@ -1,30 +1,28 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DonationEventHandler } from './donation-event-handler';
-import { Donation } from '../entities/donation.entity';
+import { Donation } from '../../entities/donation.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { GiftogetherExceptions } from '../filters/giftogether-exception';
-import { NotificationService } from '../features/notification/notification.service';
-import { FindAllAdminsUseCase } from '../features/admin/queries/find-all-admins.usecase';
-import { DeleteDepositUseCase } from '../features/deposit/commands/delete-deposit.usecase';
-import { DecreaseFundSumUseCase } from '../features/funding/commands/decrease-fundsum.usecase';
-import { DonationRefundRequestedEvent } from '../features/donation/domain/events/donation-refund-requested.event';
-import { DonationRefundCancelledEvent } from '../features/donation/domain/events/donation-refund-cancelled.event';
-import { AdminAssignedForDonationRefundEvent } from '../features/donation/domain/events/admin-assigned-for-refune.event';
-import { DonationRefundCompletedEvent } from '../features/donation/domain/events/donation-refund-completed.event';
-import { DonationDeletedEvent } from '../features/donation/domain/events/donation-deleted.event';
-import { DonationDeleteFailedEvent } from '../features/donation/domain/events/donation-delete-failed.event';
-import { NotiType } from '../enums/noti-type.enum';
-import { User } from '../entities/user.entity';
-import { createMockProvider } from '../tests/create-mock-repository';
-import {
-  createMockUser,
-  createMockDeposit,
-} from '../tests/mock-factory';
-import { Notification } from '../entities/notification.entity';
-import { Funding } from '../entities/funding.entity';
-import { Deposit } from '../entities/deposit.entity';
-import { DepositFsmService } from '../features/deposit/domain/deposit-fsm.service';
-import { DepositDto } from '../features/deposit/dto/deposit.dto';
+import { GiftogetherExceptions } from '../../filters/giftogether-exception';
+import { NotificationService } from '../../features/notification/notification.service';
+import { FindAllAdminsUseCase } from '../../features/admin/queries/find-all-admins.usecase';
+import { DeleteDepositUseCase } from '../../features/deposit/commands/delete-deposit.usecase';
+import { DecreaseFundSumUseCase } from '../../features/funding/commands/decrease-fundsum.usecase';
+import { DonationRefundRequestedEvent } from '../../features/donation/domain/events/donation-refund-requested.event';
+import { DonationRefundCancelledEvent } from '../../features/donation/domain/events/donation-refund-cancelled.event';
+import { AdminAssignedForDonationRefundEvent } from '../../features/donation/domain/events/admin-assigned-for-refune.event';
+import { DonationRefundCompletedEvent } from '../../features/donation/domain/events/donation-refund-completed.event';
+import { DonationDeletedEvent } from '../../features/donation/domain/events/donation-deleted.event';
+import { DonationDeleteFailedEvent } from '../../features/donation/domain/events/donation-delete-failed.event';
+import { NotiType } from '../../enums/noti-type.enum';
+import { User } from '../../entities/user.entity';
+import { createMockProvider } from '../../tests/create-mock-repository';
+import { createMockUser, createMockDeposit } from '../../tests/mock-factory';
+import { Notification } from '../../entities/notification.entity';
+import { Funding } from '../../entities/funding.entity';
+import { Deposit } from '../../entities/deposit.entity';
+import { DepositFsmService } from '../../features/deposit/domain/deposit-fsm.service';
+import { DepositDto } from '../../features/deposit/dto/deposit.dto';
+
 describe('DonationEventHandler', () => {
   let handler: DonationEventHandler;
   let notificationService: NotificationService;

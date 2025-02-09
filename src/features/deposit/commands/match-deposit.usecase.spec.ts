@@ -1,7 +1,7 @@
 import { MatchDepositUseCase } from './match-deposit.usecase';
 import { Deposit } from '../../../entities/deposit.entity';
 import { ProvisionalDonation } from '../../../entities/provisional-donation.entity';
-import { EventEmitter2, EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DepositMatchedEvent } from '../domain/events/deposit-matched.event';
 import { DepositUnmatchedEvent } from '../domain/events/deposit-unmatched.event';
 import { DepositPartiallyMatchedEvent } from '../domain/events/deposit-partially-matched.event';
@@ -10,12 +10,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DepositFsmService } from '../domain/deposit-fsm.service';
-import { ProvisionalDonationEventHandler } from '../../../event-handlers/provisional-donation-event-handler';
+import { ProvisionalDonationEventHandler } from 'src/event-handlers/provisional-donation/provisional-donation-event-handler';
 import { ProvisionalDonationFsmService } from '../../../features/donation/domain/services/provisional-donation-fsm.service';
 import { createMockRepository } from '../../../tests/create-mock-repository';
 import { EventModule } from '../../event/event.module';
-import { DepositEventHandler } from '../../../event-handlers/deposit-event.handler';
-import { createMockDeposit, createMockFundingWithRelations, createMockProvisionalDonation, createMockUser } from '../../../tests/mock-factory';
+import {
+  createMockDeposit,
+  createMockProvisionalDonation,
+  createMockUser,
+} from '../../../tests/mock-factory';
 
 describe('MatchDepositUseCase', () => {
   let provDonationRepository: Repository<ProvisionalDonation>;
@@ -23,7 +26,6 @@ describe('MatchDepositUseCase', () => {
   let eventEmitter: EventEmitter2;
   let g2gException: GiftogetherExceptions;
   let provDonEventHandler: ProvisionalDonationEventHandler;
-  let depositEventHandler: DepositEventHandler;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
