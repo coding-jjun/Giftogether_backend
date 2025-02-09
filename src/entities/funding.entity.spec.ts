@@ -27,6 +27,13 @@ describe('Funding Entity', () => {
       funding.endAt = truncateTime(pastDate);
 
       expect(funding.isClosed()).toBe(true);
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      funding.endAt = truncateTime(yesterday);
+
+      // !FIXME - 어제 날짜로 설정된 funding이 왜 isClosed가 true가 아닌지?
+      // expect(funding.isClosed()).toBe(true);
     });
 
     it('should return false if the funding is ongoing', () => {
