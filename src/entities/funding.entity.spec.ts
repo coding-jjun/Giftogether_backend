@@ -23,8 +23,7 @@ describe('Funding Entity', () => {
 
   describe('isClosed', () => {
     it('should return true if the funding is closed', () => {
-      const pastDate = new Date();
-      pastDate.setDate(pastDate.getDate() - 1);
+      const pastDate = new Date('1000-01-01');
       funding.endAt = truncateTime(pastDate);
 
       expect(funding.isClosed()).toBe(true);
