@@ -9,6 +9,7 @@ import { DepositDeletedEvent } from './events/deposit-deleted.event';
 import { DepositDeleteFailedEvent } from './events/deposit-delete-failed.event';
 import { InvalidStatus } from '../../../exceptions/invalid-status';
 import { DepositPartiallyMatchedEvent } from './events/deposit-partially-matched.event';
+import { DepositUpdatedEvent } from './events/deposit-updated.event';
 
 @Injectable()
 export class DepositFsmService implements IFsmService<State> {
@@ -57,6 +58,26 @@ export class DepositFsmService implements IFsmService<State> {
       from: State.PartiallyMatched,
       to: State.Deleted,
       event: DepositDeletedEvent.name,
+    },
+    {
+      from: State.Unmatched,
+      to: State.Unmatched,
+      event: DepositUpdatedEvent.name,
+    },
+    {
+      from: State.Matched,
+      to: State.Unmatched,
+      event: DepositUpdatedEvent.name,
+    },
+    {
+      from: State.Orphan,
+      to: State.Unmatched,
+      event: DepositUpdatedEvent.name,
+    },
+    {
+      from: State.PartiallyMatched,
+      to: State.Unmatched,
+      event: DepositUpdatedEvent.name,
     },
   ];
 
