@@ -10,6 +10,7 @@ import {
   UseGuards,
   Req,
   DefaultValuePipe,
+  Put,
 } from '@nestjs/common';
 import { DepositService } from './deposit.service';
 import { DepositDto } from './dto/deposit.dto';
@@ -19,6 +20,7 @@ import { JwtAuthGuard } from '../auth/guard/jwt-auth-guard';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
 import { CreateDepositDto } from './dto/create-deposit.dto';
+import { UpdateDepositDto } from './dto/update-deposit.dto';
 
 @Controller('deposits')
 export class DepositController {
@@ -90,6 +92,25 @@ export class DepositController {
       message:
         '성공적으로 입금내역 삭제요청이 완료되었습니다. Notification을 확인해주세요.',
       data: await this.depositService.requestDeleteDeposit(id, user.userId),
+    };
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  async requestUpdateDeposit(
+    @Req() req: Request,
+    @Param('id') id: number,
+    @Body() updateDepositDto: UpdateDepositDto,
+  ): Promise<CommonResponse> {
+    const user = req.user! as User;
+    return {
+      message:
+        '성공적으로 입금내역 수정요청이 완료되었습니다. Notification을 확인해주세요.',
+      data: await this.depositService.requestUpdateDeposit(
+        id,
+        updateDepositDto,
+        user.userId,
+      ),
     };
   }
 }

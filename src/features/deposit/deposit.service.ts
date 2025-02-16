@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RequestDeleteDepositUseCase } from './commands/request-delete-deposit.usecase';
 import { CreateDepositDto } from './dto/create-deposit.dto';
+import { UpdateDepositDto } from './dto/update-deposit.dto';
 
 @Injectable()
 export class DepositService {
@@ -75,5 +76,13 @@ export class DepositService {
 
   async requestDeleteDeposit(id: number, adminId: number): Promise<void> {
     await this.requestDeleteDepositUseCase.execute(id, adminId);
+  }
+
+  async requestUpdateDeposit(
+    id: number,
+    updateDepositDto: UpdateDepositDto,
+    userId: number,
+  ): any {
+    throw new Error('Method not implemented.');
   }
 }
