@@ -1,10 +1,10 @@
 import { Global, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import entities from 'src/entities/entities';
-import { DepositDeleteSaga } from './deposit-delete.saga';
-import { DepositEventHandler } from './deposit-event.handler';
-import { DonationEventHandler } from './donation-event-handler';
-import { ProvisionalDonationEventHandler } from './provisional-donation-event-handler';
+import { DepositDeleteSaga } from './deposit/deposit-delete.saga';
+import { DepositEventHandler } from './deposit/deposit-event.handler';
+import { DonationEventHandler } from './donation/donation-event-handler';
+import { ProvisionalDonationEventHandler } from './provisional-donation/provisional-donation-event-handler';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { DeleteDonationUseCase } from 'src/features/donation/commands/delete-donation.usecase';
 import { MatchDepositUseCase } from 'src/features/deposit/commands/match-deposit.usecase';

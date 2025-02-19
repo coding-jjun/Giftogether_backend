@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProvisionalDonationEventHandler } from './provisional-donation-event-handler';
-import { ProvisionalDonationFsmService } from '../features/donation/domain/services/provisional-donation-fsm.service';
+import { ProvisionalDonationFsmService } from 'src/features/donation/domain/services/provisional-donation-fsm.service';
 import { ProvisionalDonation } from 'src/entities/provisional-donation.entity';
 import { Repository } from 'typeorm';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
@@ -12,9 +12,9 @@ import { DepositMatchedEvent } from 'src/features/deposit/domain/events/deposit-
 import { Deposit } from 'src/entities/deposit.entity';
 import { DepositPartiallyMatchedEvent } from 'src/features/deposit/domain/events/deposit-partially-matched.event';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { EventModule } from '../features/event/event.module';
-import { ProvisionalDonationApprovedEvent } from '../features/donation/domain/events/provisional-donation-approved.event';
-import { ProvisionalDonationPartiallyMatchedEvent } from '../features/donation/domain/events/provisional-donation-partially-matched.event';
+import { EventModule } from 'src/features/event/event.module';
+import { ProvisionalDonationApprovedEvent } from 'src/features/donation/domain/events/provisional-donation-approved.event';
+import { ProvisionalDonationPartiallyMatchedEvent } from 'src/features/donation/domain/events/provisional-donation-partially-matched.event';
 
 describe('ProvisionalDonationEventHandler', () => {
   let handler: ProvisionalDonationEventHandler;
