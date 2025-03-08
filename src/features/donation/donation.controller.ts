@@ -56,7 +56,7 @@ export class DonationController {
     const user = req.user as { user: User } as any;
     return {
       message: 'senderSig 생성완료',
-      data: this.donationService.createSenderSig(user.userName),
+      data: DonationService.createSenderSig(user.userName),
     };
   }
 

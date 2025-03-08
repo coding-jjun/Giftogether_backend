@@ -12,7 +12,7 @@ services:
       - g2gnet
 
   app:
-    image: 975050131958.dkr.ecr.ap-northeast-2.amazonaws.com/coding-jjun/giftogether:latest
+    image: 147997129388.dkr.ecr.ap-northeast-2.amazonaws.com/coding-jjun/giftogether:latest
     container_name: giftogether-app
     ports:
       - '443:3000'

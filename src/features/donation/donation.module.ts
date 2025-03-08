@@ -14,6 +14,7 @@ import { ValidCheck } from 'src/util/valid-check';
 import { ImageModule } from '../image/image.module';
 import { CreateProvisionalDonationUseCase } from './commands/create-provisional-donation.usecase';
 import { ProvisionalDonation } from '../../entities/provisional-donation.entity';
+import { ProvisionalDonationFsmService } from './domain/services/provisional-donation-fsm.service';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ProvisionalDonation } from '../../entities/provisional-donation.entity'
     RollingPaperService,
     GiftogetherExceptions,
     ValidCheck,
+    ProvisionalDonationFsmService,
   ],
 })
 export class DonationModule {}

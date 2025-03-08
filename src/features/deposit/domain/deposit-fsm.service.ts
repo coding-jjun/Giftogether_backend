@@ -5,6 +5,10 @@ import { DepositMatchedEvent } from './events/deposit-matched.event';
 import { DepositUnmatchedEvent } from './events/deposit-unmatched.event';
 import { DepositRefundedEvent } from './events/deposit-refunded.event';
 import { IFsmService } from 'src/interfaces/fsm-service.interface';
+import { DepositDeletedEvent } from './events/deposit-deleted.event';
+import { DepositDeleteFailedEvent } from './events/deposit-delete-failed.event';
+import { InvalidStatus } from '../../../exceptions/invalid-status';
+import { DepositPartiallyMatchedEvent } from './events/deposit-partially-matched.event';
 
 @Injectable()
 export class DepositFsmService implements IFsmService<State> {
@@ -20,9 +24,39 @@ export class DepositFsmService implements IFsmService<State> {
       event: DepositUnmatchedEvent.name,
     },
     {
+      from: State.Unmatched,
+      to: State.PartiallyMatched,
+      event: DepositPartiallyMatchedEvent.name,
+    },
+    {
       from: State.Matched,
       to: State.Refunded,
       event: DepositRefundedEvent.name,
+    },
+    {
+      from: State.Matched,
+      to: State.Matched,
+      event: DepositDeleteFailedEvent.name,
+    },
+    {
+      from: State.Unmatched,
+      to: State.Deleted,
+      event: DepositDeletedEvent.name,
+    },
+    {
+      from: State.Orphan,
+      to: State.Deleted,
+      event: DepositDeletedEvent.name,
+    },
+    {
+      from: State.Matched,
+      to: State.Deleted,
+      event: DepositDeletedEvent.name,
+    },
+    {
+      from: State.PartiallyMatched,
+      to: State.Deleted,
+      event: DepositDeletedEvent.name,
     },
   ];
 
@@ -32,8 +66,7 @@ export class DepositFsmService implements IFsmService<State> {
     );
 
     if (!transition) {
-      throw new Error(
-        // !FIXME: 구체적인 에러타입 throw 하기
+      throw new InvalidStatus(
         `Invalid transition: No transition for event "${event}" from state "${current}"`,
       );
     }

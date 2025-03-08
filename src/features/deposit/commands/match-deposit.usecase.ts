@@ -61,8 +61,9 @@ export class MatchDepositUseCase {
        *  - 펀딩의 달성 금액이 업데이트 됩니다.
        *  - 후원자에게 후원이 정상적으로 처리되었음을 알리는 알림을 발송합니다.
        */
-      provDon.approve(this.g2gException);
-      await this.provDonRepo.save(provDon);
+      // 주석 사유: ProvisionalDonation와 Deposit은 Eventually Consistent 관계
+      // provDon.approve(this.g2gException);
+      // await this.provDonRepo.save(provDon);
 
       const event = new DepositMatchedEvent(deposit, provDon);
       deposit.transition(event.name, this.fsmService);
@@ -75,16 +76,18 @@ export class MatchDepositUseCase {
        *
        * 보내는 분은 일치하지만 이체 금액이 다른 경우
        * 조치:
-       *  - 예비 후원의 상태를 ‘반려’로 변경합니다.
+       *  - 예비 후원의 상태를 ‘PartiallyMatched’로 변경합니다.
        *  - 시스템은 후원자에게 반려 사유를 포함한 알림을 발송합니다.
        *  - 시스템은 관리자에게 부분매칭이 된 예비후원이 발생함 알림을 발송합니다.
        *  - 관리자는 해당 건에 대해서 환불 조치를 진행해야 합니다.
        */
-      provDon.reject(this.g2gException);
-      await this.provDonRepo.save(provDon);
-
       const event = new DepositPartiallyMatchedEvent(deposit, provDon);
+
+      deposit.transition(event.name, this.fsmService);
+      await this.depositRepo.save(deposit);
+
       this.eventEmitter.emit(event.name, event);
+
       throw this.g2gException.DepositPartiallyMatched;
     }
   }

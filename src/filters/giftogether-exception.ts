@@ -52,6 +52,12 @@ export class GiftogetherExceptions {
     HttpStatus.BAD_REQUEST,
   );
 
+  ProvisionalDonationNotFound = new GiftogetherException(
+    ErrorMsg.ProvisionalDonationNotFound,
+    ErrorCode.ProvisionalDonationNotFound,
+    HttpStatus.NOT_FOUND,
+  );
+
   // Gift
   IncorrectGiftUrl = new GiftogetherException(
     ErrorMsg.IncorrectGiftUrl,
@@ -295,8 +301,13 @@ export class GiftogetherExceptions {
     HttpStatus.BAD_REQUEST,
   );
 
-  // Generic
+  DepositNotFound = new GiftogetherException(
+    ErrorMsg.DepositNotFound,
+    ErrorCode.DepositNotFound,
+    HttpStatus.NOT_FOUND,
+  );
 
+  // Generic
   InvalidStatus = new GiftogetherException(
     ErrorMsg.InvalidStatus,
     ErrorCode.InvalidStatus,
@@ -306,6 +317,18 @@ export class GiftogetherExceptions {
   InvalidStatusChange = new GiftogetherException(
     ErrorMsg.InvalidStatusChange,
     ErrorCode.InvalidStatusChange,
+    HttpStatus.BAD_REQUEST,
+  );
+
+  InvalidPage = new GiftogetherException(
+    ErrorMsg.InvalidPage,
+    ErrorCode.InvalidPage,
+    HttpStatus.BAD_REQUEST,
+  );
+
+  InvalidLimit = new GiftogetherException(
+    ErrorMsg.InvalidLimit,
+    ErrorCode.InvalidLimit,
     HttpStatus.BAD_REQUEST,
   );
 }

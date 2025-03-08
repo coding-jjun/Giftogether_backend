@@ -7,6 +7,7 @@ export enum ErrorMsg {
   FundingNotClosed = '아직 마감되지 않은 펀딩입니다.',
   DonationNotExists = '존재하지 않는 후원입니다.',
   DonationAmountExceeded = '후원금액이 펀딩목표치를 초과합니다.',
+  ProvisionalDonationNotFound = '예비후원이 존재하지 않습니다.',
 
   // Gift
   IncorrectGiftUrl = '선물 URL이 유효하지 않습니다.',
@@ -38,10 +39,10 @@ export enum ErrorMsg {
   NotValidNick = '이미 사용 중인 닉네임 입니다.',
   PasswordIncorrect = '비밀번호가 틀렸습니다. 다시 시도해주세요.',
   UserFailedToCreate = '사용자 생성에 실패했습니다',
-  UserAccessDenied = "접근 권한이 없는 요청입니다.",
+  UserAccessDenied = '접근 권한이 없는 요청입니다.',
   // Admin
-  SnsLoginBlocked = "관리자 계정은 SNS 로그인을 사용할 수 없습니다.",
-  
+  SnsLoginBlocked = '관리자 계정은 SNS 로그인을 사용할 수 없습니다.',
+
   // Friend
   AlreadySendRequest = '이미 친구 요청을 보냈습니다.',
   AlreadyFriend = '이미 친구 상태입니다.',
@@ -75,9 +76,12 @@ export enum ErrorMsg {
   // Deposits
   DepositUnmatched = '입금내역이 어느 후원과도 매칭되지 않습니다.',
   DepositPartiallyMatched = '입금내역과 후원금액이 서로 일치하지 않습니다.',
+  DepositNotFound = '입금내역이 존재하지 않습니다.',
 
   // Generic
   InvalidStatusChange = '유효하지 않은 상태 변화입니다.',
   InvalidStatus = '유효하지 않은 상태가 발견되었습니다.',
   InconsistentAggregationError = '애그리게이션이 일관적이지 않습니다.',
+  InvalidPage = '잘못된 페이지 번호입니다.',
+  InvalidLimit = '잘못된 페이지 크기입니다.',
 }

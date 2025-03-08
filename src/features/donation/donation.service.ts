@@ -290,7 +290,7 @@ export class DonationService {
    * [노션 문서](https://www.notion.so/c3cd436359344df6b60bfaed9bdbf784?pvs=4) 참고
    * @param username 입금자명
    */
-  createSenderSig(username: string) {
+  static createSenderSig(username: string) {
     const signature: string = Math.round(Math.random() * 100).toString();
     const delimeter = '-';
     return username + delimeter + signature;

@@ -10,7 +10,15 @@ export enum NotiType {
   NewComment = 'NewComment', // 새로운 댓글
   DonationSuccess = 'DonationSuccess', // 후원이 성공적으로 이루어졌음
   DonationPartiallyMatched = 'DonationPartiallyMatched', // 후원이 금액이 안맞음
+  DonationRefundRequested = 'DonationRefundRequested', // 후원 환불 요청
   DepositUnmatched = 'DepositUnmatched', // 이체내역이 어디에도 매치하지 않는 경우
+  DonationRefundCancelled = 'DonationRefundCancelled', // 후원 환불 요청 취소
+  DonationRefundCompleted = 'DonationRefundCompleted', // 후원 환불 완료
+  DonationDeleted = 'DonationDeleted', // 후원 삭제
+  DonationDeleteFailed = 'DonationDeleteFailed',
+  AdminAssignedForDonationRefund = 'AdminAssignedForDonationRefund', // 후원 환불 관리자가 할당되었습니다. 관리자에게 환불 요청 알림을 보냅니다.
+  ProvisionalDonationMatchCancelFailed = 'ProvisionalDonationMatchCancelFailed', // 예비 후원 매치가 실패했습니다. 관리자에게 후원 삭제 실패 알림을 보냅니다.
+  DepositDeleted = 'DepositDeleted', // 이체내역 삭제완료
 }
 
 export enum ReqType {
