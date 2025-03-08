@@ -34,11 +34,14 @@ export class GiftService {
     giftImgUrls: string[];
     count: number;
   }> {
-    const [gifts, count] = await this.giftRepository.findAndCount({
-      where: { funding: { fundId: fund.fundId } },
-      relations: ['funding'],
-      order: { giftOrd: 'ASC' },
-    });
+    const qb = this.giftRepository
+      .createQueryBuilder('g')
+      .leftJoinAndSelect('g.funding', 'f', 'g.fundId = :fundId')
+      .where('g.fundId = :fundId', {
+        fundId: fund.fundId,
+      })
+      .orderBy('g.giftOrd', 'ASC');
+    const [gifts, count] = await qb.getManyAndCount();
 
     const giftImgUrls: string[] = [];
 
