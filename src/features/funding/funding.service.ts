@@ -107,7 +107,7 @@ export class FundingService {
         }
       }
     } else {
-      queryBuilder.where('funding.fundUser != :userId', { userId });
+      queryBuilder.where('funding.fundUser != :userId', { userId: user.userId });
 
       const friendIds = await this.friendRepository
         .createQueryBuilder('friend')
