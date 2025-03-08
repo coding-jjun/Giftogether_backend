@@ -101,7 +101,7 @@ export class FundingService {
 
         if (!friendship) {
           queryBuilder.andWhere(
-            'fund.fundPubl = :publ',
+            'funding.fundPubl = :publ',
             { publ: true }
           )
         }
