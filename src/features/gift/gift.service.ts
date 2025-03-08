@@ -41,20 +41,17 @@ export class GiftService {
         fundId: fund.fundId,
       })
       .orderBy('g.giftOrd', 'ASC');
+    this.imageManager.mapImage(qb);
     const [gifts, count] = await qb.getManyAndCount();
-
-    const giftImgUrls: string[] = [];
 
     // Gift 배열을 ResponseGiftDto 배열로 변환
     const responseGifts = await Promise.all(
       gifts.map(async (gift) => {
-        const { imgUrl, isDef } = await this.getGiftImageUrl(gift);
-        if (imgUrl && !isDef) {
-          giftImgUrls.push(imgUrl);
-        }
-        return new ResponseGiftDto(gift, imgUrl || '');
+        return new ResponseGiftDto(gift, gift.image.imgUrl);
       }),
     );
+
+    const giftImgUrls: string[] = gifts.map((g) => g.image.imgUrl);
 
     return { gifts: responseGifts, giftImgUrls, count };
   }
