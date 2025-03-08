@@ -46,9 +46,7 @@ export class GiftService {
 
     // Gift 배열을 ResponseGiftDto 배열로 변환
     const responseGifts = await Promise.all(
-      gifts.map(async (gift) => {
-        return new ResponseGiftDto(gift, gift.image.imgUrl);
-      }),
+      gifts.map((gift) => new ResponseGiftDto(gift, gift.image.imgUrl)),
     );
 
     const giftImgUrls: string[] = gifts.map((g) => g.image.imgUrl);
