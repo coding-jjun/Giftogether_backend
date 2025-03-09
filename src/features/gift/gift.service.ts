@@ -34,24 +34,22 @@ export class GiftService {
     giftImgUrls: string[];
     count: number;
   }> {
-    const [gifts, count] = await this.giftRepository.findAndCount({
-      where: { funding: { fundId: fund.fundId } },
-      relations: ['funding'],
-      order: { giftOrd: 'ASC' },
-    });
-
-    const giftImgUrls: string[] = [];
+    const qb = this.giftRepository
+      .createQueryBuilder('g')
+      .leftJoinAndSelect('g.funding', 'f', 'g.fundId = :fundId')
+      .where('g.fundId = :fundId', {
+        fundId: fund.fundId,
+      })
+      .orderBy('g.giftOrd', 'ASC');
+    this.imageManager.mapImage(qb);
+    const [gifts, count] = await qb.getManyAndCount();
 
     // Gift 배열을 ResponseGiftDto 배열로 변환
     const responseGifts = await Promise.all(
-      gifts.map(async (gift) => {
-        const { imgUrl, isDef } = await this.getGiftImageUrl(gift);
-        if (imgUrl && !isDef) {
-          giftImgUrls.push(imgUrl);
-        }
-        return new ResponseGiftDto(gift, imgUrl || '');
-      }),
+      gifts.map((gift) => new ResponseGiftDto(gift, gift.image.imgUrl)),
     );
+
+    const giftImgUrls: string[] = gifts.map((g) => g.image.imgUrl);
 
     return { gifts: responseGifts, giftImgUrls, count };
   }

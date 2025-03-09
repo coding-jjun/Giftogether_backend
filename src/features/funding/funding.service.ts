@@ -95,19 +95,19 @@ export class FundingService {
           .createQueryBuilder('friend')
           .where(
             '((friend.userId = :userId AND friend.friendId = :friendId) OR (friend.userId = :friendId AND friend.friendId = :userId))',
-            { userId: user.userId, friendId: userId })
+            { userId: user.userId, friendId: userId },
+          )
           .andWhere('friend.status = :status', { status: FriendStatus.Friend })
           .getOne();
 
         if (!friendship) {
-          queryBuilder.andWhere(
-            'funding.fundPubl = :publ',
-            { publ: true }
-          )
+          queryBuilder.andWhere('funding.fundPubl = :publ', { publ: true });
         }
       }
     } else {
-      queryBuilder.where('funding.fundUser != :userId', { userId: user.userId });
+      queryBuilder.where('funding.fundUser != :userId', {
+        userId: user.userId,
+      });
 
       const friendIds = await this.friendRepository
         .createQueryBuilder('friend')
@@ -132,10 +132,10 @@ export class FundingService {
       if (friendIdsArray.length > 0) {
         // 친구 목록이 있는 경우
         if (fundPublFilter === 'all') {
-          queryBuilder.andWhere(
-            'funding.fundPubl = :publ',
-            { publ: true, ids: friendIdsArray },
-          );
+          queryBuilder.andWhere('funding.fundPubl = :publ', {
+            publ: true,
+            ids: friendIdsArray,
+          });
         } else if (fundPublFilter === 'friends') {
           queryBuilder.andWhere('funding.fundUser IN (:...ids)', {
             ids: friendIdsArray,
@@ -224,21 +224,33 @@ export class FundingService {
 
     queryBuilder.take(limit);
 
-    queryBuilder.leftJoinAndSelect('funding.fundUser', 'user');
-    // .leftJoinAndSelect('user.image', 'img');
+    queryBuilder.leftJoinAndSelect('funding.fundUser', 'u');
+
+    // 현재 Nested Entity에는 ImageInstanceManager#mapImage를 사용할 수 없다.
+    queryBuilder.leftJoinAndMapOne(
+      'u.image',
+      'image',
+      'ui',
+      `
+      (u.defaultImgId IS NOT NULL AND ui.imgId = u.defaultImgId) OR
+      (u.defaultImgId IS NULL AND ui.subId = u.userId AND ui.imgType = :imgType)
+      `,
+      { imgType: ImageType.User },
+    );
 
     const fundingPromies: Promise<FundingDto>[] = await queryBuilder
       .getMany()
       .then((fundings: Funding[]) =>
         fundings.map(async (funding) => {
-          const fundUserImgUrl = await this.imageManager
-            .getImages(funding.fundUser)
-            .then((images) => images[0].imgUrl);
-
           const { gifts, giftImgUrls } =
             await this.giftService.findAllGift(funding);
 
-          return new FundingDto(funding, fundUserImgUrl, gifts, giftImgUrls);
+          return new FundingDto(
+            funding,
+            funding.fundUser.image.imgUrl,
+            gifts,
+            giftImgUrls,
+          );
         }),
       );
 
@@ -288,7 +300,7 @@ export class FundingService {
     user: User,
   ): Promise<FundingDto> {
     // TODO - accessToken -> User 객체로 변환하기
-    let funding = new Funding(
+    const funding = new Funding(
       user,
       createFundingDto.fundTitle,
       createFundingDto.fundCont,
@@ -306,7 +318,7 @@ export class FundingService {
 
     const funding_save = await this.fundingRepository.save(funding);
 
-    let fundImg: string[] = [];
+    const fundImg: string[] = [];
     if (createFundingDto.fundImg) {
       // subId = fundId, imgType = "Funding" Image 객체를 만든다.
       const fundImgUrls = [createFundingDto.fundImg]; // TODO - CreateFundingDto.fundImg -> fundImgUrls 로 변경하기
@@ -344,7 +356,10 @@ export class FundingService {
     updateFundingDto: UpdateFundingDto,
     user: User,
   ): Promise<FundingDto> {
-    const funding = await this.findFundingByUuidAndUserId(fundUuid, user.userId);
+    const funding = await this.findFundingByUuidAndUserId(
+      fundUuid,
+      user.userId,
+    );
     const fundId = funding.fundId;
 
     // endAt이 앞당겨지면 안된다.
@@ -356,7 +371,12 @@ export class FundingService {
     }
 
     // 이미지 업데이트
-    const fundingImg = await this.updateFundingImage(funding, updateFundingDto.fundImg, fundId, user);
+    const fundingImg = await this.updateFundingImage(
+      funding,
+      updateFundingDto.fundImg,
+      fundId,
+      user,
+    );
 
     // Funding 업데이트
     await this.fundingRepository.update(
