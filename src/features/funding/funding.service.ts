@@ -105,29 +105,34 @@ export class FundingService {
         }
       }
     } else {
-      queryBuilder.where('funding.fundUser != :userId', {
-        userId: user.userId,
-      });
+      let friendIdsArray = [];
 
-      const friendIds = await this.friendRepository
-        .createQueryBuilder('friend')
-        .where('friend.status = :status', { status: FriendStatus.Friend })
-        .andWhere(
-          new Brackets((qb) => {
-            qb.where('friend.userId = :userId', { userId }).orWhere(
-              'friend.friendId = :userId',
-              { userId },
-            );
-          }),
-        )
-        .select(
-          'CASE WHEN friend.userId = :userId THEN friend.friendId ELSE friend.userId END',
-          'friendId',
-        )
-        .setParameter('userId', userId)
-        .getRawMany();
+      // 회원이 펀딩 목록을 조회하는 경우, 친구 목록 조회
+      if (user) {
+        queryBuilder.where('funding.fundUser != :userId', {
+          userId: user.userId,
+        });
 
-      const friendIdsArray = friendIds.map((friend) => friend.friendId);
+        const friendIds = await this.friendRepository
+          .createQueryBuilder('friend')
+          .where('friend.status = :status', { status: FriendStatus.Friend })
+          .andWhere(
+            new Brackets((qb) => {
+              qb.where('friend.userId = :userId', { userId: user.userId }).orWhere(
+                'friend.friendId = :userId',
+                { userId: user.userId },
+              );
+            }),
+          )
+          .select(
+            'CASE WHEN friend.userId = :userId THEN friend.friendId ELSE friend.userId END',
+            'friendId',
+          )
+          .setParameter('userId', userId)
+          .getRawMany();
+      
+        friendIdsArray = friendIds.map((friend) => friend.friendId);
+      }
 
       if (friendIdsArray.length > 0) {
         // 친구 목록이 있는 경우
