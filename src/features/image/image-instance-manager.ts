@@ -110,15 +110,46 @@ export class ImageInstanceManager {
     );
   }
 
-  mapImages<T extends IImageId>(
-    queryBuilder: SelectQueryBuilder<T>,
-    mapToProperty: string,
-    property: string,
-    imgType: ImageType,
-  ): SelectQueryBuilder<T> {
-    return queryBuilder.leftJoinAndMapOne(mapToProperty, property, 'i', ``, {
-      imgType,
-    });
+  mapImages(
+    qb: SelectQueryBuilder<any>,
+    alias?: string,
+  ): SelectQueryBuilder<any> {
+    // Use provided alias or fall back to the query builder's own alias.
+    const entityAlias = alias || qb.alias;
+
+    // Determine the correct id field and image type by inspecting the query builder's metadata.
+    let idField: string;
+    let imgType: ImageType;
+    const joinedAlias = qb.expressionMap.findAliasByName(entityAlias);
+    const target = joinedAlias.metadata.target;
+
+    if (target === User) {
+      idField = 'userId';
+      imgType = ImageType.User;
+    } else if (target === Funding) {
+      idField = 'fundId';
+      imgType = ImageType.Funding;
+    } else if (target === Gift) {
+      idField = 'giftId';
+      imgType = ImageType.Gift;
+    } else {
+      throw new Error(`mapImage does not support entity type: ${target}`);
+    }
+
+    // Build the left join condition:
+    // If defaultImgId is set then join on image.imgId;
+    // otherwise, join on image.subId matching the entity id and image.imgType.
+    return qb.leftJoinAndMapMany(
+      `${entityAlias}.image`, // the property to map the result to (e.g. user.image)
+      'image', // the Image entity
+      `${entityAlias}Image`, // alias for the joined image table
+      `
+      (${entityAlias}.defaultImgId IS NOT NULL AND ${entityAlias}Image.imgId = ${entityAlias}.defaultImgId)
+      OR
+      (${entityAlias}.defaultImgId IS NULL AND ${entityAlias}Image.subId = ${entityAlias}.${idField} AND ${entityAlias}Image.imgType = :imgType)
+    `,
+      { imgType },
+    );
   }
 
   /**
