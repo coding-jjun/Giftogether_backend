@@ -7,6 +7,7 @@ import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CsComment } from 'src/entities/cs-comment.entity';
 import { CsBoardService } from '../cs-board/cs-board.service';
+import { CsBoard } from 'src/entities/cs-board.entity';
 
 @Injectable()
 export class CsCommentService {
@@ -35,8 +36,12 @@ export class CsCommentService {
     console.log("create CsComment >>> ", csComment);
 
     const newComment = await this.csComRepository.save(csComment);
+    const lastCsComment = await this.findLastCsComment(csBoard);
+    
+    await this.csBoardService.updateOnCsComment(csBoard, lastCsComment, true);
+    
     console.log("Save new Comment >>> ", newComment);
-    return newComment
+    return newComment;
   }
 
   async update(csComId: number, updateCsComment: CsCommentDto, userId: number) {
@@ -53,26 +58,45 @@ export class CsCommentService {
     }
 
     Object.assign(beforeCsComment, updateCsComment);
+    beforeCsComment.isMod = true;
 
     console.log("After update csBoard >>> ", beforeCsComment);
 
     return await this.csComRepository.save(beforeCsComment);
   }
 
-  async delete(csComId: number) {
+  async delete(csComId: number, userId: number) {
 
     const csComment = await this.csComRepository.findOne({
       where: { csComId },
+      relations: ['csBoard', "csComUser"]
     });
-    return await this.csComRepository.delete({csComId});
     // console.log("find target csComment >>> ", csComment);
     // await this.validCheck.verifyUserMatch(csComment.csComUser.userId, userId);
-
-    // if (!csComment) {
-    //   throw this.g2gException.AccountNotFound;
-    // }
     
-    // csComment.isDel = true;
-    // return await this.csComRepository.save(csComment);
+    // if (!csComment) {
+      //   throw this.g2gException.AccountNotFound;
+      // }
+
+      
+      // 1. 삭제할 댓글 찾기 (게시글 정보 포함)
+
+      const csBoard = csComment.csBoard;
+      
+      csComment.isDel = true;
+      await this.csComRepository.save(csComment);
+
+      const lastCsComment = await this.findLastCsComment(csBoard);
+      await this.csBoardService.updateOnCsComment(csBoard, lastCsComment, false);
+      
+      return await this.csComRepository.delete({csComId});
+  }
+
+  async findLastCsComment(csBoard: CsBoard) {
+    return await this.csComRepository.findOne({
+      where: { csBoard: csBoard, isDel: false }, // 삭제되지 않은 최신 댓글 조회
+      order: { regAt: "DESC" },
+      relations: ["csComUser"],
+    });
   }
 }
