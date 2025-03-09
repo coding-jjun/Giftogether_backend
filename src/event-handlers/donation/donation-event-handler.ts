@@ -9,12 +9,22 @@ import { DonationRefundCancelledEvent } from 'src/features/donation/domain/event
 import { AdminAssignedForDonationRefundEvent } from 'src/features/donation/domain/events/admin-assigned-for-refune.event';
 import { DonationRefundCompletedEvent } from 'src/features/donation/domain/events/donation-refund-completed.event';
 import { DonationDeletedEvent } from 'src/features/donation/domain/events/donation-deleted.event';
+import { Notification } from 'src/entities/notification.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
+import { User } from 'src/entities/user.entity';
 
 @Injectable()
 export class DonationEventHandler {
   constructor(
     private readonly notificationService: NotificationService,
     private readonly findAllAdmins: FindAllAdminsUseCase,
+
+    @InjectRepository(Notification)
+    private notiRepository: Repository<Notification>,
+
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   /**
@@ -122,5 +132,22 @@ export class DonationEventHandler {
     });
 
     await this.notificationService.createNoti(createNotificationDtoForDonor);
+  }
+
+  /** 
+   * 새로운 후원이 추가되었을 때, 펀딩 게시시자에게 알림을 보냅니다.
+   */
+  @OnEvent('NewDonate')
+  async handleNewDonate(data: {recvId: number, sendId: number, subId: string}) {
+    const noti = new Notification();
+    const receiver = await this.userRepository.findOneBy({ userId: data.recvId })
+    const sender = await this.userRepository.findOneBy({ userId: data.sendId })
+    
+    noti.sendId = sender;
+    noti.recvId = receiver;
+    noti.notiType = NotiType.NewDonate;
+    noti.subId = data.subId;
+  
+    return await this.notiRepository.save(noti);
   }
 }
