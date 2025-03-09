@@ -101,11 +101,13 @@ export class FundingService {
           .getOne();
 
         if (!friendship) {
-          queryBuilder.andWhere('fund.fundPubl = :publ', { publ: true });
+          queryBuilder.andWhere('funding.fundPubl = :publ', { publ: true });
         }
       }
     } else {
-      queryBuilder.where('funding.fundUser != :userId', { userId });
+      queryBuilder.where('funding.fundUser != :userId', {
+        userId: user.userId,
+      });
 
       const friendIds = await this.friendRepository
         .createQueryBuilder('friend')
