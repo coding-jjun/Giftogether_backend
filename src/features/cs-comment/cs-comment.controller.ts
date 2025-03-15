@@ -5,7 +5,7 @@ import { CommonResponse } from 'src/interfaces/common-response.interface';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
 import { JwtExtendedAuthGuard } from '../auth/guard/jwt-extended-auth-guard';
-import { CreateCsCommentDto } from './dto/create-cs-comment.dto';
+import { CsCommentReqeustDto } from './dto/cs-comment-request.dto';
 
 @Controller('cscomment')
 export class CsCommentController {
@@ -18,7 +18,7 @@ export class CsCommentController {
   async createCsBoard(
     @Req() req: Request,
     @Param('csId', ParseIntPipe) csId: number,
-    @Body() createCsComment: CreateCsCommentDto
+    @Body() createCsComment: CsCommentReqeustDto
   ): Promise<CommonResponse>{
     
     const user = req.user as { user: User } as any;
@@ -33,7 +33,7 @@ export class CsCommentController {
   async updateCsBoard(
     @Req() req: Request,
     @Param('cscomId', ParseIntPipe) cscomId: number,
-    @Body() updateCsComment: CsCommentDto
+    @Body() updateCsComment: CsCommentReqeustDto
   ): Promise<CommonResponse>{
     
     const user = req.user as { user: User } as any;

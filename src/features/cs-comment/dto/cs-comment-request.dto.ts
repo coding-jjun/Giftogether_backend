@@ -1,6 +1,6 @@
 import { IsNotEmpty } from "class-validator";
 
-export class CreateCsCommentDto {
+export class CsCommentReqeustDto {
   @IsNotEmpty()
   csComCont: string;
 

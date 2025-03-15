@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CsComment } from 'src/entities/cs-comment.entity';
 import { CsBoardService } from '../cs-board/cs-board.service';
 import { CsBoard } from 'src/entities/cs-board.entity';
-import { CreateCsCommentDto } from './dto/create-cs-comment.dto';
+import { CsCommentReqeustDto } from './dto/cs-comment-request.dto';
 
 function convertToCsCommentDto(csComment: CsComment): CsCommentDto {
   return new CsCommentDto(
@@ -35,7 +35,7 @@ export class CsCommentService {
 
   ){}
 
-  async create(csId: number, createCsBoard: CreateCsCommentDto, user: User) {
+  async create(csId: number, createCsBoard: CsCommentReqeustDto, user: User) {
     
     console.log(user)
     const csBoard = await this.csRepository
@@ -70,25 +70,28 @@ export class CsCommentService {
     return convertToCsCommentDto(newComment);
   }
 
-  async update(csComId: number, updateCsComment: CsCommentDto, userId: number) {
+  async update(csComId: number, updateCsComment: CsCommentReqeustDto, userId: number) {
 
-    const beforeCsComment = await this.csComRepository.findOne({
-      where: { csComId },
+    // 댓글 찾기
+    const csComment = await this.csComRepository.findOne({
+      where: { csComId, isDel: false },
       relations: ['csComUser']
     });
-    console.log("find target csComment >>> ", beforeCsComment);
-    await this.validCheck.verifyUserMatch(beforeCsComment.csComUser.userId, userId);
-
-    if (!beforeCsComment) {
-      throw this.g2gException.AccountNotFound;
+    if (!csComment) {
+      throw this.g2gException.CsCommentNotFound;
     }
+    console.log("find target csComment.csComId >>> ", csComment.csComId);
 
-    Object.assign(beforeCsComment, updateCsComment);
-    beforeCsComment.isMod = true;
+    // 댓글 작성자 유효성 검사
+    await this.validCheck.verifyUserMatch(csComment.csComUser.userId, userId);
+    
+    // 댓글 수정
+    csComment.csComCont = updateCsComment.csComCont;
+    csComment.isMod = true;
+    await this.csComRepository.save(csComment)
+    console.log("After update csBoard.csComId >>> ", csComId);
 
-    console.log("After update csBoard >>> ", beforeCsComment);
-
-    return await this.csComRepository.save(beforeCsComment);
+    return convertToCsCommentDto(csComment);
   }
 
   async delete(csComId: number, userId: number) {
