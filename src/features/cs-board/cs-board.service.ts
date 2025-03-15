@@ -108,11 +108,17 @@ export class CsBoardService {
     const csBoard = await this.csRepository
       .createQueryBuilder('csBoard')
       .leftJoinAndSelect('csBoard.csUser', 'csUser')
-      .where('csBoard.csId = :csId AND csBoard.isDel = false', { csId })
+      .where('csBoard.csId = :csId', { csId })
+      .andWhere('csBoard.isDel = false')
+      .andWhere('csBoard.isComplete = false')
       .getOne();
     
     if (!csBoard) {
       throw this.g2gException.CsBoardNotFound;
+    }
+
+    if (!user.isAdmin && csBoard.isComplete) {
+      throw this.g2gException.CsBoardIsComplete;
     }
 
     console.log("find target csBoard.csId >>> ", csBoard.csId);
