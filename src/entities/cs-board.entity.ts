@@ -40,6 +40,9 @@
 
     @Column('bool', { default: false })
     isDel: boolean;
+
+    @Column({nullable: true})
+    fundUuid: string;
     
     @CreateDateColumn()
     regAt: Date;

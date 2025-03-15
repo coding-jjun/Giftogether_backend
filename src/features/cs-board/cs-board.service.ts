@@ -10,6 +10,25 @@ import { UpdateCsBoardDto } from './dto/update-cs-board.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CsType } from 'src/enums/cs-type.enum';
 import { CsComment } from 'src/entities/cs-comment.entity';
+import { CsCommentDto } from '../cs-comment/dto/cs-comment.dto';
+
+
+function convertToCsBoardDto(csBoard: CsBoard, csComments: CsCommentDto[]): CsBoardDto {
+  
+  return new CsBoardDto(
+    csBoard.csId,
+    csBoard.csUser.userNick,
+    csBoard.csTitle,
+    csBoard.csCont,
+    csBoard.csType,
+    csBoard.isSecret,
+    csBoard.isUserWaiting,
+    csBoard.isComplete,
+    csBoard.regAt,
+    csBoard.fundUuid,
+    csComments
+  );
+}
 
 @Injectable()
 export class CsBoardService {
@@ -39,8 +58,8 @@ export class CsBoardService {
   // 
   async findOneCsBoard(csId: number, userId: number) {
     const csBoard = await this.findCsBoardByCsId(csId, userId);
-    const responseBoard = new CsBoardDto();
-    responseBoard.userNick = csBoard.csUser.userNick;
+    const responseBoard = null;
+    responseBoard.csUser = csBoard.csUser.userNick;
     return Object.assign(responseBoard, csBoard);
   }
 
@@ -70,16 +89,15 @@ export class CsBoardService {
 
     // 게시자가 관리자일 경우 : 댓글 막기
     if(user.isAdmin){
-     csBoard.isComplete = true; 
+      csBoard.isComplete = true; 
     }
     // 관리자 공지사항
     if(CsType.Announcement == createCsBoard.csType) {
       csBoard.isComplete = true;
       csBoard.isUserWaiting = false;
     }
-    const newBoard = await this.csRepository.save(csBoard);
-    console.log("Save new Board >>> ", newBoard);
-    return newBoard
+    const savedBoard = await this.csRepository.save(csBoard);
+    return convertToCsBoardDto(savedBoard, null)
   }
 
   async update(csId: number, updateCsBoardDto: UpdateCsBoardDto, userId: number) {

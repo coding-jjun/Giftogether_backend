@@ -14,4 +14,6 @@ export class CreateCsBoardDto {
   @IsNotEmpty()
   isSecret: boolean;
 
+  public fundUuid: string
+
 }
