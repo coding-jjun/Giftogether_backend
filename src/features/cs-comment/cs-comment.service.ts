@@ -8,13 +8,25 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CsComment } from 'src/entities/cs-comment.entity';
 import { CsBoardService } from '../cs-board/cs-board.service';
 import { CsBoard } from 'src/entities/cs-board.entity';
+import { CreateCsCommentDto } from './dto/create-cs-comment.dto';
 
+function convertToCsCommentDto(csComment: CsComment): CsCommentDto {
+  return new CsCommentDto(
+    csComment.csComId,
+    csComment.csComUser.userNick,
+    csComment.csComCont,
+    csComment.regAt,
+    csComment.isMod
+  )
+}
 @Injectable()
 export class CsCommentService {
 
   constructor(
     private readonly csBoardService: CsBoardService,
 
+    @InjectRepository(CsBoard)
+    private readonly csRepository: Repository<CsBoard>,
     @InjectRepository(CsComment)
     private readonly csComRepository: Repository<CsComment>,
 
@@ -23,25 +35,39 @@ export class CsCommentService {
 
   ){}
 
-  async create(csId: number, createCsBoard: CsCommentDto, user: User) {
+  async create(csId: number, createCsBoard: CreateCsCommentDto, user: User) {
+    
+    console.log(user)
+    const csBoard = await this.csRepository
+      .createQueryBuilder('csBoard')
+      .leftJoinAndSelect('csBoard.csUser', 'csUser')
+      .where('csBoard.csId = :csId AND csBoard.isDel = false', {csId})
+      .getOne();
+    
+    if (!csBoard) {
+      console.log("Failed to find CsBoard")
+      throw this.g2gException.CsBoardNotFound;
+    }
 
     // 비밀글) 게시자와 댓글 작성자가 동일해야 한다. + 관리자 제외
-    const csBoard = await this.csBoardService.findCsBoardByCsId(csId, user.userId);
+    if (csBoard.isSecret && !user.isAdmin) {
+      this.validCheck.verifyUserMatch(csBoard.csUser.userId, user.userId)
+    }
     
+    // 댓글 저장
     let csComment = new CsComment();
     csComment.csBoard = csBoard;
     csComment.csComCont = createCsBoard.csComCont;
     csComment.csComUser = user;
-
-    console.log("create CsComment >>> ", csComment);
-
     const newComment = await this.csComRepository.save(csComment);
-    const lastCsComment = await this.findLastCsComment(csBoard);
-    
-    await this.csBoardService.updateOnCsComment(csBoard, lastCsComment, true);
-    
-    console.log("Save new Comment >>> ", newComment);
-    return newComment;
+    console.log("create CsComment >>> ", newComment);
+
+    // 게시글 정보 업데이트
+    csBoard.lastComAt = newComment.regAt;
+    csBoard.isUserWaiting = user.isAdmin ? false : true;
+    await this.csRepository.save(csBoard)
+    console.log("Update CsBoard >>> ", csId);
+    return convertToCsCommentDto(newComment);
   }
 
   async update(csComId: number, updateCsComment: CsCommentDto, userId: number) {

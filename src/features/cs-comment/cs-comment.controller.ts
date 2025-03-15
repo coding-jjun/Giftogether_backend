@@ -5,6 +5,7 @@ import { CommonResponse } from 'src/interfaces/common-response.interface';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
 import { JwtExtendedAuthGuard } from '../auth/guard/jwt-extended-auth-guard';
+import { CreateCsCommentDto } from './dto/create-cs-comment.dto';
 
 @Controller('cscomment')
 export class CsCommentController {
@@ -17,13 +18,13 @@ export class CsCommentController {
   async createCsBoard(
     @Req() req: Request,
     @Param('csId', ParseIntPipe) csId: number,
-    @Body() createCsComment: CsCommentDto
+    @Body() createCsComment: CreateCsCommentDto
   ): Promise<CommonResponse>{
     
     const user = req.user as { user: User } as any;
     return {
       message: "CS 댓글 생성 완료",
-      data: await this.csComService.create(csId, createCsComment, user.userId),
+      data: await this.csComService.create(csId, createCsComment, user),
     }
   }
 
