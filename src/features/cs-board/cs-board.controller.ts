@@ -62,7 +62,7 @@ export class CsBoardController {
     const user = req.user as { user: User } as any;
     return {
       message: "CS 게시글 수정 완료",
-      data: await this.csService.update(csId, updateCsBoard, user.userId),
+      data: await this.csService.update(csId, updateCsBoard, user),
     }
   }
 

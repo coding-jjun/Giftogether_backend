@@ -16,5 +16,8 @@ export class UpdateCsBoardDto {
   isSecret: boolean;
 
   @IsOptional()
-  isComplete: boolean;
+  isComplete?: boolean;
+
+  @IsOptional()
+  fundingUuid?: string;
 }

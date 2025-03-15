@@ -120,24 +120,31 @@ export class CsBoardService {
     return convertToCsBoardDto(savedBoard, null)
   }
 
-  async update(csId: number, updateCsBoardDto: UpdateCsBoardDto, userId: number) {
+  async update(csId: number, updateCsBoardDto: UpdateCsBoardDto, user: User) {
 
-    const beforeCsBoard = await this.csRepository.findOne({
-      where: { csId },
-      relations: ['csUser']
-    });
-    console.log("find target csBoard >>> ", beforeCsBoard);
-    await this.validCheck.verifyUserMatch(beforeCsBoard.csUser.userId, userId);
-
-    if (!beforeCsBoard) {
-      throw this.g2gException.AccountNotFound;
+    const csBoard = await this.csRepository
+      .createQueryBuilder('csBoard')
+      .leftJoinAndSelect('csBoard.csUser', 'csUser')
+      .where('csBoard.csId = :csId AND csBoard.isDel = false', { csId })
+      .getOne();
+    
+    if (!csBoard) {
+      throw this.g2gException.CsBoardNotFound;
     }
 
-    Object.assign(beforeCsBoard, updateCsBoardDto);
+    console.log("find target csBoard.csId >>> ", csBoard.csId);
+    if (!user.isAdmin) {
+      await this.validCheck.verifyUserMatch(csBoard.csUser.userId, user.userId);
+    }
+    
+    Object.assign(csBoard, updateCsBoardDto);
 
-    console.log("After update csBoard >>> ", beforeCsBoard);
+    await this.csRepository.save(csBoard);
 
-    return await this.csRepository.save(beforeCsBoard);
+
+    console.log("Success update csBoard >>> ", csId);
+
+    return convertToCsBoardDto(csBoard, null)
   }
 
   async delete(csId: number, user: User) {
