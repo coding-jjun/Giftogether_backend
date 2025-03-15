@@ -24,7 +24,7 @@ export class CsBoardController {
     const user = req.user as { user: User } as any;
     return {
       message: "CS 게시글 조회 완료",
-      data: await this.csService.findOneCsBoard(csId, user.userId),
+      data: await this.csService.findOne(csId, user),
     }
   }
 

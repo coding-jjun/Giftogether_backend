@@ -66,12 +66,21 @@ export class CsBoardService {
     return csBoard;
   }
 
-  // 
-  async findOneCsBoard(csId: number, userId: number) {
-    const csBoard = await this.findCsBoardByCsId(csId, userId);
-    const responseBoard = null;
-    responseBoard.csUser = csBoard.csUser.userNick;
-    return Object.assign(responseBoard, csBoard);
+  // 상세 조회
+  async findOne(csId: number, user: User) {
+    const csBoard = await this.csRepository
+      .createQueryBuilder('csBoard')
+      .leftJoinAndSelect('csBoard.csUser', 'csUser')
+      .leftJoinAndSelect('csBoard.csComments', 'csComments', 'csComments.isDel = false')
+      .leftJoinAndSelect('csComments.csComUser', 'csComUser')
+      .where('csBoard.csId = :csId AND csBoard.isDel = false', { csId })
+      .getOne();
+
+    if (csBoard.isSecret && user.isAdmin) {
+      await this.validCheck.verifyUserMatch(csBoard.csUser.userId, user.userId);
+    }
+    const csCommentsDto =  csBoard?.csComments.map(convertToCsCommentsDto) ?? [];
+    return convertToCsBoardDto(csBoard, csCommentsDto);
   }
 
 
