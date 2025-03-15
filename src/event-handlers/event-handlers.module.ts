@@ -24,6 +24,10 @@ import { NotificationService } from 'src/features/notification/notification.serv
 import { ProvisionalDonationFsmService } from 'src/features/donation/domain/services/provisional-donation-fsm.service';
 import { DepositFsmService } from 'src/features/deposit/domain/deposit-fsm.service';
 import { DonationFsmService } from 'src/features/donation/domain/services/donation-fsm.service';
+import { FriendEventHandler } from './friend/friend-event-handler';
+import { FundEventHandler } from './fund/fund-event-handler';
+import { GratitudeEventHandler } from './gratitude/gratitude-event-handler';
+import { CommentEventHandler } from './comment/comment-event-handler';
 
 const usecases = [
   DeleteDonationUseCase,
@@ -58,6 +62,10 @@ const services = [
     DepositEventHandler,
     DonationEventHandler,
     ProvisionalDonationEventHandler,
+    CommentEventHandler,
+    FriendEventHandler,
+    FundEventHandler,
+    GratitudeEventHandler,
     ...usecases,
     ...services,
   ],
