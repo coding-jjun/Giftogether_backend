@@ -89,5 +89,6 @@ export enum ErrorCode {
 
   // CsBoard & CsComment
   CsBoardNotFound = "1900",
-  CsCommentNotFound = "1901"
+  CsCommentNotFound = "1901",
+  CsBoardIsComplete = "1902",
 }

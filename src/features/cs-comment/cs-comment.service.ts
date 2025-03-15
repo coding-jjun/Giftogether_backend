@@ -37,12 +37,17 @@ export class CsCommentService {
     const csBoard = await this.csRepository
       .createQueryBuilder('csBoard')
       .leftJoinAndSelect('csBoard.csUser', 'csUser')
-      .where('csBoard.csId = :csId AND csBoard.isDel = false', {csId})
+      .where('csBoard.csId = :csId', {csId})
+      .andWhere('csBoard.isDel = false')
       .getOne();
     
     if (!csBoard) {
       console.log("Failed to find CsBoard")
       throw this.g2gException.CsBoardNotFound;
+    }
+
+    if (!user.isAdmin && csBoard.isComplete) {
+      throw this.g2gException.CsBoardIsComplete;
     }
 
     // 비밀글) 게시자와 댓글 작성자가 동일해야 한다. + 관리자 제외

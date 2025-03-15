@@ -344,4 +344,9 @@ export class GiftogetherExceptions {
     ErrorCode.CsCommentNotFound,
     HttpStatus.NOT_FOUND
   )
+  CsBoardIsComplete = new GiftogetherException(
+    ErrorMsg.CsBoardIsComplete,
+    ErrorCode.CsBoardIsComplete,
+    HttpStatus.BAD_REQUEST
+  );
 }

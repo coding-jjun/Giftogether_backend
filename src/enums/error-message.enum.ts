@@ -88,4 +88,5 @@ export enum ErrorMsg {
     // CsBoard & CsComment
     CsBoardNotFound = '문의 게시글이 존재하지 않습니다.',
     CsCommentNotFound = '문의 댓글이 존재하지 않습니다.',
+    CsBoardIsComplete = '마감된 문의 게시글입니다.'
 }
