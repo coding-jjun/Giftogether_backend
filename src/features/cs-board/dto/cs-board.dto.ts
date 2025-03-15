@@ -13,6 +13,7 @@ export class CsBoardDto {
     public isUserWaiting: boolean,
     public isComplete: boolean,
     public regAt: Date,
+    public uptAt: Date,
     public fundUuid: string,
     public csComments: CsCommentDto[]
   ) {}

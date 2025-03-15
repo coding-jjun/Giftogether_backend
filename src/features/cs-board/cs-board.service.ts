@@ -25,6 +25,7 @@ function convertToCsBoardDto(csBoard: CsBoard, csComments: CsCommentDto[]): CsBo
     csBoard.isUserWaiting,
     csBoard.isComplete,
     csBoard.regAt,
+    csBoard.uptAt,
     csBoard.fundUuid,
     csComments
   );
