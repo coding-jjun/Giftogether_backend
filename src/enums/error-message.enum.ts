@@ -84,4 +84,8 @@ export enum ErrorMsg {
   InconsistentAggregationError = '애그리게이션이 일관적이지 않습니다.',
   InvalidPage = '잘못된 페이지 번호입니다.',
   InvalidLimit = '잘못된 페이지 크기입니다.',
+
+    // CsBoard & CsComment
+    CsBoardNotFound = '문의 게시글이 존재하지 않습니다.',
+    CsCommentNotFound = '문의 댓글이 존재하지 않습니다.',
 }

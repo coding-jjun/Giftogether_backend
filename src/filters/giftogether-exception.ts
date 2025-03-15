@@ -331,4 +331,17 @@ export class GiftogetherExceptions {
     ErrorCode.InvalidLimit,
     HttpStatus.BAD_REQUEST,
   );
+
+  // CSBoard & CsComment
+  CsBoardNotFound = new GiftogetherException(
+    ErrorMsg.CsBoardNotFound,
+    ErrorCode.CsBoardNotFound,
+    HttpStatus.NOT_FOUND
+  );
+  
+  CsCommentNotFound = new GiftogetherException(
+    ErrorMsg.CsCommentNotFound,
+    ErrorCode.CsCommentNotFound,
+    HttpStatus.NOT_FOUND
+  )
 }

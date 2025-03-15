@@ -86,4 +86,8 @@ export enum ErrorCode {
   InconsistentAggregationError = '1700',
   InvalidPage = '1701',
   InvalidLimit = '1702',
+
+  // CsBoard & CsComment
+  CsBoardNotFound = "1900",
+  CsCommentNotFound = "1901"
 }
