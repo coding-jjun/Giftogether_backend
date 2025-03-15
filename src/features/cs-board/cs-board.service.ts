@@ -69,23 +69,21 @@ export class CsBoardService {
   }
 
 
-  // TODO 카테고리 조회
-  async findAllCsBoards(csType:CsType) {
-    console.log(csType);
-    return await this.csRepository
-    .createQueryBuilder('csBoard')
-    .leftJoinAndSelect('csBoard.csUser', 'csUser')
-    .where('csBoard.csType = :csType', { csType })
-    .andWhere('csBoard.isDel = :isDel', { isDel: false })
-    .getMany();
-    // console.log(">>>>> csBoard " , csBoards);
-    // const result = csBoards.map(() => new CsBoardDto());
-
-    // console.log("result >>>>> ", result)
-
-    // return result;
-
+  async findAll(csType: CsType | null): Promise<CsBoardDto[]> {
+    const query = this.csRepository.createQueryBuilder('csBoard')
+      .leftJoinAndSelect('csBoard.csUser', 'csUser')
+      .andWhere('csBoard.isDel = false');
+  
+    if (csType !== null) {
+      query.andWhere('csBoard.csType = :csType', { csType });
+    } else {
+      query.andWhere('csBoard.csType IS NULL');
+    }
+  
+    const csBoards = await query.getMany();
+    return csBoards?.map(csBoard => convertToCsBoardDto(csBoard, null)) ?? [];
   }
+  
 
   async create(createCsBoard: CreateCsBoardDto, user: User) {
 

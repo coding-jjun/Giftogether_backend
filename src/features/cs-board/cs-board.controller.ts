@@ -35,9 +35,10 @@ export class CsBoardController {
 
     return {
       message: "CS 게시글 전체 조회 완료",
-      data: await this.csService.findAllCsBoards(csType),
+      data: await this.csService.findAll(csType),
     }
   }
+  
   @Post()
   @UseGuards(JwtExtendedAuthGuard)
   async createCsBoard(
