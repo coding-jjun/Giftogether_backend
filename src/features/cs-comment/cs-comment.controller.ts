@@ -53,7 +53,7 @@ export class CsCommentController {
 
     return {
       message: "CS 댓글 삭제 완료",
-      data: await this.csComService.delete(cscomId, user.userId),
+      data: await this.csComService.delete(cscomId, user),
     }
   }
 

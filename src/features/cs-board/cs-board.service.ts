@@ -51,21 +51,6 @@ export class CsBoardService {
 
   ){}
 
-  async findCsBoardByCsId(csId: number, userId: number) {
-    const csBoard = await this.csRepository.findOne({
-      where: { csId },
-      relations: ['csUser', 'csComments']
-    });
-    // 비밀글
-    if(csBoard.isSecret){
-      // 작성자 & 관리자가 아닐 경우
-      if(csBoard.csUser.userId != userId && ! csBoard.csUser.isAdmin) {
-        // throw this.g2gException.NoPermissionCsBoard;
-      }
-    }
-    return csBoard;
-  }
-
   // 상세 조회
   async findOne(csId: number, user: User) {
     const csBoard = await this.csRepository
@@ -180,21 +165,5 @@ export class CsBoardService {
     
     return convertToCsBoardDto(csBoard, convertCsComments);
   }
-
-
-  /**
-   * 댓글 생성/삭제에 따른 게시글 수정
-   */
-  async updateOnCsComment(csBoard: CsBoard, lastCsComment: CsComment, isNewComment: boolean) {
-
-    let lastCommenterisAdmin = false; // 댓글이 없는 게시글
-    if(lastCsComment != null) {       // 댓글 있는 게시글
-      lastCommenterisAdmin = lastCsComment.csComUser.isAdmin;
-    }
-    if(isNewComment) {
-      csBoard.lastComAt = lastCsComment.regAt; // 새로운 댓글 생성 날짜로 업데이트
-    }
-    csBoard.isUserWaiting = lastCommenterisAdmin ? false : true;
-    await this.csRepository.save(csBoard);
-  }
+  
 }
