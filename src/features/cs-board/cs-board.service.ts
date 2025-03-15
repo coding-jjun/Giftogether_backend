@@ -30,12 +30,22 @@ function convertToCsBoardDto(csBoard: CsBoard, csComments: CsCommentDto[]): CsBo
     csComments
   );
 }
-
+function convertToCsCommentsDto(csComment: CsComment): CsCommentDto {
+  return new CsCommentDto(
+    csComment.csComId,
+    csComment.csComUser.userNick,
+    csComment.csComCont,
+    csComment.regAt,
+    csComment.isMod
+  )
+}
 @Injectable()
 export class CsBoardService {
   constructor(
     @InjectRepository(CsBoard)
     private readonly csRepository: Repository<CsBoard>,
+    @InjectRepository(CsComment)
+    private readonly csComRepository: Repository<CsComment>,
     private readonly validCheck: ValidCheck,
     private readonly g2gException: GiftogetherExceptions
 
@@ -121,28 +131,38 @@ export class CsBoardService {
     return await this.csRepository.save(beforeCsBoard);
   }
 
-  async delete(csId: number) {
-    const userId = 1;
-
+  async delete(csId: number, user: User) {
     const csBoard = await this.csRepository.findOne({
-      where: { csId },
-      // relations: ['csUser']
+      where: { csId, isDel: false } ,
+      relations: ['csUser', 'csComments', 'csComments.csComUser']
     });
-    // return await this.csRepository.delete(csBoard);
-    return await this.csRepository.delete({
-      csId: csId
-    });
-    // console.log("find target csBoard >>> ", csBoard);
-    // await this.validCheck.verifyUserMatch(csBoard.csUser.userId, userId);
 
-    // if (!csBoard) {
-    //   throw this.g2gException.AccountNotFound;
-    // }
+    if (!csBoard) {
+      throw this.g2gException.CsBoardNotFound;
+    }
     
-    // csBoard.isDel = true;
-    // return await this.csRepository.save(csBoard);
-    // TODO 댓글 삭제 isDelete
+    console.log("find target csBoard before Delete >>> ", csBoard.csId);
+    if (!user.isAdmin) {
+      await this.validCheck.verifyUserMatch(csBoard.csUser.userId, user.userId);
+    }
     
+    csBoard.isDel = true;
+    const csComments = csBoard.csComments;
+
+    for (let csComment of csComments) {
+      csComment.isDel = true;
+    }
+
+    await this.csComRepository.save(csComments)
+    await this.csRepository.save(csBoard);
+    
+    console.log("Success Delete CsBoard >> ", csBoard.csId);
+    const convertCsComments: CsCommentDto[] = [];
+    for (const csComment of csComments) {
+      convertCsComments.push(convertToCsCommentsDto(csComment));
+    }
+    
+    return convertToCsBoardDto(csBoard, convertCsComments);
   }
 
 

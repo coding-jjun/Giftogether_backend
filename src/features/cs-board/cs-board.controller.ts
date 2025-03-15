@@ -67,12 +67,15 @@ export class CsBoardController {
   }
 
   @Delete(':csId')
+  @UseGuards(JwtExtendedAuthGuard)
   async deleteCsBoard(
+    @Req() req: Request,
     @Param('csId', ParseIntPipe) csId: number,
   ): Promise<CommonResponse>{
+    const user = req.user as { user: User } as any;
     return {
       message: "CS 게시글 삭제 완료",
-      data: await this.csService.delete(csId),
+      data: await this.csService.delete(csId, user),
     }
   }
 
