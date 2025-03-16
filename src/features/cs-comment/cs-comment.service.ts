@@ -6,14 +6,24 @@ import { ValidCheck } from 'src/util/valid-check';
 import { GiftogetherExceptions } from 'src/filters/giftogether-exception';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CsComment } from 'src/entities/cs-comment.entity';
-import { CsBoardService } from '../cs-board/cs-board.service';
+import { CsBoard } from 'src/entities/cs-board.entity';
+import { CsCommentReqeustDto } from './dto/cs-comment-request.dto';
 
+function convertToCsCommentDto(csComment: CsComment): CsCommentDto {
+  return new CsCommentDto(
+    csComment.csComId,
+    csComment.csComUser.userNick,
+    csComment.csComCont,
+    csComment.regAt,
+    csComment.isMod
+  )
+}
 @Injectable()
 export class CsCommentService {
 
   constructor(
-    private readonly csBoardService: CsBoardService,
-
+    @InjectRepository(CsBoard)
+    private readonly csRepository: Repository<CsBoard>,
     @InjectRepository(CsComment)
     private readonly csComRepository: Repository<CsComment>,
 
@@ -22,57 +32,108 @@ export class CsCommentService {
 
   ){}
 
-  async create(csId: number, createCsBoard: CsCommentDto, user: User) {
+  async create(csId: number, createCsBoard: CsCommentReqeustDto, user: User) {
+    
+    const csBoard = await this.csRepository
+      .createQueryBuilder('csBoard')
+      .leftJoinAndSelect('csBoard.csUser', 'csUser')
+      .where('csBoard.csId = :csId', {csId})
+      .andWhere('csBoard.isDel = false')
+      .getOne();
+    
+    if (!csBoard) {
+      console.log("Failed to find CsBoard")
+      throw this.g2gException.CsBoardNotFound;
+    }
+
+    if (!user.isAdmin && csBoard.isComplete) {
+      throw this.g2gException.CsBoardIsComplete;
+    }
 
     // 비밀글) 게시자와 댓글 작성자가 동일해야 한다. + 관리자 제외
-    const csBoard = await this.csBoardService.findCsBoardByCsId(csId, user.userId);
+    if (csBoard.isSecret && !user.isAdmin) {
+      this.validCheck.verifyUserMatch(csBoard.csUser.userId, user.userId)
+    }
     
+    // 댓글 저장
     let csComment = new CsComment();
     csComment.csBoard = csBoard;
     csComment.csComCont = createCsBoard.csComCont;
     csComment.csComUser = user;
-
-    console.log("create CsComment >>> ", csComment);
-
     const newComment = await this.csComRepository.save(csComment);
-    console.log("Save new Comment >>> ", newComment);
-    return newComment
+    console.log("create CsComment >>> ", newComment);
+
+    // 게시글 정보 업데이트
+    csBoard.lastComAt = newComment.regAt;
+    csBoard.isUserWaiting = user.isAdmin ? false : true;
+    await this.csRepository.save(csBoard)
+    console.log("Update CsBoard >>> ", csId);
+    return convertToCsCommentDto(newComment);
   }
 
-  async update(csComId: number, updateCsComment: CsCommentDto, userId: number) {
+  async update(csComId: number, updateCsComment: CsCommentReqeustDto, userId: number) {
 
-    const beforeCsComment = await this.csComRepository.findOne({
-      where: { csComId },
+    // 댓글 찾기
+    const csComment = await this.csComRepository.findOne({
+      where: { csComId, isDel: false },
       relations: ['csComUser']
     });
-    console.log("find target csComment >>> ", beforeCsComment);
-    await this.validCheck.verifyUserMatch(beforeCsComment.csComUser.userId, userId);
-
-    if (!beforeCsComment) {
-      throw this.g2gException.AccountNotFound;
+    if (!csComment) {
+      throw this.g2gException.CsCommentNotFound;
     }
+    console.log("find target csComment.csComId >>> ", csComment.csComId);
 
-    Object.assign(beforeCsComment, updateCsComment);
+    // 댓글 작성자 유효성 검사
+    await this.validCheck.verifyUserMatch(csComment.csComUser.userId, userId);
+    
+    // 댓글 수정
+    csComment.csComCont = updateCsComment.csComCont;
+    csComment.isMod = true;
+    await this.csComRepository.save(csComment)
+    console.log("After update csBoard.csComId >>> ", csComId);
 
-    console.log("After update csBoard >>> ", beforeCsComment);
-
-    return await this.csComRepository.save(beforeCsComment);
+    return convertToCsCommentDto(csComment);
   }
 
-  async delete(csComId: number) {
+  async delete(csComId: number, user: User) {
 
-    const csComment = await this.csComRepository.findOne({
-      where: { csComId },
+    // 댓글 찾기
+    const deleteComment = await this.csComRepository.findOne({
+      where: { csComId, isDel: false },
+      relations: ['csComUser', 'csBoard']
     });
-    return await this.csComRepository.delete({csComId});
-    // console.log("find target csComment >>> ", csComment);
-    // await this.validCheck.verifyUserMatch(csComment.csComUser.userId, userId);
+    if (!deleteComment) {
+      throw this.g2gException.CsCommentNotFound;
+    }
 
-    // if (!csComment) {
-    //   throw this.g2gException.AccountNotFound;
-    // }
+    // 댓글 삭제
+    deleteComment.isDel = true;
+    await this.csComRepository.save(deleteComment);
+
+    const csBoard = deleteComment.csBoard
+    const latestComment = await this.csComRepository
+      .createQueryBuilder('csComment')
+      .leftJoinAndSelect('csComment.csComUser', 'csComUser')
+      .where('csComment.csBoard = :csId', { csId: csBoard.csId })
+      .andWhere('csComment.isDel = false')
+      .orderBy('csComment.regAt', 'DESC')
+      .getOne();
     
-    // csComment.isDel = true;
-    // return await this.csComRepository.save(csComment);
+    // 댓글 없는 게시글 (위 삭제한 댓글이 첫번째 댓글)
+    if (!latestComment) {
+      csBoard.isUserWaiting = true;
+      csBoard.lastComAt = null;
+
+    } else {
+      const isLastestIsAdmin = latestComment.csComUser.isAdmin
+
+      // 최신 댓글로 게시글 정보 업데이트
+      csBoard.isUserWaiting = isLastestIsAdmin ? false : true;
+      csBoard.lastComAt = latestComment.regAt;
+    }
+    await this.csRepository.save(csBoard);
+    console.log("CsBoard update >> latestComment")
+
+    return convertToCsCommentDto(deleteComment);
   }
 }

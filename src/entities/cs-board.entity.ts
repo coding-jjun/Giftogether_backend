@@ -1,5 +1,5 @@
   import { CsType } from "src/enums/cs-type.enum";
-  import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+  import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
   import { CsComment } from "./cs-comment.entity";
   import { User } from "./user.entity";
 
@@ -29,6 +29,9 @@
     @OneToMany(() => CsComment, (csComment) => csComment.csBoard)
     csComments: CsComment[];
 
+    @Column('bool', { default: true }) // 마지막 댓글 작성자가 관리자인지 여부에 따라 업데이트 (관리자 페이지)
+    isUserWaiting: boolean;
+
     @Column({default: false})
     isSecret: boolean;
 
@@ -37,8 +40,17 @@
 
     @Column('bool', { default: false })
     isDel: boolean;
+
+    @Column({nullable: true})
+    fundUuid: string;
     
     @CreateDateColumn()
     regAt: Date;
+
+    @UpdateDateColumn()
+    uptAt: Date;
+
+    @Column({ type: 'timestamp', nullable: true }) // 마지막 댓글의 생성 날짜 (관리자 페이지)
+    lastComAt: Date;
 
   }

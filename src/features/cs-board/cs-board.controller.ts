@@ -24,7 +24,7 @@ export class CsBoardController {
     const user = req.user as { user: User } as any;
     return {
       message: "CS 게시글 조회 완료",
-      data: await this.csService.findOneCsBoard(csId, user.userId),
+      data: await this.csService.findOne(csId, user),
     }
   }
 
@@ -35,9 +35,10 @@ export class CsBoardController {
 
     return {
       message: "CS 게시글 전체 조회 완료",
-      data: await this.csService.findAllCsBoards(csType),
+      data: await this.csService.findAll(csType),
     }
   }
+  
   @Post()
   @UseGuards(JwtExtendedAuthGuard)
   async createCsBoard(
@@ -62,17 +63,20 @@ export class CsBoardController {
     const user = req.user as { user: User } as any;
     return {
       message: "CS 게시글 수정 완료",
-      data: await this.csService.update(csId, updateCsBoard, user.userId),
+      data: await this.csService.update(csId, updateCsBoard, user),
     }
   }
 
   @Delete(':csId')
+  @UseGuards(JwtExtendedAuthGuard)
   async deleteCsBoard(
+    @Req() req: Request,
     @Param('csId', ParseIntPipe) csId: number,
   ): Promise<CommonResponse>{
+    const user = req.user as { user: User } as any;
     return {
       message: "CS 게시글 삭제 완료",
-      data: await this.csService.delete(csId),
+      data: await this.csService.delete(csId, user),
     }
   }
 

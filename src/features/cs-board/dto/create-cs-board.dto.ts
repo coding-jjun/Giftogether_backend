@@ -1,4 +1,4 @@
-import { IsNotEmpty } from "class-validator";
+import { IsNotEmpty, IsOptional } from "class-validator";
 import { CsType } from "src/enums/cs-type.enum";
 
 export class CreateCsBoardDto {
@@ -13,5 +13,8 @@ export class CreateCsBoardDto {
 
   @IsNotEmpty()
   isSecret: boolean;
+
+  @IsOptional()
+  fundUuid?: string
 
 }

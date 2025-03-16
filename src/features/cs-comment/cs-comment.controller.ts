@@ -5,6 +5,7 @@ import { CommonResponse } from 'src/interfaces/common-response.interface';
 import { Request } from 'express';
 import { User } from 'src/entities/user.entity';
 import { JwtExtendedAuthGuard } from '../auth/guard/jwt-extended-auth-guard';
+import { CsCommentReqeustDto } from './dto/cs-comment-request.dto';
 
 @Controller('cscomment')
 export class CsCommentController {
@@ -17,13 +18,13 @@ export class CsCommentController {
   async createCsBoard(
     @Req() req: Request,
     @Param('csId', ParseIntPipe) csId: number,
-    @Body() createCsComment: CsCommentDto
+    @Body() createCsComment: CsCommentReqeustDto
   ): Promise<CommonResponse>{
     
     const user = req.user as { user: User } as any;
     return {
       message: "CS 댓글 생성 완료",
-      data: await this.csComService.create(csId, createCsComment, user.userId),
+      data: await this.csComService.create(csId, createCsComment, user),
     }
   }
 
@@ -32,7 +33,7 @@ export class CsCommentController {
   async updateCsBoard(
     @Req() req: Request,
     @Param('cscomId', ParseIntPipe) cscomId: number,
-    @Body() updateCsComment: CsCommentDto
+    @Body() updateCsComment: CsCommentReqeustDto
   ): Promise<CommonResponse>{
     
     const user = req.user as { user: User } as any;
@@ -43,12 +44,16 @@ export class CsCommentController {
   }
 
   @Delete(':cscomId')
+  @UseGuards(JwtExtendedAuthGuard)
   async deleteCsBoard(
+    @Req() req: Request,
     @Param('cscomId', ParseIntPipe) cscomId: number,
   ): Promise<CommonResponse>{
+    const user = req.user as { user: User } as any;
+
     return {
       message: "CS 댓글 삭제 완료",
-      data: await this.csComService.delete(cscomId),
+      data: await this.csComService.delete(cscomId, user),
     }
   }
 
