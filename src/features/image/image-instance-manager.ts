@@ -1,9 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { IImageId } from 'src/interfaces/image-id.interface';
 import { ImageService } from './image.service';
 import { Image } from 'src/entities/image.entity';
 import { SelectQueryBuilder } from 'typeorm';
-import { T } from 'node_modules/@faker-js/faker/dist/airline-BnpeTvY9.cjs';
 import { ImageType } from 'src/enums/image-type.enum';
 import { User } from 'src/entities/user.entity';
 import { Funding } from 'src/entities/funding.entity';
@@ -36,7 +35,9 @@ export class ImageInstanceManager {
    * and image.imgType to the proper ImageType.
    *
    * @param qb    The TypeORM query builder for one of the entities.
-   * @param alias Optional alias for the entity in the query.
+   * @param alias 매핑하고 싶은 엔티티의 alias를 명시, e.g. mapImage(fundingQb, 'author')
+   * 2025-03-09 edit: 네스팅된 엔티티에도 사용가능! mapImage 하기 전에 연관 엔티티와 join을 수행해야 하겠죠?
+   *
    * @returns     The query builder with the left join mapped to the `image` property.
    * @see https://orkhan.gitbook.io/typeorm/docs/select-query-builder#joining-and-mapping-functionality
    * @example
@@ -48,11 +49,11 @@ export class ImageInstanceManager {
         'comment.isDel = :isDel',
         { isDel: false },
       )
-      .leftJoinAndSelect('comment.author', 'author')
+      .leftJoinAndSelect('comment.author', 'author') // *** funding.comment.'author'
       .where('funding.fundUuid = :fundUuid', { fundUuid })
       .orderBy('comment.regAt', 'DESC');
 
-    // NOTE - 이런 식으로 매핑하고 싶은 엔티티 alias를 붙여주면 됩니다.
+    // *** NOTE - 이런 식으로 매핑하고 싶은 엔티티 alias를 붙여주면 됩니다.
     this.imageInstanceManager.mapImage(fundingQb, 'author');
     this.imageInstanceManager.mapImage(fundingQb, 'funding');
 
@@ -65,7 +66,7 @@ export class ImageInstanceManager {
       .where('author.userId = :userId', { userId: user.userId! });
 
     // NOTE - 또는 아래와 같이 alias를 생략하면 query builder의 main alias가 자동으로 사용됩니다.
-    this.imageInstanceManager.mapImage(authorQb);
+    this.imageInstanceManager.mapImage(authorQb); // 'user'가 자동으로 설정.
    */
   mapImage(
     qb: SelectQueryBuilder<any>,
@@ -109,15 +110,46 @@ export class ImageInstanceManager {
     );
   }
 
-  mapImages<T extends IImageId>(
-    queryBuilder: SelectQueryBuilder<T>,
-    mapToProperty: string,
-    property: string,
-    imgType: ImageType,
-  ): SelectQueryBuilder<T> {
-    return queryBuilder.leftJoinAndMapOne(mapToProperty, property, 'i', ``, {
-      imgType,
-    });
+  mapImages(
+    qb: SelectQueryBuilder<any>,
+    alias?: string,
+  ): SelectQueryBuilder<any> {
+    // Use provided alias or fall back to the query builder's own alias.
+    const entityAlias = alias || qb.alias;
+
+    // Determine the correct id field and image type by inspecting the query builder's metadata.
+    let idField: string;
+    let imgType: ImageType;
+    const joinedAlias = qb.expressionMap.findAliasByName(entityAlias);
+    const target = joinedAlias.metadata.target;
+
+    if (target === User) {
+      idField = 'userId';
+      imgType = ImageType.User;
+    } else if (target === Funding) {
+      idField = 'fundId';
+      imgType = ImageType.Funding;
+    } else if (target === Gift) {
+      idField = 'giftId';
+      imgType = ImageType.Gift;
+    } else {
+      throw new Error(`mapImage does not support entity type: ${target}`);
+    }
+
+    // Build the left join condition:
+    // If defaultImgId is set then join on image.imgId;
+    // otherwise, join on image.subId matching the entity id and image.imgType.
+    return qb.leftJoinAndMapMany(
+      `${entityAlias}.image`, // the property to map the result to (e.g. user.image)
+      'image', // the Image entity
+      `${entityAlias}Image`, // alias for the joined image table
+      `
+      (${entityAlias}.defaultImgId IS NOT NULL AND ${entityAlias}Image.imgId = ${entityAlias}.defaultImgId)
+      OR
+      (${entityAlias}.defaultImgId IS NULL AND ${entityAlias}Image.subId = ${entityAlias}.${idField} AND ${entityAlias}Image.imgType = :imgType)
+    `,
+      { imgType },
+    );
   }
 
   /**

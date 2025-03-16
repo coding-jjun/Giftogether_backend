@@ -231,17 +231,8 @@ export class FundingService {
 
     queryBuilder.leftJoinAndSelect('funding.fundUser', 'u');
 
-    // 현재 Nested Entity에는 ImageInstanceManager#mapImage를 사용할 수 없다.
-    queryBuilder.leftJoinAndMapOne(
-      'u.image',
-      'image',
-      'ui',
-      `
-      (u.defaultImgId IS NOT NULL AND ui.imgId = u.defaultImgId) OR
-      (u.defaultImgId IS NULL AND ui.subId = u.userId AND ui.imgType = :imgType)
-      `,
-      { imgType: ImageType.User },
-    );
+    // Nested Entity에도 ImageInstanceManager#mapImage를 사용할 수 있넹??
+    this.imageManager.mapImage(queryBuilder, 'u');
 
     const fundingPromies: Promise<FundingDto>[] = await queryBuilder
       .getMany()
